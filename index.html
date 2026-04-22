@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StreetWok POS - The Biker's Cafe</title>
+    <meta name="description" content="StreetWok POS System - Point of Sale for The Biker's Cafe">
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Toast Notification Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- Main App Container -->
+    <div class="app-container">
+
+        <!-- ===== LEFT SIDEBAR ===== -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">SW</div>
+
+            <div class="nav-group">
+                <div class="nav-item active" id="nav-pos" data-view="pos" title="Point of Sale">
+                    <i class="bi bi-grid-1x2-fill"></i>
+                </div>
+                <span class="nav-label">POS</span>
+
+                <div class="nav-item" id="nav-inventory" data-view="inventory" title="Inventory">
+                    <i class="bi bi-box-seam-fill"></i>
+                </div>
+                <span class="nav-label">Stock</span>
+
+                <div class="nav-item" id="nav-reports" data-view="reports" title="Reports">
+                    <i class="bi bi-bar-chart-line-fill"></i>
+                </div>
+                <span class="nav-label">Reports</span>
+
+                <div class="nav-item" id="nav-menu" data-view="menu" title="Menu">
+                    <i class="bi bi-journal-text"></i>
+                </div>
+                <span class="nav-label">Menu</span>
+            </div>
+
+            <div class="nav-spacer"></div>
+
+            <div class="nav-group">
+                <div class="nav-item" id="nav-settings" data-view="settings" title="Settings">
+                    <i class="bi bi-gear-fill"></i>
+                </div>
+                <span class="nav-label">Settings</span>
+            </div>
+        </aside>
+
+        <!-- ===== MAIN CONTENT AREA ===== -->
+        <main class="main-content">
+
+            <!-- POS VIEW -->
+            <div class="view-section" id="pos-view">
+                <div class="top-header">
+                    <div class="header-left">
+                        <div class="header-title">Point of Sale</div>
+                        <div class="header-subtitle" id="current-date-display"></div>
+                    </div>
+                    <div class="search-wrapper">
+                        <i class="bi bi-search search-icon"></i>
+                        <input type="text" id="menu-search" placeholder="Search menu items...">
+                    </div>
+                </div>
+
+                <div class="category-section">
+                    <div class="section-label">Categories</div>
+                    <div class="category-scroll" id="category-scroll">
+                        <!-- Categories rendered dynamically -->
+                    </div>
+                </div>
+
+                <div class="menu-grid-container">
+                    <div class="menu-grid" id="menu-grid">
+                        <!-- Menu cards rendered dynamically -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- INVENTORY VIEW -->
+            <div class="view-section hidden" id="inventory-view">
+                <div class="top-header">
+                    <div class="header-left">
+                        <div class="header-title">Inventory Management</div>
+                        <div class="header-subtitle">Track and manage your stock levels</div>
+                    </div>
+                    <button class="btn-add-stock" id="btn-add-new-stock">
+                        <i class="bi bi-plus-lg"></i> Add Item
+                    </button>
+                </div>
+                <div class="inventory-grid" id="inventory-grid">
+                    <!-- Stock cards rendered dynamically -->
+                </div>
+                <button class="btn-save-stock" id="btn-save-stock">
+                    <i class="bi bi-check-lg"></i> Save All Changes
+                </button>
+            </div>
+
+            <!-- REPORTS VIEW -->
+            <div class="view-section hidden" id="reports-view">
+                <div class="top-header">
+                    <div class="header-left">
+                        <div class="header-title">Sales & Revenue</div>
+                        <div class="header-subtitle">Track your business performance</div>
+                    </div>
+                    <div class="date-filter">
+                        <button class="btn-export" id="btn-export-csv">
+                            <i class="bi bi-download"></i> Export CSV
+                        </button>
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card revenue">
+                        <div class="stat-label">Total Revenue</div>
+                        <div class="stat-value" id="total-revenue">₹0</div>
+                    </div>
+                    <div class="stat-card today">
+                        <div class="stat-label">Today's Revenue</div>
+                        <div class="stat-value" id="today-revenue">₹0</div>
+                    </div>
+                    <div class="stat-card transactions">
+                        <div class="stat-label">Total Orders</div>
+                        <div class="stat-value" id="total-transactions">0</div>
+                    </div>
+                    <div class="stat-card avg">
+                        <div class="stat-label">Avg Order Value</div>
+                        <div class="stat-value" id="avg-order-value">₹0</div>
+                    </div>
+                </div>
+
+                <div class="report-section">
+                    <div class="report-card">
+                        <div class="report-card-header">
+                            <h5>Daily Breakdown</h5>
+                        </div>
+                        <div style="max-height: 250px; overflow-y: auto;">
+                            <table class="report-table">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Orders</th>
+                                        <th>Cash Sales</th>
+                                        <th>UPI Sales</th>
+                                        <th>Card Sales</th>
+                                        <th>Total Revenue</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="daily-sales-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="report-section">
+                    <div class="report-card">
+                        <div class="report-card-header">
+                            <h5>Recent Transactions</h5>
+                        </div>
+                        <div style="max-height: 300px; overflow-y: auto;">
+                            <table class="report-table">
+                                <thead>
+                                    <tr>
+                                        <th>Order #</th>
+                                        <th>Time</th>
+                                        <th>Customer</th>
+                                        <th>Items</th>
+                                        <th>Payment</th>
+                                        <th>Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="transactions-table-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MENU MANAGEMENT VIEW -->
+            <div class="view-section hidden" id="menu-view">
+                <div class="top-header">
+                    <div class="header-left">
+                        <div class="header-title">Menu Management</div>
+                        <div class="header-subtitle">Add, edit or remove menu items</div>
+                    </div>
+                    <button class="btn-add-stock" id="btn-add-new-menu-item">
+                        <i class="bi bi-plus-lg"></i> Add Item
+                    </button>
+                </div>
+                <div class="menu-mgmt-grid" id="menu-mgmt-grid">
+                    <!-- Menu items rendered dynamically -->
+                </div>
+            </div>
+
+            <!-- SETTINGS VIEW -->
+            <div class="view-section hidden" id="settings-view">
+                <div class="top-header">
+                    <div class="header-left">
+                        <div class="header-title">Settings</div>
+                        <div class="header-subtitle">Configure your POS system</div>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <div class="settings-title">Business Info</div>
+                    <div class="settings-row">
+                        <span class="settings-label">Shop Name</span>
+                        <input type="text" class="settings-input" id="setting-shop-name" value="StreetWok">
+                    </div>
+                    <div class="settings-row">
+                        <span class="settings-label">Tagline</span>
+                        <input type="text" class="settings-input" id="setting-tagline" value="The Biker's Cafe">
+                    </div>
+                    <div class="settings-row">
+                        <span class="settings-label">Phone</span>
+                        <input type="text" class="settings-input" id="setting-phone" value="">
+                    </div>
+                    <div class="settings-row">
+                        <span class="settings-label">Address</span>
+                        <input type="text" class="settings-input" id="setting-address" value="">
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <div class="settings-title">Tax & Pricing</div>
+                    <div class="settings-row">
+                        <span class="settings-label">GST Rate (%)</span>
+                        <input type="number" class="settings-input" id="setting-tax-rate" value="5" min="0" max="28">
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <div class="settings-title">Danger Zone</div>
+                    <div class="settings-row">
+                        <span class="settings-label">Clear all transaction history</span>
+                        <button class="btn-danger-action" id="btn-clear-transactions">Clear Transactions</button>
+                    </div>
+                    <div class="settings-row">
+                        <span class="settings-label">Reset everything to defaults</span>
+                        <button class="btn-danger-action" id="btn-reset-all">Reset All Data</button>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- ===== RIGHT ORDER PANEL ===== -->
+        <aside class="order-panel">
+            <div class="order-header">
+                <div class="order-header-top">
+                    <h4>Current Order</h4>
+                    <span class="order-number" id="order-id-display">#001</span>
+                </div>
+                <div class="order-type-toggle">
+                    <button class="order-type-btn active" data-type="dine-in">Dine In</button>
+                    <button class="order-type-btn" data-type="takeaway">Takeaway</button>
+                    <button class="order-type-btn" data-type="delivery">Delivery</button>
+                </div>
+                <input type="text" class="customer-input" id="customer-name" placeholder="Customer name (optional)">
+            </div>
+
+            <div class="order-list-area" id="order-list">
+                <div class="empty-cart" id="empty-cart">
+                    <div class="empty-cart-icon">🛒</div>
+                    <p>Add items to start an order</p>
+                </div>
+            </div>
+
+            <div class="billing-section">
+                <div class="bill-row">
+                    <span>Subtotal</span>
+                    <span id="subtotal">₹0.00</span>
+                </div>
+                <div class="bill-row">
+                    <span>GST (<span id="tax-rate-display">5</span>%)</span>
+                    <span id="tax">₹0.00</span>
+                </div>
+                <div class="bill-row total">
+                    <span>Total</span>
+                    <span id="total">₹0.00</span>
+                </div>
+            </div>
+
+            <div class="action-section">
+                <div class="action-grid">
+                    <button class="btn-action btn-clear" id="btn-clear-order">
+                        <i class="bi bi-trash3"></i> Clear
+                    </button>
+                    <button class="btn-action btn-print" id="btn-print-order">
+                        <i class="bi bi-printer"></i> Print
+                    </button>
+                    <button class="btn-action btn-checkout" id="btn-pay" disabled>
+                        <i class="bi bi-credit-card"></i> Checkout — <span id="checkout-total">₹0.00</span>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+    </div>
+
+    <!-- ===== MODALS ===== -->
+
+    <!-- Payment Modal -->
+    <div class="modal-overlay hidden" id="payment-modal">
+        <div class="modal-box">
+            <div class="modal-title">Select Payment Method</div>
+            <div class="modal-total">
+                <div class="modal-total-label">Amount to Pay</div>
+                <div class="modal-total-value" id="payment-total">₹0.00</div>
+            </div>
+            <div class="payment-methods">
+                <button class="payment-btn" onclick="processPayment('Cash')">
+                    <span class="pay-icon">💵</span>
+                    Cash
+                </button>
+                <button class="payment-btn" onclick="processPayment('UPI')">
+                    <span class="pay-icon">📱</span>
+                    UPI
+                </button>
+                <button class="payment-btn" onclick="processPayment('Card')">
+                    <span class="pay-icon">💳</span>
+                    Card
+                </button>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-modal btn-modal-cancel" onclick="closeModal('payment-modal')">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Receipt Modal -->
+    <div class="modal-overlay hidden" id="receipt-modal">
+        <div class="modal-box" style="max-width: 380px;">
+            <div class="receipt-box" id="receipt-content">
+                <!-- Receipt content generated dynamically -->
+            </div>
+            <div class="modal-actions" style="margin-top: 1rem;">
+                <button class="btn-modal btn-modal-cancel" onclick="closeModal('receipt-modal')">Close</button>
+                <button class="btn-modal btn-modal-confirm" onclick="window.print()">
+                    <i class="bi bi-printer"></i> Print
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add New Stock Modal -->
+    <div class="modal-overlay hidden" id="add-stock-modal">
+        <div class="modal-box">
+            <div class="modal-title">Add New Stock Item</div>
+            <div class="modal-form-group">
+                <label>Item Name</label>
+                <input type="text" id="new-stock-name" placeholder="e.g. Chicken Breast">
+            </div>
+            <div class="modal-form-group">
+                <label>Quantity</label>
+                <input type="number" id="new-stock-qty" value="0" min="0">
+            </div>
+            <div class="modal-form-group">
+                <label>Unit</label>
+                <select id="new-stock-unit">
+                    <option value="kg">Kilograms (kg)</option>
+                    <option value="litre">Litres (L)</option>
+                    <option value="pcs">Pieces (pcs)</option>
+                    <option value="packs">Packs</option>
+                    <option value="dozen">Dozen</option>
+                    <option value="grams">Grams (g)</option>
+                </select>
+            </div>
+            <div class="modal-form-group">
+                <label>Low Stock Alert (when qty falls below)</label>
+                <input type="number" id="new-stock-alert" value="5" min="0">
+            </div>
+            <div class="modal-actions">
+                <button class="btn-modal btn-modal-cancel" onclick="closeModal('add-stock-modal')">Cancel</button>
+                <button class="btn-modal btn-modal-confirm" id="btn-create-stock">Add Item</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add New Menu Item Modal -->
+    <div class="modal-overlay hidden" id="add-menu-modal">
+        <div class="modal-box">
+            <div class="modal-title" id="menu-modal-title">Add New Menu Item</div>
+            <div class="modal-form-group">
+                <label>Item Name</label>
+                <input type="text" id="new-menu-name" placeholder="e.g. Chicken Burger">
+            </div>
+            <div class="modal-form-group">
+                <label>Category</label>
+                <select id="new-menu-category">
+                    <option value="burgers">Burgers</option>
+                    <option value="fries">Fries</option>
+                    <option value="strips">Peri Peri Strips</option>
+                    <option value="drinks">Chai & Coffee</option>
+                    <option value="popcorn">Popcorn</option>
+                    <option value="snacks">Snacks</option>
+                    <option value="wings">Wings</option>
+                    <option value="momos">Momos</option>
+                    <option value="combos">Combos</option>
+                </select>
+            </div>
+            <div class="modal-form-group">
+                <label>Price (₹)</label>
+                <input type="number" id="new-menu-price" value="0" min="0">
+            </div>
+            <div class="modal-actions">
+                <button class="btn-modal btn-modal-cancel" onclick="closeModal('add-menu-modal')">Cancel</button>
+                <button class="btn-modal btn-modal-confirm" id="btn-create-menu-item">Save Item</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

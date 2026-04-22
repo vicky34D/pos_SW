@@ -1,0 +1,24 @@
+{
+  "name": "streetwok-pos",
+  "version": "1.0.0",
+  "description": "Street Wok - The Biker's Cafe POS System",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder"
+  },
+  "author": "Street Wok",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.6.4"
+  },
+  "build": {
+    "appId": "com.streetwok.pos",
+    "productName": "StreetWok POS",
+    "mac": {
+      "category": "public.app-category.business",
+      "target": "dmg"
+    }
+  }
+}
