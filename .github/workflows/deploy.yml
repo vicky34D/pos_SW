@@ -22,18 +22,21 @@ jobs:
             cd ~/pos_SW
             git pull origin main
             
-            echo "=== Building and Running with Docker ==="
-            # We pass the Google Client ID as a build argument
-            export VITE_GOOGLE_CLIENT_ID="${{ secrets.VITE_GOOGLE_CLIENT_ID }}"
+            echo "=== Cleaning up existing containers ==="
+            # Forcefully remove the specific container if it exists to avoid naming conflicts
+            docker rm -f streetwok-pos || true
             
-            # Stop existing container if any
+            # Also try normal compose down
             docker compose down || true
             
-            # Build and start
-            VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID docker compose up -d --build
+            echo "=== Building and Running with Docker ==="
+            export VITE_GOOGLE_CLIENT_ID="${{ secrets.VITE_GOOGLE_CLIENT_ID }}"
+            
+            # Build and start with explicit project name to be safe
+            VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID docker compose -p streetwok up -d --build
             
             echo "=== Deployment Status ==="
-            docker compose ps
+            docker compose -p streetwok ps
             
             echo "=== Cleanup old images ==="
             docker image prune -f
