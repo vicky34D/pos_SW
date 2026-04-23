@@ -8,7 +8,7 @@ export default function WelcomePage({ onGetStarted }) {
   const [error, setError] = useState('')
 
   // Hardcoded allowed users
-  const allowedUsers = ['admin@gmail.com', 'staff@gmail.com', 'sudipagharami@gmail.com']
+  const allowedUsers = ['admin@gmail.com', 'staff@gmail.com', 'sudipagharami@gmail.com', 'vicky233012@gmail.com']
 
   const handleEmailLogin = (e) => {
     e.preventDefault()
