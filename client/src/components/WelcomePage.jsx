@@ -47,7 +47,7 @@ export default function WelcomePage({ onGetStarted }) {
     setError('Google Sign-In failed or was cancelled.')
   }
 
-  const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || 'YOUR_GOOGLE_CLIENT_ID_HERE'
+  const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '691116683990-p0eucmu9rs1bd0es55ks177pr567otvs.apps.googleusercontent.com'
 
   return (
     <GoogleOAuthProvider clientId={clientId}>
@@ -113,8 +113,8 @@ export default function WelcomePage({ onGetStarted }) {
                 useOneTap
                 theme="outline"
                 size="large"
-                shape="circle"
-                type="icon"
+                shape="pill"
+                type="standard"
               />
             </div>
           </div>

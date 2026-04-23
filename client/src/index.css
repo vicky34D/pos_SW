@@ -626,7 +626,7 @@ input, select, textarea { font-family: 'Inter', sans-serif; }
 .divider span { padding: 0 1rem; }
 
 .social-login-container { display: flex; justify-content: center; gap: 1rem; margin-bottom: 2rem; }
-.google-btn-wrapper { border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; width: 45px; height: 45px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+.google-btn-wrapper { display: flex; align-items: center; justify-content: center; }
 
 .signup-prompt { font-size: 0.9rem; color: #8e8e93; margin-bottom: 1rem; }
 .signup-prompt a { color: #1a1a1a; font-weight: 600; text-decoration: none; }
