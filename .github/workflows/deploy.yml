@@ -23,16 +23,19 @@ jobs:
             git pull origin main
             
             echo "=== Cleaning up existing containers ==="
-            # Forcefully remove the specific container if it exists to avoid naming conflicts
             docker rm -f streetwok-pos || true
-            
-            # Also try normal compose down
-            docker compose down || true
+            docker compose -p streetwok down || true
             
             echo "=== Building and Running with Docker ==="
-            export VITE_GOOGLE_CLIENT_ID="${{ secrets.VITE_GOOGLE_CLIENT_ID }}"
+            # We use the provided ID as a fallback if the secret is missing
+            SECRET_ID="${{ secrets.VITE_GOOGLE_CLIENT_ID }}"
+            FALLBACK_ID="691116683990-p0eucmu9rs1bd0es55ks177pr567otvs.apps.googleusercontent.com"
             
-            # Build and start with explicit project name to be safe
+            export VITE_GOOGLE_CLIENT_ID="${SECRET_ID:-$FALLBACK_ID}"
+            
+            echo "Using Google Client ID starting with: ${VITE_GOOGLE_CLIENT_ID:0:10}..."
+            
+            # Build and start
             VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID docker compose -p streetwok up -d --build
             
             echo "=== Deployment Status ==="
