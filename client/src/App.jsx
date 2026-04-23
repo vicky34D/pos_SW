@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import './index.css'
 import Sidebar from './components/Sidebar'
+import WelcomePage from './components/WelcomePage'
 import PosView from './components/PosView'
 import OrderPanel from './components/OrderPanel'
 import InventoryView from './components/InventoryView'
@@ -11,7 +12,7 @@ import Toast from './components/Toast'
 import * as api from './api'
 
 export default function App() {
-  const [activeView, setActiveView] = useState('pos')
+  const [activeView, setActiveView] = useState('welcome')
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [currentOrder, setCurrentOrder] = useState([])
   const [orderType, setOrderType] = useState('dine-in')
@@ -79,6 +80,10 @@ export default function App() {
       return null
     }
   }, [currentOrder, customerName, orderType, settings, clearOrder, showToast])
+
+  if (activeView === 'welcome') {
+    return <WelcomePage onGetStarted={() => setActiveView('pos')} settings={settings} />
+  }
 
   return (
     <div className="app-container">
