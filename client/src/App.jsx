@@ -13,6 +13,7 @@ import * as api from './api'
 
 export default function App() {
   const [activeView, setActiveView] = useState('welcome')
+  const [currentUser, setCurrentUser] = useState(null)
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [currentOrder, setCurrentOrder] = useState([])
   const [orderType, setOrderType] = useState('dine-in')
@@ -81,13 +82,23 @@ export default function App() {
     }
   }, [currentOrder, customerName, orderType, settings, clearOrder, showToast])
 
+  const handleLogout = useCallback(() => {
+    setCurrentUser(null)
+    setActiveView('welcome')
+  }, [])
+
   if (activeView === 'welcome') {
-    return <WelcomePage onGetStarted={() => setActiveView('pos')} settings={settings} />
+    return <WelcomePage onGetStarted={(email) => { setCurrentUser(email); setActiveView('pos'); }} settings={settings} />
   }
 
   return (
     <div className="app-container">
-      <Sidebar activeView={activeView} onViewChange={setActiveView} />
+      <Sidebar 
+        activeView={activeView} 
+        onViewChange={setActiveView} 
+        currentUser={currentUser} 
+        onLogout={handleLogout} 
+      />
 
       <main className="main-content">
         {activeView === 'pos' && (

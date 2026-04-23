@@ -1,4 +1,4 @@
-export default function Sidebar({ activeView, onViewChange }) {
+export default function Sidebar({ activeView, onViewChange, currentUser, onLogout }) {
   const navItems = [
     { id: 'pos', icon: '⊞', label: 'POS' },
     { id: 'inventory', icon: '📦', label: 'Stock' },
@@ -6,13 +6,15 @@ export default function Sidebar({ activeView, onViewChange }) {
     { id: 'menu', icon: '📋', label: 'Menu' },
   ]
 
+  const userInitial = currentUser ? currentUser.charAt(0).toUpperCase() : 'U';
+
   return (
     <aside className="sidebar">
       <div className="sidebar-brand">SW</div>
 
       <div className="nav-group">
         {navItems.map(item => (
-          <div key={item.id}>
+          <div key={item.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <div
               className={`nav-item${activeView === item.id ? ' active' : ''}`}
               onClick={() => onViewChange(item.id)}
@@ -42,6 +44,13 @@ export default function Sidebar({ activeView, onViewChange }) {
           Settings
         </span>
       </div>
+
+      {currentUser && (
+        <div className="sidebar-user" onClick={onLogout} title={`Logged in as ${currentUser}. Click to Logout.`}>
+          <div className="user-avatar">{userInitial}</div>
+          <span className="logout-icon">⏻</span>
+        </div>
+      )}
     </aside>
   )
 }
