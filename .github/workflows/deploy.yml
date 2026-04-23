@@ -18,5 +18,16 @@ jobs:
           script: |
             cd ~/pos_SW
             git pull origin main
+            
+            # Build the React client
+            cd client
             npm install
-            pm2 restart all
+            npm run build
+            
+            # Update server dependencies
+            cd ../server
+            npm install
+            npm rebuild better-sqlite3
+            
+            # Restart the application
+            pm2 restart pos-app
