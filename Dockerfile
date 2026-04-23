@@ -1,24 +1,26 @@
-FROM node:20-alpine
+# Stage 1: Build Frontend
+FROM node:20-slim AS client-builder
+WORKDIR /app/client
+COPY client/package*.json ./
+RUN npm install
+COPY client/ ./
+ARG VITE_GOOGLE_CLIENT_ID
+ENV VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID
+RUN npm run build
 
+# Stage 2: Build Backend & Final Image
+FROM node:20-slim
 WORKDIR /app
 
-# Copy package files for both client and server
-COPY server/package*.json ./server/
-COPY client/package*.json ./client/
+# Install dependencies for better-sqlite3 compilation
+RUN apt-get update && apt-get install -y python3 make g++ && rm -rf /var/lib/apt/lists/*
 
-# Install server dependencies
+COPY server/package*.json ./server/
 RUN cd server && npm install --production
 
-# Install client dependencies
-# We install all dependencies to build, then we can clean up if we want, but for simplicity we keep it.
-RUN cd client && npm install
-
-# Copy source code
+# Copy source and built frontend
 COPY server/ ./server/
-COPY client/ ./client/
-
-# Build client
-RUN cd client && npm run build
+COPY --from=client-builder /app/client/dist ./client/dist
 
 # Expose port
 EXPOSE 5001

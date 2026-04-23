@@ -1,4 +1,4 @@
-name: Deploy to OCI
+name: Deploy to OCI (Docker)
 
 on:
   push:
@@ -9,7 +9,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy to OCI
+      - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.OCI_HOST }}
@@ -17,29 +17,25 @@ jobs:
           key: ${{ secrets.OCI_KEY }}
           script: |
             set -e
-
+            
             echo "=== Pulling latest code ==="
             cd ~/pos_SW
             git pull origin main
-
-            echo "=== Building React client ==="
-            cd client
-            npm install
-
-            # Ensure the .env file exists with required variables
-            echo "VITE_GOOGLE_CLIENT_ID=${{ secrets.VITE_GOOGLE_CLIENT_ID }}" > .env
-
-            npm run build
-            echo "=== Client build complete ==="
-            ls -la dist/
-
-            echo "=== Updating server dependencies ==="
-            cd ../server
-            npm install
-            npm rebuild better-sqlite3
-
-            echo "=== Restarting PM2 ==="
-            pm2 restart pos-app
-            pm2 status
-
-            echo "=== Deploy complete ==="
+            
+            echo "=== Building and Running with Docker ==="
+            # We pass the Google Client ID as a build argument
+            export VITE_GOOGLE_CLIENT_ID="${{ secrets.VITE_GOOGLE_CLIENT_ID }}"
+            
+            # Stop existing container if any
+            docker compose down || true
+            
+            # Build and start
+            VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID docker compose up -d --build
+            
+            echo "=== Deployment Status ==="
+            docker compose ps
+            
+            echo "=== Cleanup old images ==="
+            docker image prune -f
+            
+            echo "=== Deploy Complete ==="

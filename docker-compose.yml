@@ -2,13 +2,16 @@ version: '3.8'
 
 services:
   streetwok-pos:
-    build: .
+    build:
+      context: .
+      args:
+        - VITE_GOOGLE_CLIENT_ID=${VITE_GOOGLE_CLIENT_ID}
     container_name: streetwok-pos
     restart: always
     ports:
       - "80:5001"
     volumes:
-      - ./server/database.db:/app/server/database.db
+      - ./server/streetwok.db:/app/server/streetwok.db
     environment:
       - NODE_ENV=production
       - PORT=5001
