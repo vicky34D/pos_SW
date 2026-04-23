@@ -12,12 +12,15 @@ import * as api from './api'
 
 export default function App() {
   const [activeView, setActiveView] = useState('pos')
+  const [isCartOpen, setIsCartOpen] = useState(false)
   const [currentOrder, setCurrentOrder] = useState([])
   const [orderType, setOrderType] = useState('dine-in')
   const [customerName, setCustomerName] = useState('')
   const [orderCounter, setOrderCounter] = useState(0)
   const [settings, setSettings] = useState({ shop_name: 'StreetWok', tagline: "The Biker's Cafe", tax_rate: '5' })
   const [toasts, setToasts] = useState([])
+
+  const totalItems = currentOrder.reduce((sum, item) => sum + item.qty, 0)
 
   const showToast = useCallback((message, type = 'info') => {
     const id = Date.now()
@@ -99,19 +102,30 @@ export default function App() {
         )}
       </main>
 
-      <OrderPanel
-        currentOrder={currentOrder}
-        orderType={orderType}
-        setOrderType={setOrderType}
-        customerName={customerName}
-        setCustomerName={setCustomerName}
-        orderCounter={orderCounter}
-        settings={settings}
-        updateQty={updateQty}
-        clearOrder={clearOrder}
-        onCheckout={handleCheckout}
-        showToast={showToast}
-      />
+      {activeView === 'pos' && (
+        <button className="mobile-cart-btn" onClick={() => setIsCartOpen(true)}>
+          🛒 Cart {totalItems > 0 && <span className="cart-badge">{totalItems}</span>}
+        </button>
+      )}
+
+      {isCartOpen && <div className="cart-overlay" onClick={() => setIsCartOpen(false)}></div>}
+
+      <div className={`order-panel-container ${isCartOpen ? 'open' : ''}`}>
+        <button className="mobile-close-cart" onClick={() => setIsCartOpen(false)}>✕</button>
+        <OrderPanel
+          currentOrder={currentOrder}
+          orderType={orderType}
+          setOrderType={setOrderType}
+          customerName={customerName}
+          setCustomerName={setCustomerName}
+          orderCounter={orderCounter}
+          settings={settings}
+          updateQty={updateQty}
+          clearOrder={clearOrder}
+          onCheckout={handleCheckout}
+          showToast={showToast}
+        />
+      </div>
 
       <Toast toasts={toasts} />
     </div>
