@@ -164,3 +164,32 @@ pm2 restart streetwok-pos
 sudo yum install -y certbot python3-certbot-nginx
 sudo certbot --nginx -d yourdomain.com
 ```
+
+## Step 11: Alternative (Easier) Deployment using Docker
+
+Instead of installing Node.js, PM2, and Nginx manually, you can use Docker to deploy in one simple step:
+
+```bash
+# On OCI Server: Install Docker & Docker Compose
+sudo yum install -y yum-utils
+sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+sudo yum install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+sudo systemctl enable --now docker
+sudo usermod -aG docker opc
+# (Log out and log back in to apply docker group)
+
+# Upload the entire project directory (excluding node_modules)
+# From your local machine:
+tar czf streetwok-pos.tar.gz --exclude='node_modules' --exclude='*.db' --exclude='.git' server/ client/ deploy/ Dockerfile docker-compose.yml
+scp -i ~/.ssh/your_key streetwok-pos.tar.gz opc@<IP>:~/
+
+# On OCI Server: Extract and Run
+mkdir -p ~/streetwok-pos
+tar xzf streetwok-pos.tar.gz -C ~/streetwok-pos
+cd ~/streetwok-pos
+
+# Run with Docker Compose
+docker compose up -d --build
+```
+
+This will automatically build the React app, set up the Node.js server, map port 80 to your instance, and ensure the database persists via a mounted volume.

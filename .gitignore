@@ -7,6 +7,8 @@ client/dist/
 
 # Database
 server/*.db
+server/*.db-wal
+server/*.db-shm
 
 # OS files
 .DS_Store
@@ -20,3 +22,6 @@ Thumbs.db
 npm-debug.log*
 
 # Old Electron files (deprecated)
+
+# Deployment archives
+*.tar.gz

@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  streetwok-pos:
+    build: .
+    container_name: streetwok-pos
+    restart: always
+    ports:
+      - "80:5001"
+    volumes:
+      - ./server/database.db:/app/server/database.db
+    environment:
+      - NODE_ENV=production
+      - PORT=5001
