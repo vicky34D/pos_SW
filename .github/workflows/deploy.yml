@@ -16,18 +16,30 @@ jobs:
           username: ${{ secrets.OCI_USER }}
           key: ${{ secrets.OCI_KEY }}
           script: |
+            set -e
+
+            echo "=== Pulling latest code ==="
             cd ~/pos_SW
             git pull origin main
-            
-            # Build the React client
+
+            echo "=== Building React client ==="
             cd client
             npm install
+
+            # Ensure the .env file exists with required variables
+            echo "VITE_GOOGLE_CLIENT_ID=${{ secrets.VITE_GOOGLE_CLIENT_ID }}" > .env
+
             npm run build
-            
-            # Update server dependencies
+            echo "=== Client build complete ==="
+            ls -la dist/
+
+            echo "=== Updating server dependencies ==="
             cd ../server
             npm install
             npm rebuild better-sqlite3
-            
-            # Restart the application
+
+            echo "=== Restarting PM2 ==="
             pm2 restart pos-app
+            pm2 status
+
+            echo "=== Deploy complete ==="
