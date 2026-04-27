@@ -1,4 +1,4 @@
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, shell } = require('electron');
 const path = require('path');
 
 function createWindow() {
@@ -17,10 +17,17 @@ function createWindow() {
         show: false
     });
 
-    win.loadFile('index.html');
+    // Load the bundled React frontend (built into client/dist)
+    win.loadFile(path.join(__dirname, 'client', 'dist', 'index.html'));
 
     win.once('ready-to-show', () => {
         win.show();
+    });
+
+    // Open external links in the default browser
+    win.webContents.setWindowOpenHandler(({ url }) => {
+        shell.openExternal(url);
+        return { action: 'deny' };
     });
 
     // Open DevTools in development

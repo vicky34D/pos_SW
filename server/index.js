@@ -11,8 +11,16 @@ const { authenticateToken, requireRole } = require('./middleware/auth');
 const app = express();
 const PORT = process.env.PORT || 5001;
 
-// Middleware
-app.use(cors());
+// Middleware — Allow requests from Electron desktop app + web
+app.use(cors({
+  origin: function(origin, callback) {
+    // Allow requests with no origin (Electron file://, mobile apps, curl)
+    if (!origin) return callback(null, true);
+    // Allow any origin in development/production
+    return callback(null, true);
+  },
+  credentials: true
+}));
 app.use(express.json());
 
 // Auth Routes (Public)

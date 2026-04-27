@@ -1,4 +1,6 @@
-const BASE = '/api';
+// When running as desktop app, VITE_API_URL points to the cloud server.
+// When running as web app on OCI, it defaults to relative '/api'.
+const BASE = import.meta.env.VITE_API_URL || '/api';
 
 export const setAuthToken = (token) => {
   if (token) {

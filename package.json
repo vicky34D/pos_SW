@@ -1,11 +1,13 @@
 {
   "name": "streetwok-pos",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Street Wok - The Biker's Cafe POS System",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "dist": "electron-builder"
+    "build:client": "cd client && npm run build",
+    "dist": "npm run build:client && electron-builder",
+    "dist:mac": "npm run build:client && electron-builder --mac"
   },
   "author": "Street Wok",
   "license": "MIT",
@@ -16,9 +18,27 @@
   "build": {
     "appId": "com.streetwok.pos",
     "productName": "StreetWok POS",
+    "files": [
+      "main.js",
+      "client/dist/**/*"
+    ],
     "mac": {
       "category": "public.app-category.business",
-      "target": "dmg"
+      "target": [
+        {
+          "target": "dmg",
+          "arch": ["arm64"]
+        }
+      ],
+      "icon": "assets/icon.icns"
+    },
+    "dmg": {
+      "title": "StreetWok POS",
+      "backgroundColor": "#f5f7fb",
+      "contents": [
+        { "x": 130, "y": 220 },
+        { "x": 410, "y": 220, "type": "link", "path": "/Applications" }
+      ]
     }
   }
 }
