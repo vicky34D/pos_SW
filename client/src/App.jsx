@@ -8,6 +8,7 @@ import InventoryView from './components/InventoryView'
 import ReportsView from './components/ReportsView'
 import MenuManagement from './components/MenuManagement'
 import SettingsView from './components/SettingsView'
+import UserManagement from './components/UserManagement'
 import Toast from './components/Toast'
 import * as api from './api'
 
@@ -31,9 +32,11 @@ export default function App() {
   }, [])
 
   useEffect(() => {
-    api.getSettings().then(setSettings).catch(() => {})
-    api.getOrderCounter().then(data => setOrderCounter(data.last_number)).catch(() => {})
-  }, [])
+    if (currentUser) {
+      api.getSettings().then(setSettings).catch(() => {})
+      api.getOrderCounter().then(data => setOrderCounter(data.last_number)).catch(() => {})
+    }
+  }, [currentUser])
 
   const addToOrder = useCallback((item) => {
     setCurrentOrder(prev => {
@@ -84,11 +87,12 @@ export default function App() {
 
   const handleLogout = useCallback(() => {
     setCurrentUser(null)
+    api.clearAuthToken()
     setActiveView('welcome')
   }, [])
 
   if (activeView === 'welcome') {
-    return <WelcomePage onGetStarted={(email) => { setCurrentUser(email); setActiveView('pos'); }} settings={settings} />
+    return <WelcomePage onGetStarted={(user) => { setCurrentUser(user); setActiveView('pos'); }} settings={settings} />
   }
 
   return (
@@ -115,6 +119,9 @@ export default function App() {
         )}
         {activeView === 'settings' && (
           <SettingsView settings={settings} setSettings={setSettings} showToast={showToast} />
+        )}
+        {activeView === 'team' && (
+          <UserManagement showToast={showToast} currentUser={currentUser} />
         )}
       </main>
 

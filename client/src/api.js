@@ -1,16 +1,40 @@
 const BASE = '/api';
 
+export const setAuthToken = (token) => {
+  if (token) {
+    localStorage.setItem('auth_token', token);
+  } else {
+    localStorage.removeItem('auth_token');
+  }
+};
+
+export const getAuthToken = () => localStorage.getItem('auth_token');
+
+export const clearAuthToken = () => localStorage.removeItem('auth_token');
+
 async function request(path, options = {}) {
+  const headers = { 'Content-Type': 'application/json', ...options.headers };
+  const token = getAuthToken();
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
   const res = await fetch(`${BASE}${path}`, {
-    headers: { 'Content-Type': 'application/json', ...options.headers },
     ...options,
+    headers,
   });
+
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: res.statusText }));
     throw new Error(err.error || 'Request failed');
   }
   return res.json();
 }
+
+// Auth
+export const googleLogin = (credential) => request('/auth/google', { method: 'POST', body: JSON.stringify({ credential }) });
+export const setupProfile = (data) => request('/auth/setup-profile', { method: 'POST', body: JSON.stringify(data) });
+export const login = (data) => request('/auth/login', { method: 'POST', body: JSON.stringify(data) });
 
 // Menu
 export const getMenu = (category, search) => {
@@ -48,3 +72,10 @@ export const getOrderCounter = () => request('/reports/counter');
 // Settings
 export const getSettings = () => request('/settings');
 export const updateSettings = (data) => request('/settings', { method: 'PUT', body: JSON.stringify(data) });
+
+// Users / Team
+export const getUsers = () => request('/users');
+export const createUser = (data) => request('/users', { method: 'POST', body: JSON.stringify(data) });
+export const updateUserRole = (id, data) => request(`/users/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+export const deleteUser = (id) => request(`/users/${id}`, { method: 'DELETE' });
+
