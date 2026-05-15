@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import './index.css'
 import Sidebar from './components/Sidebar'
-import WelcomePage from './components/WelcomePage'
 import PosView from './components/PosView'
 import OrderPanel from './components/OrderPanel'
 import InventoryView from './components/InventoryView'
@@ -13,7 +12,8 @@ import Toast from './components/Toast'
 import * as api from './api'
 
 export default function App() {
-  const [activeView, setActiveView] = useState('welcome')
+  const [activeView, setActiveView] = useState('loading')
+  const [startupError, setStartupError] = useState(null)
   const [currentUser, setCurrentUser] = useState(null)
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [currentOrder, setCurrentOrder] = useState([])
@@ -32,11 +32,19 @@ export default function App() {
   }, [])
 
   useEffect(() => {
-    if (currentUser) {
-      api.getSettings().then(setSettings).catch(() => {})
-      api.getOrderCounter().then(data => setOrderCounter(data.last_number)).catch(() => {})
-    }
-  }, [currentUser])
+    api.getSession()
+      .then(({ user }) => {
+        setCurrentUser(user)
+        setActiveView('pos')
+        return Promise.allSettled([
+          api.getSettings().then(setSettings),
+          api.getOrderCounter().then(data => setOrderCounter(data.last_number))
+        ])
+      })
+      .catch(err => {
+        setStartupError(err.message || `Cannot reach ${window.streetwokConfig?.apiBaseUrl || import.meta.env.VITE_API_URL || '/api'}`)
+      })
+  }, [])
 
   const addToOrder = useCallback((item) => {
     setCurrentOrder(prev => {
@@ -85,14 +93,16 @@ export default function App() {
     }
   }, [currentOrder, customerName, orderType, settings, clearOrder, showToast])
 
-  const handleLogout = useCallback(() => {
-    setCurrentUser(null)
-    api.clearAuthToken()
-    setActiveView('welcome')
-  }, [])
-
-  if (activeView === 'welcome') {
-    return <WelcomePage onGetStarted={(user) => { setCurrentUser(user); setActiveView('pos'); }} settings={settings} />
+  if (activeView === 'loading') {
+    return (
+      <div className="pastel-welcome-container">
+        <div className="pastel-header"></div>
+        <div className="pastel-login-card" style={{ textAlign: 'center', padding: '40px' }}>
+          <h2 className="pastel-title">{startupError ? 'Connection Error' : 'Starting POS...'}</h2>
+          {startupError && <p style={{color: 'red', marginTop: '20px'}}>{startupError}</p>}
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -100,8 +110,7 @@ export default function App() {
       <Sidebar 
         activeView={activeView} 
         onViewChange={setActiveView} 
-        currentUser={currentUser} 
-        onLogout={handleLogout} 
+        currentUser={currentUser}
       />
 
       <main className="main-content">

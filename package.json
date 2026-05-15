@@ -6,8 +6,10 @@
   "scripts": {
     "start": "electron .",
     "build:client": "cd client && npm run build",
+    "build:client:cloud": "cd client && VITE_API_URL=http://YOUR_CLOUD_SERVER_IP/api npm run build",
     "dist": "npm run build:client && electron-builder",
-    "dist:mac": "npm run build:client && electron-builder --mac"
+    "dist:mac": "npm run build:client && electron-builder --mac",
+    "dist:mac:cloud": "npm run build:client && electron-builder --mac"
   },
   "author": "Street Wok",
   "license": "MIT",
@@ -20,7 +22,11 @@
     "productName": "StreetWok POS",
     "files": [
       "main.js",
+      "preload.js",
       "client/dist/**/*"
+    ],
+    "extraResources": [
+      "desktop.config.json"
     ],
     "mac": {
       "category": "public.app-category.business",

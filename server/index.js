@@ -5,7 +5,7 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const { db } = require('./db');
+const { db, getDefaultSessionUser } = require('./db');
 const { authenticateToken, requireRole } = require('./middleware/auth');
 
 const app = express();
@@ -25,6 +25,19 @@ app.use(express.json());
 
 // Auth Routes (Public)
 app.use('/api/auth', require('./routes/auth'));
+
+app.get('/api/session', authenticateToken, (req, res) => {
+  const user = req.user || getDefaultSessionUser();
+  res.json({
+    user: {
+      id: user.id,
+      org_id: user.org_id,
+      email: user.email,
+      name: user.name,
+      role: user.role
+    }
+  });
+});
 
 // Protected API Routes
 app.use('/api/menu', authenticateToken, require('./routes/menu'));

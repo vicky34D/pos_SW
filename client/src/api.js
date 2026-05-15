@@ -1,6 +1,9 @@
-// When running as desktop app, VITE_API_URL points to the cloud server.
-// When running as web app on OCI, it defaults to relative '/api'.
-const BASE = import.meta.env.VITE_API_URL || '/api';
+const runtimeBase = typeof window !== 'undefined' ? window.streetwokConfig?.apiBaseUrl : undefined;
+const hasUsableRuntimeBase =
+  typeof runtimeBase === 'string' &&
+  runtimeBase.trim() !== '' &&
+  !runtimeBase.includes('YOUR_CLOUD_SERVER_IP');
+const BASE = (hasUsableRuntimeBase ? runtimeBase : undefined) || import.meta.env.VITE_API_URL || '/api';
 
 export const setAuthToken = (token) => {
   if (token) {
@@ -21,10 +24,24 @@ async function request(path, options = {}) {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const res = await fetch(`${BASE}${path}`, {
-    ...options,
-    headers,
-  });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 8000);
+
+  let res;
+  try {
+    res = await fetch(`${BASE}${path}`, {
+      ...options,
+      headers,
+      signal: controller.signal,
+    });
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      throw new Error(`Connection timed out while reaching ${BASE}`);
+    }
+    throw new Error(`Failed to fetch from ${BASE}`);
+  } finally {
+    clearTimeout(timeout);
+  }
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: res.statusText }));
@@ -34,6 +51,7 @@ async function request(path, options = {}) {
 }
 
 // Auth
+export const getSession = () => request('/session');
 export const googleLogin = (credential) => request('/auth/google', { method: 'POST', body: JSON.stringify({ credential }) });
 export const setupProfile = (data) => request('/auth/setup-profile', { method: 'POST', body: JSON.stringify(data) });
 export const login = (data) => request('/auth/login', { method: 'POST', body: JSON.stringify(data) });
@@ -80,4 +98,3 @@ export const getUsers = () => request('/users');
 export const createUser = (data) => request('/users', { method: 'POST', body: JSON.stringify(data) });
 export const updateUserRole = (id, data) => request(`/users/${id}`, { method: 'PUT', body: JSON.stringify(data) });
 export const deleteUser = (id) => request(`/users/${id}`, { method: 'DELETE' });
-

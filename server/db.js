@@ -7,7 +7,7 @@ const Database = require('better-sqlite3');
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 
-const DB_PATH = path.join(__dirname, 'streetwok.db');
+const DB_PATH = process.env.DB_PATH || path.join(__dirname, 'streetwok.db');
 const db = new Database(DB_PATH);
 
 // Enable WAL mode for better concurrent read performance
@@ -126,25 +126,28 @@ function seedOrganizationData(orgId, shopName) {
     insertSetting.run(key, orgId, value);
   }
 
-  // Seed default menu items
-  const defaultMenuItems = [
-    // BURGERS
-    { id: uuidv4(), name: 'Aloo Tikki Burger', price: 59, category: 'burgers', emoji: '🍔' },
-    { id: uuidv4(), name: 'Smash Chicken Burger', price: 79, category: 'burgers', emoji: '🍔' },
-    { id: uuidv4(), name: 'Zinger Burger', price: 79, category: 'burgers', emoji: '🍔' },
-    // FRIES
-    { id: uuidv4(), name: 'Regular Fries', price: 49, category: 'fries', emoji: '🍟' },
-    { id: uuidv4(), name: 'Loaded Fries', price: 109, category: 'fries', emoji: '🍟' },
-    // CHAI & COFFEE
-    { id: uuidv4(), name: 'Chai Small', price: 10, category: 'drinks', emoji: '🍵' },
-    { id: uuidv4(), name: 'Hot Coffee Small', price: 30, category: 'drinks', emoji: '☕' }
-  ];
+  // Seed default menu items — only if org has none yet
+  const existingMenuCount = db.prepare('SELECT COUNT(*) as cnt FROM menu_items WHERE org_id = ? AND active = 1').get(orgId);
+  if (!existingMenuCount || existingMenuCount.cnt === 0) {
+    const defaultMenuItems = [
+      // BURGERS
+      { id: `seed_burgers_aloo_${orgId}`, name: 'Aloo Tikki Burger', price: 59, category: 'burgers', emoji: '🍔' },
+      { id: `seed_burgers_smash_${orgId}`, name: 'Smash Chicken Burger', price: 79, category: 'burgers', emoji: '🍔' },
+      { id: `seed_burgers_zinger_${orgId}`, name: 'Zinger Burger', price: 79, category: 'burgers', emoji: '🍔' },
+      // FRIES
+      { id: `seed_fries_regular_${orgId}`, name: 'Regular Fries', price: 49, category: 'fries', emoji: '🍟' },
+      { id: `seed_fries_loaded_${orgId}`, name: 'Loaded Fries', price: 109, category: 'fries', emoji: '🍟' },
+      // CHAI & COFFEE
+      { id: `seed_drinks_chai_${orgId}`, name: 'Chai Small', price: 10, category: 'drinks', emoji: '🍵' },
+      { id: `seed_drinks_coffee_${orgId}`, name: 'Hot Coffee Small', price: 30, category: 'drinks', emoji: '☕' }
+    ];
 
-  const insertMenu = db.prepare(
-    'INSERT OR IGNORE INTO menu_items (id, org_id, name, price, category, emoji, description) VALUES (?, ?, ?, ?, ?, ?, ?)'
-  );
-  for (const item of defaultMenuItems) {
-    insertMenu.run(item.id, orgId, item.name, item.price, item.category, item.emoji, item.desc || '');
+    const insertMenu = db.prepare(
+      'INSERT OR IGNORE INTO menu_items (id, org_id, name, price, category, emoji, description) VALUES (?, ?, ?, ?, ?, ?, ?)'
+    );
+    for (const item of defaultMenuItems) {
+      insertMenu.run(item.id, orgId, item.name, item.price, item.category, item.emoji, item.desc || '');
+    }
   }
 
   // Seed default inventory
@@ -163,4 +166,59 @@ function seedOrganizationData(orgId, shopName) {
   }
 }
 
-module.exports = { db, seedOrganizationData };
+function ensureDefaultOrganization() {
+  let org = db.prepare('SELECT id, name FROM organizations ORDER BY created_at ASC LIMIT 1').get();
+
+  if (!org) {
+    const orgId = uuidv4();
+    const orgName = process.env.DEFAULT_ORG_NAME || 'StreetWok';
+    db.prepare('INSERT INTO organizations (id, name) VALUES (?, ?)').run(orgId, orgName);
+    seedOrganizationData(orgId, orgName);
+    org = { id: orgId, name: orgName };
+  } else {
+    seedOrganizationData(org.id, org.name);
+  }
+
+  let user = db.prepare(`
+    SELECT id, org_id, email, name, role, active
+    FROM users
+    WHERE org_id = ? AND active = 1
+    ORDER BY
+      CASE role
+        WHEN 'Admin' THEN 0
+        WHEN 'Manager' THEN 1
+        ELSE 2
+      END,
+      created_at ASC
+    LIMIT 1
+  `).get(org.id);
+
+  if (!user) {
+    const userId = uuidv4();
+    const userName = process.env.DEFAULT_USER_NAME || 'Store Admin';
+    const userEmail = process.env.DEFAULT_USER_EMAIL || 'store@streetwok.local';
+    db.prepare(`
+      INSERT INTO users (id, org_id, email, name, role, active)
+      VALUES (?, ?, ?, ?, 'Admin', 1)
+    `).run(userId, org.id, userEmail, userName);
+
+    user = {
+      id: userId,
+      org_id: org.id,
+      email: userEmail,
+      name: userName,
+      role: 'Admin',
+      active: 1
+    };
+  }
+
+  return user;
+}
+
+function getDefaultSessionUser() {
+  return ensureDefaultOrganization();
+}
+
+ensureDefaultOrganization();
+
+module.exports = { db, seedOrganizationData, ensureDefaultOrganization, getDefaultSessionUser };

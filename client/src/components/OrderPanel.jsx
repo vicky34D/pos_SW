@@ -11,6 +11,7 @@ export default function OrderPanel({
   const subtotal = useMemo(() => currentOrder.reduce((s, i) => s + i.price * i.qty, 0), [currentOrder])
   const tax = Math.round(subtotal * taxRate * 100) / 100
   const total = Math.round((subtotal + tax) * 100) / 100
+  const totalItems = currentOrder.reduce((s, i) => s + i.qty, 0)
 
   const handlePay = async (method) => {
     const order = await onCheckout(method)
@@ -38,6 +39,7 @@ export default function OrderPanel({
 
   return (
     <aside className="order-panel">
+      {/* Header */}
       <div className="order-header">
         <div className="order-header-top">
           <h4>Current Order</h4>
@@ -50,7 +52,7 @@ export default function OrderPanel({
               className={`order-type-btn${orderType === type ? ' active' : ''}`}
               onClick={() => setOrderType(type)}
             >
-              {type === 'dine-in' ? 'Dine In' : type.charAt(0).toUpperCase() + type.slice(1)}
+              {type === 'dine-in' ? '🍽 Dine In' : type === 'takeaway' ? '🥡 Takeaway' : '🚴 Delivery'}
             </button>
           ))}
         </div>
@@ -63,51 +65,68 @@ export default function OrderPanel({
         />
       </div>
 
+      {/* Items List */}
       <div className="order-list-area">
         {currentOrder.length === 0 ? (
           <div className="empty-cart">
-            <div className="empty-cart-icon">🛒</div>
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" opacity="0.2"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
             <p>Add items to start an order</p>
           </div>
         ) : (
-          currentOrder.map(item => (
-            <div key={item.id} className="order-item">
-              <span className="order-item-emoji">{item.emoji}</span>
-              <div className="order-item-details">
-                <div className="order-item-title">{item.name}</div>
-                <div className="order-item-price">₹{item.price} × {item.qty} = ₹{item.price * item.qty}</div>
+          <>
+            <div className="order-items-count">{totalItems} item{totalItems !== 1 ? 's' : ''}</div>
+            {currentOrder.map(item => (
+              <div key={item.id} className="order-item">
+                <div className="order-item-left">
+                  <span className="order-item-emoji">{item.emoji}</span>
+                  <div className="order-item-details">
+                    <div className="order-item-title">{item.name}</div>
+                    <div className="order-item-price">₹{item.price} each</div>
+                  </div>
+                </div>
+                <div className="order-item-right">
+                  <div className="qty-controls">
+                    <button
+                      className={`qty-btn${item.qty === 1 ? ' delete-btn' : ''}`}
+                      onClick={() => updateQty(item.id, -1)}
+                    >
+                      {item.qty === 1 ? '✕' : '−'}
+                    </button>
+                    <span className="qty-display">{item.qty}</span>
+                    <button className="qty-btn" onClick={() => updateQty(item.id, 1)}>+</button>
+                  </div>
+                  <div className="order-item-total">₹{(item.price * item.qty).toFixed(0)}</div>
+                </div>
               </div>
-              <div className="qty-controls">
-                <button
-                  className={`qty-btn${item.qty === 1 ? ' delete-btn' : ''}`}
-                  onClick={() => updateQty(item.id, -1)}
-                >
-                  {item.qty === 1 ? '🗑' : '−'}
-                </button>
-                <span className="qty-display">{item.qty}</span>
-                <button className="qty-btn" onClick={() => updateQty(item.id, 1)}>+</button>
-              </div>
-            </div>
-          ))
+            ))}
+          </>
         )}
       </div>
 
+      {/* Billing */}
       <div className="billing-section">
         <div className="bill-row"><span>Subtotal</span><span>₹{subtotal.toFixed(2)}</span></div>
         <div className="bill-row"><span>GST ({settings.tax_rate || 5}%)</span><span>₹{tax.toFixed(2)}</span></div>
         <div className="bill-row total"><span>Total</span><span>₹{total.toFixed(2)}</span></div>
       </div>
 
+      {/* Actions */}
       <div className="action-section">
         <div className="action-grid">
-          <button className="btn-action btn-clear" onClick={clearOrder}>🗑 Clear</button>
-          <button className="btn-action btn-print" onClick={printOrder}>🖨 Print</button>
+          <button className="btn-action btn-clear" onClick={clearOrder}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            Clear
+          </button>
+          <button className="btn-action btn-print" onClick={printOrder}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+            Print
+          </button>
           <button
             className="btn-action btn-checkout"
             disabled={currentOrder.length === 0}
             onClick={() => setShowPayModal(true)}
           >
-            💳 Checkout — ₹{total.toFixed(2)}
+            Checkout — ₹{total.toFixed(2)}
           </button>
         </div>
       </div>

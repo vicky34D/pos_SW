@@ -18,11 +18,21 @@ export default function MenuManagement({ showToast }) {
   const [showModal, setShowModal] = useState(false)
   const [editItem, setEditItem] = useState(null)
   const [form, setForm] = useState({ name: '', price: '', category: 'burgers', description: '' })
+  const [filterCat, setFilterCat] = useState('all')
+  const [search, setSearch] = useState('')
 
   const fetchItems = async () => {
     try {
       const data = await api.getMenu()
-      setItems(data)
+      // Deduplicate by name+category
+      const seen = new Set()
+      const unique = data.filter(item => {
+        const key = `${item.name}|${item.category}`
+        if (seen.has(key)) return false
+        seen.add(key)
+        return true
+      })
+      setItems(unique)
     } catch (e) {
       showToast(e.message, 'error')
     }
@@ -75,38 +85,90 @@ export default function MenuManagement({ showToast }) {
     }
   }
 
+  const filtered = items.filter(item => {
+    const matchesCat = filterCat === 'all' || item.category === filterCat
+    const matchesSearch = item.name.toLowerCase().includes(search.toLowerCase())
+    return matchesCat && matchesSearch
+  })
+
+  const grouped = {}
+  filtered.forEach(item => {
+    const cat = item.category || 'other'
+    if (!grouped[cat]) grouped[cat] = []
+    grouped[cat].push(item)
+  })
+
   return (
     <div className="view-section">
       <div className="top-header">
         <div className="header-left">
           <div className="header-title">Menu Management</div>
-          <div className="header-subtitle">Add, edit or remove menu items</div>
+          <div className="header-subtitle">{items.length} items across {categoryOptions.length} categories</div>
         </div>
-        <button className="btn-add-stock" onClick={openAdd}>+ Add Item</button>
+        <button className="btn-add-stock" onClick={openAdd}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
+          Add Item
+        </button>
       </div>
 
-      <div className="menu-mgmt-grid">
-        {items.map(item => {
-          const catInfo = categoryOptions.find(c => c.id === item.category)
-          return (
-            <div key={item.id} className="menu-mgmt-card">
-              <div className="mgmt-card-header">
-                <span className="mgmt-item-name">{item.emoji} {item.name}</span>
-                <span className="mgmt-item-price">₹{item.price}</span>
-              </div>
-              <span className="mgmt-item-category">{catInfo?.name || item.category}</span>
-              {item.description && (
-                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
-                  {item.description}
-                </div>
+      {/* Filters */}
+      <div className="menu-mgmt-toolbar">
+        <div className="search-wrapper" style={{ width: 'min(320px, 100%)' }}>
+          <span className="search-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          </span>
+          <input placeholder="Search menu items..." value={search} onChange={e => setSearch(e.target.value)} />
+        </div>
+        <div className="inventory-filter-group">
+          <button className={`inventory-filter-btn${filterCat === 'all' ? ' active' : ''}`} onClick={() => setFilterCat('all')}>All</button>
+          {categoryOptions.map(c => (
+            <button key={c.id} className={`inventory-filter-btn${filterCat === c.id ? ' active' : ''}`} onClick={() => setFilterCat(c.id)}>
+              {c.emoji} {c.name}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Menu Items Table */}
+      <div className="report-card" style={{ flex: 1 }}>
+        <div style={{ overflowY: 'auto', maxHeight: 'calc(100vh - 300px)' }}>
+          <table className="report-table menu-table">
+            <thead>
+              <tr>
+                <th style={{ width: 50 }}></th>
+                <th>Item Name</th>
+                <th>Category</th>
+                <th>Description</th>
+                <th style={{ textAlign: 'right' }}>Price</th>
+                <th style={{ textAlign: 'right', width: 140 }}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.length === 0 ? (
+                <tr><td colSpan="6" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>No menu items found</td></tr>
+              ) : (
+                filtered.map(item => {
+                  const catInfo = categoryOptions.find(c => c.id === item.category)
+                  return (
+                    <tr key={item.id}>
+                      <td style={{ textAlign: 'center', fontSize: '1.4rem' }}>{item.emoji}</td>
+                      <td><span className="fw-bold">{item.name}</span></td>
+                      <td><span className="mgmt-item-category">{catInfo?.emoji} {catInfo?.name || item.category}</span></td>
+                      <td style={{ color: 'var(--text-muted)', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.description || '—'}</td>
+                      <td style={{ textAlign: 'right', fontWeight: 700, fontFamily: "'Outfit', sans-serif" }}>₹{item.price}</td>
+                      <td style={{ textAlign: 'right' }}>
+                        <div className="mgmt-actions" style={{ justifyContent: 'flex-end' }}>
+                          <button className="mgmt-btn mgmt-btn-edit" onClick={() => openEdit(item)}>Edit</button>
+                          <button className="mgmt-btn mgmt-btn-delete" onClick={() => handleDelete(item)}>Delete</button>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })
               )}
-              <div className="mgmt-actions">
-                <button className="mgmt-btn mgmt-btn-edit" onClick={() => openEdit(item)}>Edit</button>
-                <button className="mgmt-btn mgmt-btn-delete" onClick={() => handleDelete(item)}>Delete</button>
-              </div>
-            </div>
-          )
-        })}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {showModal && (
@@ -120,7 +182,7 @@ export default function MenuManagement({ showToast }) {
             <div className="modal-form-group">
               <label>Category</label>
               <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}>
-                {categoryOptions.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                {categoryOptions.map(c => <option key={c.id} value={c.id}>{c.emoji} {c.name}</option>)}
               </select>
             </div>
             <div className="modal-form-group">

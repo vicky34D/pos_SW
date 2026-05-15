@@ -73,42 +73,63 @@ export default function UserManagement({ showToast, currentUser }) {
 
   if (loading) return <div className="view-container"><div className="loading-state">Loading team members...</div></div>
 
+  const activeUsers = users.filter(user => user.active)
+  const inactiveUsers = users.filter(user => !user.active)
+
   return (
-    <div className="view-container fade-in">
-      <div className="view-header">
-        <h2 className="view-title">Team Management</h2>
+    <div className="view-section">
+      <div className="top-header">
+        <div className="header-left">
+          <div className="header-title">Team</div>
+          <div className="header-subtitle">Manage roles, access, and staff status</div>
+        </div>
         {currentUser?.role === 'Admin' && (
-          <button className="btn-primary" onClick={() => setIsAdding(!isAdding)}>
-            {isAdding ? 'Cancel' : '+ Add Team Member'}
+          <button className="btn-add-stock" onClick={() => setIsAdding(!isAdding)}>
+            {isAdding ? 'Close Form' : 'Add Team Member'}
           </button>
         )}
       </div>
 
+      <div className="team-summary-grid">
+        <div className="team-summary-card">
+          <div className="team-summary-label">Total Members</div>
+          <div className="team-summary-value">{users.length}</div>
+        </div>
+        <div className="team-summary-card">
+          <div className="team-summary-label">Active</div>
+          <div className="team-summary-value">{activeUsers.length}</div>
+        </div>
+        <div className="team-summary-card">
+          <div className="team-summary-label">Inactive</div>
+          <div className="team-summary-value">{inactiveUsers.length}</div>
+        </div>
+      </div>
+
       {isAdding && (
-        <div className="card" style={{ marginBottom: '20px' }}>
-          <h3>Add New Team Member</h3>
-          <form className="settings-form" onSubmit={handleAddSubmit} style={{ display: 'grid', gap: '15px', gridTemplateColumns: '1fr 1fr' }}>
-            <div className="form-group">
+        <div className="team-form-panel">
+          <div className="team-panel-title">Add Team Member</div>
+          <form className="team-form-grid" onSubmit={handleAddSubmit}>
+            <div className="team-form-field">
               <label>Full Name</label>
               <input type="text" value={newUser.name} onChange={e => setNewUser({...newUser, name: e.target.value})} required />
             </div>
-            <div className="form-group">
+            <div className="team-form-field">
               <label>Email Address</label>
               <input type="email" value={newUser.email} onChange={e => setNewUser({...newUser, email: e.target.value})} required />
             </div>
-            <div className="form-group">
+            <div className="team-form-field">
               <label>Phone Number</label>
               <input type="text" value={newUser.phone} onChange={e => setNewUser({...newUser, phone: e.target.value})} />
             </div>
-            <div className="form-group">
+            <div className="team-form-field">
               <label>Designation</label>
               <input type="text" value={newUser.designation} onChange={e => setNewUser({...newUser, designation: e.target.value})} />
             </div>
-            <div className="form-group">
+            <div className="team-form-field">
               <label>Temporary Password</label>
               <input type="password" value={newUser.password} onChange={e => setNewUser({...newUser, password: e.target.value})} required />
             </div>
-            <div className="form-group">
+            <div className="team-form-field">
               <label>Role</label>
               <select value={newUser.role} onChange={e => setNewUser({...newUser, role: e.target.value})}>
                 <option value="Admin">Admin</option>
@@ -117,74 +138,70 @@ export default function UserManagement({ showToast, currentUser }) {
                 <option value="Viewer">Viewer</option>
               </select>
             </div>
-            <div className="form-actions" style={{ gridColumn: 'span 2', display: 'flex', justifyContent: 'flex-end' }}>
-              <button type="submit" className="btn-primary">Create User</button>
+            <div className="team-form-actions">
+              <button type="submit" className="btn-save-stock">Create User</button>
             </div>
           </form>
         </div>
       )}
 
-      <div className="table-container">
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Role</th>
-              <th>Status</th>
-              {currentUser?.role === 'Admin' && <th style={{textAlign: 'right'}}>Actions</th>}
-            </tr>
-          </thead>
-          <tbody>
-            {users.map(user => (
-              <tr key={user.id} className={!user.active ? 'inactive-row' : ''} style={!user.active ? {opacity: 0.5} : {}}>
-                <td>
-                  <div style={{fontWeight: 'bold'}}>{user.name}</div>
-                  <div style={{fontSize: '0.8rem', color: 'var(--text-light)'}}>{user.designation || 'No Designation'}</div>
-                </td>
-                <td>{user.email}</td>
-                <td>
-                  {currentUser?.role === 'Admin' ? (
-                    <select 
-                      value={user.role} 
-                      onChange={(e) => handleRoleChange(user, e.target.value)}
-                      disabled={!user.active || user.id === currentUser.id}
-                      style={{ padding: '4px', borderRadius: '4px' }}
-                    >
-                      <option value="Admin">Admin</option>
-                      <option value="Manager">Manager</option>
-                      <option value="Employee">Employee</option>
-                      <option value="Viewer">Viewer</option>
-                    </select>
-                  ) : (
-                    <span className={`status-badge ${user.role.toLowerCase()}`}>{user.role}</span>
-                  )}
-                </td>
-                <td>
-                  <span className={`status-badge ${user.active ? 'completed' : 'cancelled'}`}>
+      <div className="team-list">
+        {users.map(user => (
+          <div key={user.id} className={`team-card ${user.active ? '' : 'team-card-inactive'}`}>
+            <div className="team-card-main">
+              <div className="team-avatar">{user.name?.charAt(0)?.toUpperCase() || 'U'}</div>
+              <div className="team-meta">
+                <div className="team-name-row">
+                  <span className="team-name">{user.name}</span>
+                  <span className={`team-status ${user.active ? 'active' : 'inactive'}`}>
                     {user.active ? 'Active' : 'Inactive'}
                   </span>
-                </td>
-                {currentUser?.role === 'Admin' && (
-                  <td style={{textAlign: 'right'}}>
-                    {user.id !== currentUser.id && (
-                      <button 
-                        className="btn-icon" 
-                        onClick={() => handleToggleActive(user)}
-                        title={user.active ? "Deactivate User" : "Activate User"}
-                      >
-                        {user.active ? '🚫' : '✅'}
-                      </button>
-                    )}
-                  </td>
+                </div>
+                <div className="team-designation">{user.designation || 'No designation set'}</div>
+                <div className="team-contact-row">
+                  <span>{user.email}</span>
+                  <span>{user.phone || 'No phone'}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="team-card-controls">
+              <div className="team-field-block">
+                <label>Role</label>
+                {currentUser?.role === 'Admin' ? (
+                  <select
+                    value={user.role}
+                    onChange={(e) => handleRoleChange(user, e.target.value)}
+                    disabled={!user.active || user.id === currentUser.id}
+                  >
+                    <option value="Admin">Admin</option>
+                    <option value="Manager">Manager</option>
+                    <option value="Employee">Employee</option>
+                    <option value="Viewer">Viewer</option>
+                  </select>
+                ) : (
+                  <div className="team-role-readonly">{user.role}</div>
                 )}
-              </tr>
-            ))}
-            {users.length === 0 && (
-              <tr><td colSpan="5" className="empty-state">No team members found</td></tr>
-            )}
-          </tbody>
-        </table>
+              </div>
+
+              {currentUser?.role === 'Admin' && user.id !== currentUser.id && (
+                <button
+                  className="team-toggle-btn"
+                  onClick={() => handleToggleActive(user)}
+                >
+                  {user.active ? 'Deactivate' : 'Activate'}
+                </button>
+              )}
+            </div>
+          </div>
+        ))}
+
+        {users.length === 0 && (
+          <div className="inventory-empty-state">
+            <div className="inventory-empty-title">No team members found</div>
+            <div className="inventory-empty-copy">Create the first staff profile to start managing access.</div>
+          </div>
+        )}
       </div>
     </div>
   )
