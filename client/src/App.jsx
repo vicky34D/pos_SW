@@ -9,6 +9,7 @@ import MenuManagement from './components/MenuManagement'
 import SettingsView from './components/SettingsView'
 import UserManagement from './components/UserManagement'
 import Toast from './components/Toast'
+import WelcomePage from './components/WelcomePage'
 import * as api from './api'
 
 const TOTAL_TABLES = 10
@@ -67,32 +68,35 @@ export default function App() {
     }, 800)
   }, [])
 
+  const loadInitialData = useCallback((user) => {
+    setCurrentUser(user)
+    setActiveView('pos')
+    return Promise.allSettled([
+      api.getSettings().then(setSettings),
+      api.getOrderCounter().then(data => setOrderCounter(data.last_number)),
+      api.getTables().then(serverTables => {
+        const tablesMap = {}
+        serverTables.forEach(t => {
+          tablesMap[t.table_number] = {
+            items: t.items || [],
+            customerName: t.customer_name || '',
+            orderType: t.order_type || 'dine-in'
+          }
+        })
+        setTables(tablesMap)
+      })
+    ])
+  }, [])
+
   // Load session + tables on startup
   useEffect(() => {
     api.getSession()
-      .then(({ user }) => {
-        setCurrentUser(user)
-        setActiveView('pos')
-        return Promise.allSettled([
-          api.getSettings().then(setSettings),
-          api.getOrderCounter().then(data => setOrderCounter(data.last_number)),
-          api.getTables().then(serverTables => {
-            const tablesMap = {}
-            serverTables.forEach(t => {
-              tablesMap[t.table_number] = {
-                items: t.items || [],
-                customerName: t.customer_name || '',
-                orderType: t.order_type || 'dine-in'
-              }
-            })
-            setTables(tablesMap)
-          })
-        ])
-      })
+      .then(({ user }) => loadInitialData(user))
       .catch(err => {
-        setStartupError(err.message || `Cannot reach ${window.streetwokConfig?.apiBaseUrl || import.meta.env.VITE_API_URL || '/api'}`)
+        // Show login page if not authenticated
+        setActiveView('login')
       })
-  }, [])
+  }, [loadInitialData])
 
   // Select a table
   const selectTable = useCallback((tableNum) => {
@@ -239,20 +243,30 @@ export default function App() {
   if (activeView === 'loading') {
     return (
       <div className="pastel-welcome-container">
-        <div className="pastel-header"></div>
         <div className="pastel-login-card" style={{ textAlign: 'center', padding: '40px' }}>
-          <h2 className="pastel-title">{startupError ? 'Connection Error' : 'Starting POS...'}</h2>
-          {startupError && <p style={{color: 'red', marginTop: '20px'}}>{startupError}</p>}
+          <h2 className="pastel-title">Loading POS...</h2>
         </div>
       </div>
     )
+  }
+
+  if (activeView === 'login') {
+    return <WelcomePage onGetStarted={loadInitialData} />
   }
 
   return (
     <div className="app-container">
       <Sidebar 
         activeView={activeView} 
-        onViewChange={setActiveView} 
+        onViewChange={(view) => {
+          if (view === 'logout') {
+            api.clearAuthToken()
+            setCurrentUser(null)
+            setActiveView('login')
+          } else {
+            setActiveView(view)
+          }
+        }} 
         currentUser={currentUser}
       />
 

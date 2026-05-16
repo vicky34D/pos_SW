@@ -284,10 +284,11 @@ function ensureDefaultOrganization() {
     const userId = uuidv4();
     const userName = process.env.DEFAULT_USER_NAME || 'Store Admin';
     const userEmail = process.env.DEFAULT_USER_EMAIL || 'store@streetwok.local';
+    const defaultPasswordHash = '$2b$10$AUYwt30F/uydaBnmjUpp1uMJ6tOySCpPjhemamC.FwIRIzjI1er9W'; // admin123
     db.prepare(`
-      INSERT INTO users (id, org_id, email, name, role, active)
-      VALUES (?, ?, ?, ?, 'Admin', 1)
-    `).run(userId, org.id, userEmail, userName);
+      INSERT INTO users (id, org_id, email, name, role, active, password_hash)
+      VALUES (?, ?, ?, ?, 'Admin', 1, ?)
+    `).run(userId, org.id, userEmail, userName, defaultPasswordHash);
 
     user = {
       id: userId,
@@ -298,6 +299,11 @@ function ensureDefaultOrganization() {
       active: 1
     };
   }
+
+  // Ensure any existing users without a password can login with admin123
+  db.prepare(`
+    UPDATE users SET password_hash = ? WHERE password_hash IS NULL
+  `).run('$2b$10$AUYwt30F/uydaBnmjUpp1uMJ6tOySCpPjhemamC.FwIRIzjI1er9W');
 
   return user;
 }

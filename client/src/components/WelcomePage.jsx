@@ -2,21 +2,27 @@ import { useState } from 'react'
 import { login, setAuthToken } from '../api'
 
 export default function WelcomePage({ onGetStarted }) {
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const handleStart = async () => {
+  const handleLogin = async (e) => {
+    if (e) e.preventDefault()
+    if (!email || !password) {
+      setError('Please enter email and password')
+      return
+    }
     setLoading(true)
     setError('')
     try {
-      // Auto-login with demo credentials
-      const res = await login({ email: 'admin@example.com', password: 'password123' })
+      const res = await login({ email, password })
       if (res.action === 'login_success') {
         setAuthToken(res.token)
         onGetStarted(res.user)
       }
     } catch (err) {
-      setError(err.message || 'Failed to start POS')
+      setError(err.message || 'Invalid credentials. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -27,21 +33,42 @@ export default function WelcomePage({ onGetStarted }) {
       <div className="pastel-header"></div>
       <div className="pastel-login-card" style={{ textAlign: 'center', padding: '40px' }}>
         <h1 className="pastel-title">StreetWok POS</h1>
-        <p className="pastel-subtitle" style={{ marginBottom: '30px' }}>
-          Welcome to The Biker's Cafe.<br/>
-          Click below to start your shift.
+        <p className="pastel-subtitle" style={{ marginBottom: '25px' }}>
+          Please sign in to your account
         </p>
 
-        {error && <div className="error-message" style={{ marginBottom: '20px' }}>{error}</div>}
+        {error && <div className="error-message" style={{ marginBottom: '15px' }}>{error}</div>}
 
-        <button 
-          onClick={handleStart} 
-          className="pastel-btn-primary" 
-          disabled={loading}
-          style={{ width: '100%', padding: '15px', fontSize: '18px' }}
-        >
-          {loading ? 'Starting...' : 'Start POS'}
-        </button>
+        <form onSubmit={handleLogin} className="pastel-form">
+          <div className="input-group">
+            <input 
+              type="email" 
+              placeholder="Email address" 
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={loading}
+              required
+            />
+          </div>
+          <div className="input-group">
+            <input 
+              type="password" 
+              placeholder="Password" 
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              disabled={loading}
+              required
+            />
+          </div>
+          <button 
+            type="submit" 
+            className="pastel-btn-primary" 
+            disabled={loading}
+            style={{ width: '100%', padding: '12px', fontSize: '16px', marginTop: '10px' }}
+          >
+            {loading ? 'Verifying...' : 'Login'}
+          </button>
+        </form>
       </div>
     </div>
   )
