@@ -5,18 +5,23 @@ const hasUsableRuntimeBase =
   !runtimeBase.includes('YOUR_CLOUD_SERVER_IP');
 const BASE = (hasUsableRuntimeBase ? runtimeBase : undefined) || import.meta.env.VITE_API_URL || '/api';
 
+let memoryToken = null;
+
 export const setAuthToken = (token) => {
   if (token) {
-    sessionStorage.setItem('auth_token', token);
+    memoryToken = token;
   } else {
-    sessionStorage.removeItem('auth_token');
-    localStorage.removeItem('auth_token'); // Clear any legacy token
+    memoryToken = null;
   }
+  // Clear any legacy tokens to enforce strict login
+  sessionStorage.removeItem('auth_token');
+  localStorage.removeItem('auth_token');
 };
 
-export const getAuthToken = () => sessionStorage.getItem('auth_token');
+export const getAuthToken = () => memoryToken;
 
 export const clearAuthToken = () => {
+  memoryToken = null;
   sessionStorage.removeItem('auth_token');
   localStorage.removeItem('auth_token');
 };
