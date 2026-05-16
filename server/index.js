@@ -45,6 +45,7 @@ app.use('/api/orders', authenticateToken, require('./routes/orders'));
 app.use('/api/inventory', authenticateToken, require('./routes/inventory'));
 app.use('/api/reports', authenticateToken, require('./routes/reports'));
 app.use('/api/users', authenticateToken, require('./routes/users'));
+app.use('/api/tables', authenticateToken, require('./routes/tables'));
 
 // Settings routes (Protected)
 app.get('/api/settings', authenticateToken, (req, res) => {

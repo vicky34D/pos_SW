@@ -197,6 +197,7 @@ export default function InventoryView({ showToast }) {
                     <option value="kg">kg</option>
                     <option value="litre">litre</option>
                     <option value="pcs">pcs</option>
+                    <option value="plates">plates</option>
                     <option value="packs">packs</option>
                     <option value="dozen">dozen</option>
                     <option value="grams">grams</option>
@@ -215,7 +216,12 @@ export default function InventoryView({ showToast }) {
               </div>
               <div className="stock-card-footer">
                 <div className="stock-note">
-                  {item.qty <= item.alert_level ? 'Needs restock soon' : 'Stock level healthy'}
+                  {item.name.toLowerCase().includes('momo') && item.unit === 'pcs' && item.qty > 0
+                    ? `🥟 ${Math.floor(item.qty / 5)} plates + ${item.qty % 5} pcs (5 pcs/plate)`
+                    : item.name.toLowerCase().includes('momo') && item.unit === 'plates' && item.qty > 0
+                    ? `🥟 ${item.qty} plates = ${item.qty * 5} pcs total`
+                    : item.qty <= item.alert_level ? 'Needs restock soon' : 'Stock level healthy'
+                  }
                 </div>
                 <button className="inventory-delete-btn" onClick={() => removeItem(item)}>Remove</button>
               </div>
@@ -255,6 +261,7 @@ export default function InventoryView({ showToast }) {
                 <option value="kg">Kilograms</option>
                 <option value="litre">Litres</option>
                 <option value="pcs">Pieces</option>
+                <option value="plates">Plates (5 pcs each)</option>
                 <option value="packs">Packs</option>
                 <option value="dozen">Dozen</option>
                 <option value="grams">Grams</option>

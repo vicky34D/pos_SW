@@ -86,6 +86,8 @@ export const deleteInventoryItem = (id) => request(`/inventory/${id}`, { method:
 // Reports
 export const getReportSummary = () => request('/reports/summary');
 export const getDailyReport = () => request('/reports/daily');
+export const getMonthlyReport = () => request('/reports/monthly');
+export const getTodayItems = () => request('/reports/today-items');
 export const getTopItems = () => request('/reports/top-items');
 export const getOrderCounter = () => request('/reports/counter');
 
@@ -98,3 +100,9 @@ export const getUsers = () => request('/users');
 export const createUser = (data) => request('/users', { method: 'POST', body: JSON.stringify(data) });
 export const updateUserRole = (id, data) => request(`/users/${id}`, { method: 'PUT', body: JSON.stringify(data) });
 export const deleteUser = (id) => request(`/users/${id}`, { method: 'DELETE' });
+
+// Tables
+export const getTables = () => request('/tables');
+export const openTable = (table_number) => request('/tables', { method: 'POST', body: JSON.stringify({ table_number }) });
+export const updateTable = (tableNumber, data) => request(`/tables/${tableNumber}`, { method: 'PUT', body: JSON.stringify(data) });
+export const closeTable = (tableNumber) => request(`/tables/${tableNumber}`, { method: 'DELETE' });

@@ -2,7 +2,8 @@ import { useState, useMemo } from 'react'
 
 export default function OrderPanel({
   currentOrder, orderType, setOrderType, customerName, setCustomerName,
-  orderCounter, settings, updateQty, clearOrder, onCheckout, showToast
+  orderCounter, settings, updateQty, clearOrder, onCheckout, showToast,
+  activeTable
 }) {
   const [showPayModal, setShowPayModal] = useState(false)
   const [receipt, setReceipt] = useState(null)
@@ -42,7 +43,7 @@ export default function OrderPanel({
       {/* Header */}
       <div className="order-header">
         <div className="order-header-top">
-          <h4>Current Order</h4>
+          <h4>{activeTable !== null ? `🪑 Table ${activeTable}` : '🥡 Quick Order'}</h4>
           <span className="order-number">#{String(orderCounter + 1).padStart(3, '0')}</span>
         </div>
         <div className="order-type-toggle">
