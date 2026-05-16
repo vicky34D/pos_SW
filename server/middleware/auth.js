@@ -8,14 +8,12 @@ function authenticateToken(req, res, next) {
   const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
 
   if (!token) {
-    req.user = getDefaultSessionUser();
-    return next();
+    return res.status(401).json({ error: 'Authentication token required' });
   }
 
   jwt.verify(token, JWT_SECRET, (err, user) => {
     if (err) {
-      req.user = getDefaultSessionUser();
-      return next();
+      return res.status(401).json({ error: 'Invalid or expired token' });
     }
     req.user = user; // { id, org_id, role, email, name }
     next();
