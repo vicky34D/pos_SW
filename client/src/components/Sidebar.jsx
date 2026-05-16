@@ -55,11 +55,7 @@ export default function Sidebar({ activeView, onViewChange, currentUser }) {
       )}
 
       {currentUser && (
-        <div className="sidebar-user" title={`${currentUser.name} (${userRole}) \nClick to Logout`} onClick={() => {
-          if(window.confirm('Are you sure you want to log out?')) {
-            onViewChange('logout')
-          }
-        }}>
+        <div className="sidebar-user" title={`${currentUser.name} (${userRole}) \nClick to Logout`} onClick={() => onViewChange('logout')}>
           <div className="user-avatar">{userInitial}</div>
         </div>
       )}

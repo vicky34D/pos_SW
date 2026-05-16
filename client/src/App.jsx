@@ -254,15 +254,28 @@ export default function App() {
     return <WelcomePage onGetStarted={loadInitialData} />
   }
 
+  const handleLogout = async () => {
+    try {
+      const summary = await api.getReportSummary()
+      const todayTotal = summary.today_revenue || 0
+      const confirmed = window.confirm(`Today's Total Sale is ₹${todayTotal}.\n\nAre you sure you want to log out?`)
+      if (!confirmed) return
+    } catch (err) {
+      if (!window.confirm("Could not fetch today's sales.\n\nAre you sure you want to log out?")) return
+    }
+    
+    api.clearAuthToken()
+    setCurrentUser(null)
+    setActiveView('login')
+  }
+
   return (
     <div className="app-container">
       <Sidebar 
         activeView={activeView} 
         onViewChange={(view) => {
           if (view === 'logout') {
-            api.clearAuthToken()
-            setCurrentUser(null)
-            setActiveView('login')
+            handleLogout()
           } else {
             setActiveView(view)
           }

@@ -7,15 +7,19 @@ const BASE = (hasUsableRuntimeBase ? runtimeBase : undefined) || import.meta.env
 
 export const setAuthToken = (token) => {
   if (token) {
-    localStorage.setItem('auth_token', token);
+    sessionStorage.setItem('auth_token', token);
   } else {
-    localStorage.removeItem('auth_token');
+    sessionStorage.removeItem('auth_token');
+    localStorage.removeItem('auth_token'); // Clear any legacy token
   }
 };
 
-export const getAuthToken = () => localStorage.getItem('auth_token');
+export const getAuthToken = () => sessionStorage.getItem('auth_token');
 
-export const clearAuthToken = () => localStorage.removeItem('auth_token');
+export const clearAuthToken = () => {
+  sessionStorage.removeItem('auth_token');
+  localStorage.removeItem('auth_token');
+};
 
 async function request(path, options = {}) {
   const headers = { 'Content-Type': 'application/json', ...options.headers };
