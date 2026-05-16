@@ -10,6 +10,7 @@ import SettingsView from './components/SettingsView'
 import UserManagement from './components/UserManagement'
 import Toast from './components/Toast'
 import WelcomePage from './components/WelcomePage'
+import TablesView from './components/TablesView'
 import * as api from './api'
 
 const TOTAL_TABLES = 10
@@ -114,6 +115,11 @@ export default function App() {
       api.openTable(tableNum).catch(() => {})
     }
   }, [tables])
+
+  const handleSelectTableFromDashboard = useCallback((num) => {
+    selectTable(num)
+    setActiveView('pos')
+  }, [selectTable])
 
   const addToOrder = useCallback((item) => {
     if (activeTable !== null) {
@@ -318,6 +324,13 @@ export default function App() {
 
             <PosView onAddToOrder={addToOrder} />
           </>
+        )}
+        {activeView === 'tables' && (
+          <TablesView 
+            tables={tables} 
+            activeTable={activeTable} 
+            onSelectTable={handleSelectTableFromDashboard} 
+          />
         )}
         {activeView === 'inventory' && (
           <InventoryView showToast={showToast} />
