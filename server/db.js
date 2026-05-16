@@ -195,6 +195,11 @@ function seedOrganizationData(orgId, shopName) {
       { name: 'Momo Lover Combo', price: 139, category: 'combos', emoji: '🎁', desc: 'Steam Chicken Momo + Fries + Chai' },
       { name: 'Crunchy Chicken Box', price: 149, category: 'combos', emoji: '🎁', desc: 'Popcorn + Wings 2pcs + Fries' },
       { name: 'Veggie Snack Box', price: 149, category: 'combos', emoji: '🎁', desc: 'Cheese Sticks + Nuggets + Fries' },
+      // CIGARETTES
+      { name: 'Gold Flake Small', price: 15, category: 'cigarettes', emoji: '🚬', desc: 'Gold Flake Kings' },
+      { name: 'Gold Flake Medium', price: 20, category: 'cigarettes', emoji: '🚬', desc: 'Gold Flake Medium' },
+      { name: 'Flake', price: 25, category: 'cigarettes', emoji: '🚬', desc: 'Classic Flake' },
+      { name: 'Silk Cut', price: 30, category: 'cigarettes', emoji: '🚬', desc: 'Silk Cut' },
     ];
 
     const insertMenu = db.prepare(

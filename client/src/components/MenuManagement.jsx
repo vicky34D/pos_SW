@@ -11,6 +11,7 @@ const categoryOptions = [
   { id: 'wings', name: 'Wings', emoji: '🍗' },
   { id: 'momos', name: 'Momos', emoji: '🥟' },
   { id: 'combos', name: 'Combos', emoji: '🎁' },
+  { id: 'cigarettes', name: 'Cigarettes', emoji: '🚬' },
 ]
 
 export default function MenuManagement({ showToast }) {

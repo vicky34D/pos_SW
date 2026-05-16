@@ -1,5 +1,12 @@
 import { useState, useMemo } from 'react'
 
+const categoryLabels = {
+  burgers: 'Burger', fries: 'Fries', strips: 'Strips',
+  drinks: 'Drink', popcorn: 'Popcorn', snacks: 'Snack',
+  wings: 'Wings', momos: 'Momos', combos: 'Combo',
+  cigarettes: 'Cigarette', other: 'Item'
+}
+
 export default function OrderPanel({
   currentOrder, orderType, setOrderType, customerName, setCustomerName,
   orderCounter, settings, updateQty, clearOrder, onCheckout, showToast,
@@ -75,14 +82,22 @@ export default function OrderPanel({
           </div>
         ) : (
           <>
-            <div className="order-items-count">{totalItems} item{totalItems !== 1 ? 's' : ''}</div>
+            <div className="order-items-count">{totalItems} item{totalItems !== 1 ? 's' : ''} in cart</div>
             {currentOrder.map(item => (
               <div key={item.id} className="order-item">
                 <div className="order-item-left">
                   <span className="order-item-emoji">{item.emoji}</span>
                   <div className="order-item-details">
                     <div className="order-item-title">{item.name}</div>
-                    <div className="order-item-price">₹{item.price} each</div>
+                    <div className="order-item-meta">
+                      {item.category && (
+                        <span className="order-item-category">{categoryLabels[item.category] || item.category}</span>
+                      )}
+                      {item.description && (
+                        <span className="order-item-desc-text">{item.description}</span>
+                      )}
+                    </div>
+                    <div className="order-item-price">₹{item.price} × {item.qty} = <strong>₹{(item.price * item.qty).toFixed(0)}</strong></div>
                   </div>
                 </div>
                 <div className="order-item-right">
@@ -96,7 +111,6 @@ export default function OrderPanel({
                     <span className="qty-display">{item.qty}</span>
                     <button className="qty-btn" onClick={() => updateQty(item.id, 1)}>+</button>
                   </div>
-                  <div className="order-item-total">₹{(item.price * item.qty).toFixed(0)}</div>
                 </div>
               </div>
             ))}
@@ -106,7 +120,7 @@ export default function OrderPanel({
 
       {/* Billing */}
       <div className="billing-section">
-        <div className="bill-row"><span>Subtotal</span><span>₹{subtotal.toFixed(2)}</span></div>
+        <div className="bill-row"><span>Subtotal ({totalItems} items)</span><span>₹{subtotal.toFixed(2)}</span></div>
         <div className="bill-row"><span>GST ({settings.tax_rate || 5}%)</span><span>₹{tax.toFixed(2)}</span></div>
         <div className="bill-row total"><span>Total</span><span>₹{total.toFixed(2)}</span></div>
       </div>
@@ -115,12 +129,12 @@ export default function OrderPanel({
       <div className="action-section">
         <div className="action-grid">
           <button className="btn-action btn-clear" onClick={clearOrder}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
             Clear
           </button>
           <button className="btn-action btn-print" onClick={printOrder}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-            Print
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+            Print KOT
           </button>
           <button
             className="btn-action btn-checkout"
@@ -140,6 +154,9 @@ export default function OrderPanel({
             <div className="modal-total">
               <div className="modal-total-label">Amount to Pay</div>
               <div className="modal-total-value">₹{total.toFixed(2)}</div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                {totalItems} item{totalItems !== 1 ? 's' : ''} · Incl. {settings.tax_rate || 5}% GST
+              </div>
             </div>
             <div className="payment-methods">
               <button className="payment-btn" onClick={() => handlePay('Cash')}>

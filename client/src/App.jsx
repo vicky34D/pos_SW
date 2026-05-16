@@ -120,7 +120,7 @@ export default function App() {
         if (existing) {
           newItems = tableData.items.map(i => i.id === item.id ? { ...i, qty: i.qty + 1 } : i)
         } else {
-          newItems = [...tableData.items, { id: item.id, name: item.name, price: item.price, emoji: item.emoji, qty: 1 }]
+          newItems = [...tableData.items, { id: item.id, name: item.name, price: item.price, emoji: item.emoji, category: item.category, description: item.description, qty: 1 }]
         }
         const newTableData = { ...tableData, items: newItems }
         saveTableToServer(activeTable, newTableData)
@@ -132,7 +132,7 @@ export default function App() {
         if (existing) {
           return prev.map(i => i.id === item.id ? { ...i, qty: i.qty + 1 } : i)
         }
-        return [...prev, { id: item.id, name: item.name, price: item.price, emoji: item.emoji, qty: 1 }]
+        return [...prev, { id: item.id, name: item.name, price: item.price, emoji: item.emoji, category: item.category, description: item.description, qty: 1 }]
       })
     }
     showToast(`${item.name} added`, 'success')

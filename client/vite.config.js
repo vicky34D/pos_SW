@@ -12,5 +12,19 @@ export default defineConfig({
         changeOrigin: true,
       }
     }
+  },
+  build: {
+    // Smaller chunks for faster initial load
+    chunkSizeWarningLimit: 400,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          react: ['react', 'react-dom'],
+        }
+      }
+    },
+    // Strip console logs in production for lighter build
+    minify: 'esbuild',
+    target: 'es2020',
   }
 })
