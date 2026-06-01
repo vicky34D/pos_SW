@@ -198,6 +198,19 @@ This will automatically build the React app, set up the Node.js server, map port
 
 ## CI/CD Pipeline — Working Branch + Manual Approval Gate
 
+> **Production runtime (verified 2026-06-01):** the live app runs as a **PM2**
+> process named `pos-app` (Node `server/index.js`) behind **Nginx** (:80 → :5001).
+> **Docker is not used in production.** The SQLite database
+> (`server/streetwok.db`) is **gitignored**, so `git pull`/`reset` during a deploy
+> never touches your data. The deploy workflow is PM2-based to match this.
+>
+> **Data-safety note:** SQLite runs in WAL mode. A plain `pm2 restart` can drop
+> transactions still sitting in the write-ahead log. The deploy therefore does a
+> **stop → `wal_checkpoint(TRUNCATE)` → start** sequence so every committed order
+> is flushed to the main `.db` file before the process is replaced. It also backs
+> up the DB (to `~/deploy_safety/`) on every run. *(Consider also adding a
+> graceful-shutdown checkpoint in `server/index.js` for defence in depth.)*
+
 Deployment is automated via `.github/workflows/deploy.yml`, but it **never pushes
 straight to the live server**. The flow is:
 

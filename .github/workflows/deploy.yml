@@ -1,62 +1,50 @@
-name: CI & Deploy to OCI (Docker)
+name: CI & Deploy to OCI (PM2)
 
+# How production actually runs (verified 2026-06-01):
+#   - The app is a Node server (server/index.js) managed by PM2 as "pos-app".
+#   - Nginx reverse-proxies :80 -> :5001. There is NO Docker in production.
+#   - The SQLite DB (server/streetwok.db) is gitignored, so code updates
+#     (git reset/pull) never touch it.
+#
 # Flow:
-#   1. Push to the `working` branch (or any branch / PR into main) -> the
-#      `build-check` job runs and verifies the client compiles. It NEVER
-#      touches the live server.
-#   2. When changes land on `main` (via a reviewed Pull Request from
-#      `working`), the `deploy` job is queued but PAUSED on the protected
-#      `production` environment until you click "Approve" in GitHub.
-#      Only after your manual approval does it SSH into OCI and go live.
-#   3. You can also trigger a deploy by hand from the Actions tab
-#      ("Run workflow") thanks to workflow_dispatch.
+#   1. Push to `working` (or any PR into main) -> build-check only. Never
+#      touches the server.
+#   2. Merge to `main` -> the deploy job queues but PAUSES on the protected
+#      `production` environment until you approve it in the Actions tab.
+#   3. On approval it SSHes in, backs up the DB, updates code, rebuilds the
+#      frontend, and does a SAFE restart that flushes the SQLite WAL to disk
+#      first (this is what prevents the order-loss we hit on 2026-06-01).
 
 on:
   push:
-    branches:
-      - main
-      - working
+    branches: [main, working]
   pull_request:
-    branches:
-      - main
+    branches: [main]
   workflow_dispatch:
 
 jobs:
-  # ---------------------------------------------------------------
-  # Build check — runs on every push/PR, including the working branch.
-  # Catches breakage BEFORE anything reaches the live server.
-  # ---------------------------------------------------------------
   build-check:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '20'
-
       - name: Install client deps
         working-directory: client
         run: npm install
-
       - name: Build client
         working-directory: client
         run: npm run build
 
-  # ---------------------------------------------------------------
-  # Deploy — only on main, only after build-check passes, and ONLY
-  # after manual approval on the `production` environment.
-  # ---------------------------------------------------------------
   deploy:
     needs: build-check
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     environment:
-      name: production        # <-- manual-approval gate lives here
+      name: production        # <-- manual-approval gate; see deploy/README.md
     steps:
-      - name: Deploy via SSH
+      - name: Deploy via SSH (PM2, WAL-safe)
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.OCI_HOST }}
@@ -64,31 +52,36 @@ jobs:
           key: ${{ secrets.OCI_KEY }}
           script: |
             set -e
-
-            echo "=== Pulling latest code ==="
             cd ~/pos_SW
-            git pull origin main
 
-            echo "=== Cleaning up existing containers ==="
-            docker rm -f streetwok-pos || true
-            docker compose -p streetwok down || true
+            echo "=== 1) Back up the database (timestamped, keep last 20) ==="
+            mkdir -p ~/deploy_safety
+            TS=$(date +%F_%H%M%S)
+            cp -a server/streetwok.db     ~/deploy_safety/auto_streetwok.db.$TS     2>/dev/null || true
+            cp -a server/streetwok.db-wal ~/deploy_safety/auto_streetwok.db-wal.$TS 2>/dev/null || true
+            cp -a server/streetwok.db-shm ~/deploy_safety/auto_streetwok.db-shm.$TS 2>/dev/null || true
+            ls -1t ~/deploy_safety/auto_streetwok.db.* 2>/dev/null | tail -n +21 | xargs -r rm -f
 
-            echo "=== Building and Running with Docker ==="
-            # We use the provided ID as a fallback if the secret is missing
-            SECRET_ID="${{ secrets.VITE_GOOGLE_CLIENT_ID }}"
-            FALLBACK_ID="691116683990-p0eucmu9rs1bd0es55ks177pr567otvs.apps.googleusercontent.com"
+            echo "=== 2) Update code to origin/main (DB is gitignored = untouched) ==="
+            git fetch origin main
+            git reset --hard origin/main
+            git log --oneline -1
 
-            export VITE_GOOGLE_CLIENT_ID="${SECRET_ID:-$FALLBACK_ID}"
+            echo "=== 3) Build frontend + sync server deps ==="
+            cd ~/pos_SW/client && npm install --no-audit --no-fund && npm run build
+            cd ~/pos_SW/server && npm install --no-audit --no-fund
 
-            echo "Using Google Client ID starting with: ${VITE_GOOGLE_CLIENT_ID:0:10}..."
+            echo "=== 4) SAFE restart: stop -> flush WAL to disk -> start ==="
+            # Stopping first means our checkpoint connection is the only writer,
+            # so every committed transaction is guaranteed into the main .db file
+            # BEFORE the process is replaced. This is the fix for WAL data loss.
+            pm2 stop pos-app || true
+            node -e 'const db=require("better-sqlite3")("streetwok.db"); db.pragma("wal_checkpoint(TRUNCATE)"); console.log("WAL flushed to disk"); db.close();'
+            pm2 start pos-app || pm2 restart pos-app
+            pm2 save
 
-            # Build and start
-            VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID docker compose -p streetwok up -d --build
-
-            echo "=== Deployment Status ==="
-            docker compose -p streetwok ps
-
-            echo "=== Cleanup old images ==="
-            docker image prune -f
-
-            echo "=== Deploy Complete ==="
+            echo "=== 5) Health check ==="
+            sleep 2
+            curl -fsS -o /dev/null http://localhost:5001/ && echo "App responding on :5001"
+            pm2 list
+            echo "=== Deploy complete ==="
