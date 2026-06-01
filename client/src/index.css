@@ -377,6 +377,37 @@ input,select,textarea { font-family:'Inter',sans-serif; }
 }
 .bill-row.total span:last-child { color:var(--accent); }
 
+/* Inline cash received + balance (calculated before checkout) */
+.bill-cash {
+  margin-top:0.6rem; padding-top:0.6rem;
+  border-top:1.5px dashed var(--border-hover);
+}
+.bill-cash-row {
+  display:flex; justify-content:space-between; align-items:center;
+  font-size:0.8rem; color:var(--text-secondary); gap:0.5rem;
+}
+.bill-cash-input-wrap {
+  display:flex; align-items:center; gap:0.25rem;
+  border:1.5px solid var(--border); border-radius:var(--radius-sm);
+  background:var(--bg-primary); padding:0.25rem 0.5rem; min-width:110px;
+}
+.bill-cash-input-wrap:focus-within { border-color:var(--accent); }
+.bill-cash-prefix { font-weight:700; color:var(--text-secondary); }
+.bill-cash-input {
+  width:100%; min-width:0; border:none; background:transparent; outline:none;
+  text-align:right; font-family:'Outfit',sans-serif; font-size:0.95rem;
+  font-weight:700; color:var(--text-primary);
+}
+.bill-cash-input::-webkit-outer-spin-button,
+.bill-cash-input::-webkit-inner-spin-button { -webkit-appearance:none; margin:0; }
+.bill-cash-input { -moz-appearance:textfield; appearance:textfield; }
+.bill-row.balance {
+  margin-top:0.5rem; font-weight:800; font-size:1rem;
+  font-family:'Outfit',sans-serif; color:#16a34a;
+}
+.bill-row.balance span:last-child { color:#16a34a; }
+.bill-row.balance.short, .bill-row.balance.short span:last-child { color:#dc2626; }
+
 /* Actions */
 .action-section { padding:0.75rem 1rem 1.1rem; flex-shrink:0; background:var(--bg-secondary); }
 .action-grid { display:grid; grid-template-columns:1fr 1fr; gap:0.5rem; }
