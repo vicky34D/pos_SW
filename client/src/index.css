@@ -377,6 +377,37 @@ input,select,textarea { font-family:'Inter',sans-serif; }
 }
 .bill-row.total span:last-child { color:var(--accent); }
 
+/* Inline cash received + balance (calculated before checkout) */
+.bill-cash {
+  margin-top:0.6rem; padding-top:0.6rem;
+  border-top:1.5px dashed var(--border-hover);
+}
+.bill-cash-row {
+  display:flex; justify-content:space-between; align-items:center;
+  font-size:0.8rem; color:var(--text-secondary); gap:0.5rem;
+}
+.bill-cash-input-wrap {
+  display:flex; align-items:center; gap:0.25rem;
+  border:1.5px solid var(--border); border-radius:var(--radius-sm);
+  background:var(--bg-primary); padding:0.25rem 0.5rem; min-width:110px;
+}
+.bill-cash-input-wrap:focus-within { border-color:var(--accent); }
+.bill-cash-prefix { font-weight:700; color:var(--text-secondary); }
+.bill-cash-input {
+  width:100%; min-width:0; border:none; background:transparent; outline:none;
+  text-align:right; font-family:'Outfit',sans-serif; font-size:0.95rem;
+  font-weight:700; color:var(--text-primary);
+}
+.bill-cash-input::-webkit-outer-spin-button,
+.bill-cash-input::-webkit-inner-spin-button { -webkit-appearance:none; margin:0; }
+.bill-cash-input { -moz-appearance:textfield; appearance:textfield; }
+.bill-row.balance {
+  margin-top:0.5rem; font-weight:800; font-size:1rem;
+  font-family:'Outfit',sans-serif; color:#16a34a;
+}
+.bill-row.balance span:last-child { color:#16a34a; }
+.bill-row.balance.short, .bill-row.balance.short span:last-child { color:#dc2626; }
+
 /* Actions */
 .action-section { padding:0.75rem 1rem 1.1rem; flex-shrink:0; background:var(--bg-secondary); }
 .action-grid { display:grid; grid-template-columns:1fr 1fr; gap:0.5rem; }
@@ -516,9 +547,11 @@ input,select,textarea { font-family:'Inter',sans-serif; }
   background:var(--bg-secondary); border:1px solid var(--border);
   border-radius:var(--radius-xl); padding:1.75rem;
   width:92%; max-width:440px; box-shadow:var(--shadow-lg);
+  max-height:90dvh; overflow-y:auto;
   animation:scaleIn 0.22s cubic-bezier(0.34,1.56,0.64,1);
 }
 @keyframes scaleIn { from { transform:scale(0.92); opacity:0; } to { transform:scale(1); opacity:1; } }
+@keyframes slideUp { from { transform:translateY(100%); } to { transform:translateY(0); } }
 .modal-title {
   font-family:'Outfit',sans-serif; font-size:1.2rem; font-weight:700;
   margin-bottom:1.25rem; text-align:center; color:var(--text-primary);
@@ -560,16 +593,20 @@ input,select,textarea { font-family:'Inter',sans-serif; }
 .cash-input-wrap { display:flex; align-items:center; gap:0.4rem; margin-bottom:0.85rem; }
 .cash-input-prefix { font-size:1.4rem; font-weight:800; color:var(--text-secondary); }
 .cash-input {
-  flex:1; padding:0.7rem 0.9rem; border-radius:var(--radius-md);
+  flex:1; min-width:0; padding:0.7rem 0.9rem; border-radius:var(--radius-md);
   border:2px solid var(--border); background:var(--bg-primary);
   font-family:'Outfit',sans-serif; font-size:1.4rem; font-weight:700; color:var(--text-primary);
 }
 .cash-input:focus { outline:none; border-color:var(--accent); }
+/* Hide native number spinners for a cleaner, larger tap area */
+.cash-input::-webkit-outer-spin-button,
+.cash-input::-webkit-inner-spin-button { -webkit-appearance:none; margin:0; }
+.cash-input { -moz-appearance:textfield; appearance:textfield; }
 .cash-quick-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:0.5rem; margin-bottom:0.85rem; }
 .cash-quick-btn {
-  padding:0.55rem 0.4rem; border:1px solid var(--border); border-radius:var(--radius-sm);
+  min-height:44px; padding:0.55rem 0.4rem; border:1px solid var(--border); border-radius:var(--radius-sm);
   background:var(--bg-elevated); color:var(--text-secondary); font-size:0.8rem; font-weight:600;
-  transition:var(--transition);
+  transition:var(--transition); cursor:pointer;
 }
 .cash-quick-btn:hover { border-color:var(--accent); color:var(--accent); background:var(--accent-soft); }
 .change-display {
@@ -914,8 +951,20 @@ input,select,textarea { font-family:'Inter',sans-serif; }
   .report-table { font-size:0.72rem; }
   .report-table thead th { padding:0.5rem 0.6rem; font-size:0.62rem; }
   .report-table tbody td { padding:0.5rem 0.6rem; font-size:0.72rem; }
-  .modal-box { padding:1.25rem; width:94%; }
+  /* Modals become reachable bottom-sheets on phones */
+  .modal-overlay { align-items:flex-end; }
+  .modal-box {
+    width:100%; max-width:100%;
+    padding:1.25rem 1.25rem calc(1.25rem + env(safe-area-inset-bottom));
+    border-radius:24px 24px 0 0; max-height:92dvh;
+    animation:slideUp 0.25s ease;
+  }
   .payment-methods { grid-template-columns:1fr 1fr 1fr; gap:0.4rem; }
+  .payment-btn { min-height:84px; }
+  /* Cash entry: bigger touch targets on mobile */
+  .cash-input { font-size:1.5rem; padding:0.85rem 0.9rem; }
+  .btn-modal { padding:0.85rem; font-size:0.9rem; }
+  .change-display strong { font-size:1.7rem; }
   .pos-categories { gap:0.35rem; }
   .pos-cat-pill { padding:0.35rem 0.7rem; font-size:0.72rem; }
   .settings-row { flex-direction:column; align-items:flex-start; gap:0.5rem; }

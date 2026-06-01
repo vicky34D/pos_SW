@@ -29,16 +29,17 @@ export default function OrderPanel({
   const changeDue = hasReceived ? Math.round((received - total) * 100) / 100 : 0
   const shortBy = hasReceived && changeDue < 0 ? Math.abs(changeDue) : 0
 
+  // Keep any cash typed inline (don't wipe it just because the modal closed)
   const closePayModal = () => {
     setShowPayModal(false)
     setCashMode(false)
-    setCashReceived('')
   }
 
   const handlePay = async (method, extra = {}) => {
     const order = await onCheckout(method)
     if (order) {
       closePayModal()
+      setCashReceived('')
       setReceipt({ ...order, ...extra })
     }
   }
@@ -49,6 +50,12 @@ export default function OrderPanel({
     handlePay('Cash', hasReceived
       ? { cash_received: received, change_due: changeDue }
       : {})
+  }
+
+  // Clearing the order should also clear the tendered cash
+  const handleClear = () => {
+    setCashReceived('')
+    clearOrder()
   }
 
   const printOrder = () => {
@@ -145,12 +152,41 @@ export default function OrderPanel({
         <div className="bill-row"><span>Subtotal ({totalItems} items)</span><span>₹{subtotal.toFixed(2)}</span></div>
         <div className="bill-row"><span>GST ({settings.tax_rate || 5}%)</span><span>₹{tax.toFixed(2)}</span></div>
         <div className="bill-row total"><span>Total</span><span>₹{total.toFixed(2)}</span></div>
+
+        {/* Cash tendered + balance — calculated before checkout */}
+        {currentOrder.length > 0 && (
+          <div className="bill-cash">
+            <div className="bill-cash-row">
+              <span>Cash received</span>
+              <div className="bill-cash-input-wrap">
+                <span className="bill-cash-prefix">₹</span>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  min="0"
+                  step="1"
+                  className="bill-cash-input"
+                  placeholder="0"
+                  value={cashReceived}
+                  onChange={e => setCashReceived(e.target.value)}
+                />
+              </div>
+            </div>
+            {hasReceived && (
+              shortBy > 0 ? (
+                <div className="bill-row balance short"><span>Short by</span><span>₹{shortBy.toFixed(2)}</span></div>
+              ) : (
+                <div className="bill-row balance"><span>Balance to return</span><span>₹{changeDue.toFixed(2)}</span></div>
+              )
+            )}
+          </div>
+        )}
       </div>
 
       {/* Actions */}
       <div className="action-section">
         <div className="action-grid">
-          <button className="btn-action btn-clear" onClick={clearOrder}>
+          <button className="btn-action btn-clear" onClick={handleClear}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
             Clear
           </button>
