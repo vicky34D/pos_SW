@@ -1,13 +1,60 @@
-name: Deploy to OCI (Docker)
+name: CI & Deploy to OCI (Docker)
+
+# Flow:
+#   1. Push to the `working` branch (or any branch / PR into main) -> the
+#      `build-check` job runs and verifies the client compiles. It NEVER
+#      touches the live server.
+#   2. When changes land on `main` (via a reviewed Pull Request from
+#      `working`), the `deploy` job is queued but PAUSED on the protected
+#      `production` environment until you click "Approve" in GitHub.
+#      Only after your manual approval does it SSH into OCI and go live.
+#   3. You can also trigger a deploy by hand from the Actions tab
+#      ("Run workflow") thanks to workflow_dispatch.
 
 on:
   push:
     branches:
       - main
+      - working
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
 
 jobs:
-  deploy:
+  # ---------------------------------------------------------------
+  # Build check — runs on every push/PR, including the working branch.
+  # Catches breakage BEFORE anything reaches the live server.
+  # ---------------------------------------------------------------
+  build-check:
     runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install client deps
+        working-directory: client
+        run: npm install
+
+      - name: Build client
+        working-directory: client
+        run: npm run build
+
+  # ---------------------------------------------------------------
+  # Deploy — only on main, only after build-check passes, and ONLY
+  # after manual approval on the `production` environment.
+  # ---------------------------------------------------------------
+  deploy:
+    needs: build-check
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    environment:
+      name: production        # <-- manual-approval gate lives here
     steps:
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.0
@@ -17,31 +64,31 @@ jobs:
           key: ${{ secrets.OCI_KEY }}
           script: |
             set -e
-            
+
             echo "=== Pulling latest code ==="
             cd ~/pos_SW
             git pull origin main
-            
+
             echo "=== Cleaning up existing containers ==="
             docker rm -f streetwok-pos || true
             docker compose -p streetwok down || true
-            
+
             echo "=== Building and Running with Docker ==="
             # We use the provided ID as a fallback if the secret is missing
             SECRET_ID="${{ secrets.VITE_GOOGLE_CLIENT_ID }}"
             FALLBACK_ID="691116683990-p0eucmu9rs1bd0es55ks177pr567otvs.apps.googleusercontent.com"
-            
+
             export VITE_GOOGLE_CLIENT_ID="${SECRET_ID:-$FALLBACK_ID}"
-            
+
             echo "Using Google Client ID starting with: ${VITE_GOOGLE_CLIENT_ID:0:10}..."
-            
+
             # Build and start
             VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID docker compose -p streetwok up -d --build
-            
+
             echo "=== Deployment Status ==="
             docker compose -p streetwok ps
-            
+
             echo "=== Cleanup old images ==="
             docker image prune -f
-            
+
             echo "=== Deploy Complete ==="
