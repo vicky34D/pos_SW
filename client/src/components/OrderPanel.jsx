@@ -14,6 +14,8 @@ export default function OrderPanel({
 }) {
   const [showPayModal, setShowPayModal] = useState(false)
   const [receipt, setReceipt] = useState(null)
+  const [cashMode, setCashMode] = useState(false)
+  const [cashReceived, setCashReceived] = useState('')
 
   const taxRate = parseFloat(settings.tax_rate || 5) / 100
   const subtotal = useMemo(() => currentOrder.reduce((s, i) => s + i.price * i.qty, 0), [currentOrder])
@@ -21,12 +23,32 @@ export default function OrderPanel({
   const total = Math.round((subtotal + tax) * 100) / 100
   const totalItems = currentOrder.reduce((s, i) => s + i.qty, 0)
 
-  const handlePay = async (method) => {
+  // Cash tendered → change to return to the customer
+  const received = parseFloat(cashReceived)
+  const hasReceived = !isNaN(received) && cashReceived !== ''
+  const changeDue = hasReceived ? Math.round((received - total) * 100) / 100 : 0
+  const shortBy = hasReceived && changeDue < 0 ? Math.abs(changeDue) : 0
+
+  const closePayModal = () => {
+    setShowPayModal(false)
+    setCashMode(false)
+    setCashReceived('')
+  }
+
+  const handlePay = async (method, extra = {}) => {
     const order = await onCheckout(method)
     if (order) {
-      setShowPayModal(false)
-      setReceipt(order)
+      closePayModal()
+      setReceipt({ ...order, ...extra })
     }
+  }
+
+  const handleCashPay = () => {
+    // Block completion if customer hasn't tendered enough
+    if (hasReceived && changeDue < 0) return
+    handlePay('Cash', hasReceived
+      ? { cash_received: received, change_due: changeDue }
+      : {})
   }
 
   const printOrder = () => {
@@ -148,9 +170,9 @@ export default function OrderPanel({
 
       {/* Payment Modal */}
       {showPayModal && (
-        <div className="modal-overlay" onClick={() => setShowPayModal(false)}>
+        <div className="modal-overlay" onClick={closePayModal}>
           <div className="modal-box" onClick={e => e.stopPropagation()}>
-            <div className="modal-title">Select Payment Method</div>
+            <div className="modal-title">{cashMode ? 'Cash Payment' : 'Select Payment Method'}</div>
             <div className="modal-total">
               <div className="modal-total-label">Amount to Pay</div>
               <div className="modal-total-value">₹{total.toFixed(2)}</div>
@@ -158,20 +180,85 @@ export default function OrderPanel({
                 {totalItems} item{totalItems !== 1 ? 's' : ''} · Incl. {settings.tax_rate || 5}% GST
               </div>
             </div>
-            <div className="payment-methods">
-              <button className="payment-btn" onClick={() => handlePay('Cash')}>
-                <span className="pay-icon">💵</span>Cash
-              </button>
-              <button className="payment-btn" onClick={() => handlePay('UPI')}>
-                <span className="pay-icon">📱</span>UPI
-              </button>
-              <button className="payment-btn" onClick={() => handlePay('Card')}>
-                <span className="pay-icon">💳</span>Card
-              </button>
-            </div>
-            <div className="modal-actions">
-              <button className="btn-modal btn-modal-cancel" onClick={() => setShowPayModal(false)}>Cancel</button>
-            </div>
+
+            {!cashMode ? (
+              <>
+                <div className="payment-methods">
+                  <button className="payment-btn" onClick={() => setCashMode(true)}>
+                    <span className="pay-icon">💵</span>Cash
+                  </button>
+                  <button className="payment-btn" onClick={() => handlePay('UPI')}>
+                    <span className="pay-icon">📱</span>UPI
+                  </button>
+                  <button className="payment-btn" onClick={() => handlePay('Card')}>
+                    <span className="pay-icon">💳</span>Card
+                  </button>
+                </div>
+                <div className="modal-actions">
+                  <button className="btn-modal btn-modal-cancel" onClick={closePayModal}>Cancel</button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="cash-entry">
+                  <label className="cash-entry-label">Cash Received from Customer</label>
+                  <div className="cash-input-wrap">
+                    <span className="cash-input-prefix">₹</span>
+                    <input
+                      type="number"
+                      inputMode="decimal"
+                      min="0"
+                      step="1"
+                      className="cash-input"
+                      placeholder={total.toFixed(0)}
+                      value={cashReceived}
+                      onChange={e => setCashReceived(e.target.value)}
+                      autoFocus
+                    />
+                  </div>
+
+                  <div className="cash-quick-grid">
+                    {[total, 100, 200, 500, 1000, 2000]
+                      .filter((v, i, arr) => arr.indexOf(v) === i)
+                      .map(v => (
+                        <button
+                          key={v}
+                          type="button"
+                          className="cash-quick-btn"
+                          onClick={() => setCashReceived(String(v === total ? total.toFixed(2) : v))}
+                        >
+                          {v === total ? 'Exact' : `₹${v}`}
+                        </button>
+                      ))}
+                  </div>
+
+                  {hasReceived && (
+                    shortBy > 0 ? (
+                      <div className="change-display short">
+                        <span>Short by</span>
+                        <strong>₹{shortBy.toFixed(2)}</strong>
+                      </div>
+                    ) : (
+                      <div className="change-display">
+                        <span>Return to Customer</span>
+                        <strong>₹{changeDue.toFixed(2)}</strong>
+                      </div>
+                    )
+                  )}
+                </div>
+
+                <div className="modal-actions">
+                  <button className="btn-modal btn-modal-cancel" onClick={() => { setCashMode(false); setCashReceived('') }}>Back</button>
+                  <button
+                    className="btn-modal btn-modal-confirm"
+                    disabled={shortBy > 0}
+                    onClick={handleCashPay}
+                  >
+                    Complete Payment
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
@@ -203,6 +290,12 @@ export default function OrderPanel({
                 <div className="receipt-total-row"><span>Subtotal</span><span>₹{receipt.subtotal.toFixed(2)}</span></div>
                 <div className="receipt-total-row"><span>GST ({settings.tax_rate || 5}%)</span><span>₹{receipt.tax.toFixed(2)}</span></div>
                 <div className="receipt-total-row grand-total"><span>TOTAL</span><span>₹{receipt.total.toFixed(2)}</span></div>
+                {receipt.cash_received != null && (
+                  <>
+                    <div className="receipt-total-row"><span>Cash Received</span><span>₹{receipt.cash_received.toFixed(2)}</span></div>
+                    <div className="receipt-total-row"><span>Change Returned</span><span>₹{receipt.change_due.toFixed(2)}</span></div>
+                  </>
+                )}
               </div>
               <div className="receipt-footer">Thank you for visiting {settings.shop_name || 'StreetWok'}! 🏍️</div>
             </div>

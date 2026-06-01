@@ -193,3 +193,56 @@ docker compose up -d --build
 ```
 
 This will automatically build the React app, set up the Node.js server, map port 80 to your instance, and ensure the database persists via a mounted volume.
+
+---
+
+## CI/CD Pipeline — Working Branch + Manual Approval Gate
+
+Deployment is automated via `.github/workflows/deploy.yml`, but it **never pushes
+straight to the live server**. The flow is:
+
+```
+  feature work ──► working branch ──► PR into main ──► (manual approval) ──► OCI live
+```
+
+1. **Do all development on the `working` branch.** Pushing to `working` runs the
+   `build-check` job only (it compiles the client). It does **not** touch OCI.
+2. **Open a Pull Request from `working` into `main`.** The build check runs again
+   on the PR.
+3. **Merge the PR into `main`.** The `deploy` job is now queued — but it **pauses**
+   on the `production` environment and waits for your approval.
+4. **Approve the deploy.** Go to the repo's **Actions** tab → open the running
+   workflow → click **Review deployments** → check `production` → **Approve and
+   deploy**. Only then does it SSH into OCI and go live.
+
+### One-time setup (required for the approval gate)
+
+The gate is enforced by a GitHub **Environment** with a required reviewer. Set it
+up once:
+
+1. Go to the repo on GitHub → **Settings** → **Environments** → **New environment**.
+2. Name it exactly **`production`** and click **Configure environment**.
+3. Under **Deployment protection rules**, tick **Required reviewers** and add
+   yourself (and anyone else allowed to approve go-lives). Save.
+4. (Recommended) Protect `main` so code can only land via reviewed PRs:
+   **Settings → Branches → Add branch ruleset/protection** for `main` →
+   enable **Require a pull request before merging**.
+
+> Without step 1–3 the deploy job will run immediately on merge to `main`
+> instead of waiting for approval. The other steps in this workflow already exist.
+
+### Required repository secrets
+
+These power the SSH deploy step (**Settings → Secrets and variables → Actions**):
+
+| Secret | Purpose |
+| --- | --- |
+| `OCI_HOST` | Public IP / hostname of the OCI instance |
+| `OCI_USER` | SSH user (e.g. `opc` or `ubuntu`) |
+| `OCI_KEY` | Private SSH key for that user |
+| `VITE_GOOGLE_CLIENT_ID` | Google OAuth client ID (optional; falls back to the baked-in default) |
+
+### Manual deploy
+
+You can also trigger a deploy by hand: **Actions** tab → **CI & Deploy to OCI** →
+**Run workflow**. It still respects the `production` approval gate.

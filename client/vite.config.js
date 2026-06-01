@@ -18,13 +18,13 @@ export default defineConfig({
     chunkSizeWarningLimit: 400,
     rollupOptions: {
       output: {
-        manualChunks: {
-          react: ['react', 'react-dom'],
+        manualChunks(id) {
+          if (id.includes('node_modules/react') || id.includes('node_modules/react-dom')) {
+            return 'react'
+          }
         }
       }
     },
-    // Strip console logs in production for lighter build
-    minify: 'esbuild',
     target: 'es2020',
   }
 })
