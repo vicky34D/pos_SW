@@ -236,6 +236,12 @@ export default function App() {
       }
 
       showToast(`Order #${order.order_number} completed — ${paymentMethod}`, 'success')
+
+      // Warn if any ingredient dropped to/below its alert level after this sale.
+      if (order.low_stock?.length) {
+        const names = order.low_stock.map(s => `${s.name} (${s.qty})`).join(', ')
+        showToast(`Low stock: ${names}`, 'error')
+      }
       return order
     } catch (err) {
       showToast(err.message, 'error')

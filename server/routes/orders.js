@@ -69,12 +69,37 @@ router.post('/', requireRole(['Admin', 'Manager', 'Employee']), (req, res) => {
 
   const updateCounter = db.prepare('UPDATE order_counter SET last_number = ? WHERE org_id = ?');
 
-  // Transaction for atomicity
+  // Recipe-driven inventory deduction.
+  const getRecipe = db.prepare(
+    'SELECT inventory_id, qty_per_unit FROM menu_recipes WHERE org_id = ? AND menu_item_id = ?'
+  );
+  const decStock = db.prepare(
+    'UPDATE inventory SET qty = qty - ? WHERE id = ? AND org_id = ?'
+  );
+  const getStock = db.prepare('SELECT name, qty, alert_level FROM inventory WHERE id = ? AND org_id = ?');
+
+  // Accumulate total usage per inventory item across the whole order, so a low
+  // stock warning reflects the combined draw (e.g. buns used by two burgers).
+  const lowStock = [];
+
+  // Transaction for atomicity — sale + stock deduction commit together.
   const createOrder = db.transaction(() => {
     insertOrder.run(orderId, orgId, nextNumber, customer_name || 'Walk-in', order_type || 'dine-in', payment_method, subtotal, tax, total);
 
     for (const item of items) {
       insertItem.run(orderId, orgId, item.id, item.name, item.price, item.qty);
+
+      // Deduct each ingredient this menu item consumes. Items with no recipe
+      // are skipped entirely, so untracked items behave exactly as before.
+      const recipe = getRecipe.all(orgId, item.id);
+      for (const ing of recipe) {
+        const used = ing.qty_per_unit * (item.qty || 1);
+        decStock.run(used, ing.inventory_id, orgId);
+        const after = getStock.get(ing.inventory_id, orgId);
+        if (after && after.qty <= after.alert_level) {
+          lowStock.push({ name: after.name, qty: after.qty });
+        }
+      }
     }
 
     updateCounter.run(nextNumber, orgId);
@@ -84,6 +109,12 @@ router.post('/', requireRole(['Admin', 'Manager', 'Employee']), (req, res) => {
 
   const order = db.prepare('SELECT * FROM orders WHERE id = ? AND org_id = ?').get(orderId, orgId);
   order.items = db.prepare('SELECT * FROM order_items WHERE order_id = ? AND org_id = ?').all(orderId, orgId);
+  // De-dupe low-stock names (keep last/lowest value seen) for a tidy warning.
+  if (lowStock.length) {
+    const seen = new Map();
+    for (const s of lowStock) seen.set(s.name, s.qty);
+    order.low_stock = [...seen.entries()].map(([name, qty]) => ({ name, qty }));
+  }
 
   res.status(201).json(order);
 });

@@ -674,8 +674,42 @@ input,select,textarea { font-family:'Inter',sans-serif; }
 }
 .mgmt-btn-edit { background:var(--info-bg); color:var(--info); }
 .mgmt-btn-delete { background:var(--danger-bg); color:var(--danger); }
+.mgmt-btn-recipe { background:var(--accent-soft); color:var(--accent); }
 .mgmt-btn-edit:hover { background:var(--info); color:white; }
 .mgmt-btn-delete:hover { background:var(--danger); color:white; }
+.mgmt-btn-recipe:hover { background:var(--accent); color:white; }
+
+/* Recipe (ingredient mapping) modal */
+.recipe-hint { font-size:0.8rem; color:var(--text-muted); line-height:1.5; margin-bottom:1rem; }
+.recipe-loading { padding:1.5rem; text-align:center; color:var(--text-muted); }
+.recipe-rows { display:flex; flex-direction:column; gap:0.5rem; margin-bottom:0.5rem; }
+.recipe-row { display:flex; align-items:center; gap:0.5rem; }
+.recipe-ingredient {
+  flex:1; min-width:0; padding:0.5rem 0.6rem; border:1px solid var(--border);
+  border-radius:var(--radius-sm); background:var(--bg-secondary);
+  color:var(--text-primary); font-size:0.82rem; outline:none;
+}
+.recipe-ingredient:focus { border-color:var(--accent); }
+.recipe-qty {
+  width:72px; padding:0.5rem 0.6rem; border:1px solid var(--border);
+  border-radius:var(--radius-sm); background:var(--bg-secondary);
+  color:var(--text-primary); font-size:0.82rem; outline:none; text-align:right;
+}
+.recipe-qty:focus { border-color:var(--accent); }
+.recipe-unit { width:48px; font-size:0.74rem; color:var(--text-muted); }
+.recipe-remove {
+  border:none; background:var(--danger-bg); color:var(--danger);
+  width:28px; height:28px; border-radius:var(--radius-sm); font-size:0.8rem;
+  cursor:pointer; flex-shrink:0; transition:var(--transition);
+}
+.recipe-remove:hover { background:var(--danger); color:white; }
+.recipe-add {
+  align-self:flex-start; margin-top:0.25rem; padding:0.45rem 0.85rem;
+  border:1px dashed var(--accent); background:var(--accent-soft); color:var(--accent);
+  border-radius:var(--radius-sm); font-size:0.8rem; font-weight:600; cursor:pointer;
+  transition:var(--transition);
+}
+.recipe-add:hover { background:var(--accent); color:white; }
 
 /* Settings */
 .settings-section { margin-bottom:1.75rem; }

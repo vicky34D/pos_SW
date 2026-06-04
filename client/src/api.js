@@ -92,6 +92,11 @@ export const updateInventoryItem = (id, data) => request(`/inventory/${id}`, { m
 export const bulkUpdateInventory = (updates) => request('/inventory', { method: 'PUT', body: JSON.stringify({ updates }) });
 export const deleteInventoryItem = (id) => request(`/inventory/${id}`, { method: 'DELETE' });
 
+// Recipes (menu item -> inventory ingredient mapping)
+export const getRecipe = (menuItemId) => request(`/recipes/${menuItemId}`);
+export const updateRecipe = (menuItemId, ingredients) =>
+  request(`/recipes/${menuItemId}`, { method: 'PUT', body: JSON.stringify({ ingredients }) });
+
 // Reports
 export const getReportSummary = () => request('/reports/summary');
 export const getDailyReport = () => request('/reports/daily');

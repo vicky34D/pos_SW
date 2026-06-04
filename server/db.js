@@ -114,6 +114,21 @@ db.exec(`
     FOREIGN KEY (org_id) REFERENCES organizations(id),
     UNIQUE(org_id, table_number)
   );
+
+  -- Recipe / ingredient mapping: how much of each inventory item one unit of a
+  -- menu item consumes. Drives automatic stock deduction at checkout. A menu
+  -- item with no rows here is simply not tracked (no deduction) — opt-in per item.
+  CREATE TABLE IF NOT EXISTS menu_recipes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    org_id TEXT NOT NULL,
+    menu_item_id TEXT NOT NULL,
+    inventory_id INTEGER NOT NULL,
+    qty_per_unit REAL NOT NULL DEFAULT 1,
+    FOREIGN KEY (org_id) REFERENCES organizations(id),
+    FOREIGN KEY (menu_item_id) REFERENCES menu_items(id),
+    FOREIGN KEY (inventory_id) REFERENCES inventory(id),
+    UNIQUE(org_id, menu_item_id, inventory_id)
+  );
 `);
 
 // ===== SEED FUNCTION FOR NEW ORGS =====

@@ -43,6 +43,7 @@ app.get('/api/session', authenticateToken, (req, res) => {
 app.use('/api/menu', authenticateToken, require('./routes/menu'));
 app.use('/api/orders', authenticateToken, require('./routes/orders'));
 app.use('/api/inventory', authenticateToken, require('./routes/inventory'));
+app.use('/api/recipes', authenticateToken, require('./routes/recipes'));
 app.use('/api/reports', authenticateToken, require('./routes/reports'));
 app.use('/api/users', authenticateToken, require('./routes/users'));
 app.use('/api/tables', authenticateToken, require('./routes/tables'));
