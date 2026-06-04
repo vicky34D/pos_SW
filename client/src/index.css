@@ -154,11 +154,11 @@ input,select,textarea { font-family:'Inter',sans-serif; }
 
 /* ===== POS VIEW ===== */
 .pos-view {
-  display:flex; flex-direction:column; height:100%; padding:1.25rem 1.5rem; overflow:hidden;
+  display:flex; flex-direction:column; height:100%; padding:1rem 1.25rem; overflow:hidden;
 }
 .pos-topbar {
   display:flex; justify-content:space-between; align-items:center;
-  margin-bottom:1rem; flex-shrink:0; gap:1rem;
+  margin-bottom:0.7rem; flex-shrink:0; gap:1rem;
 }
 .pos-topbar-left { display:flex; align-items:center; gap:0.75rem; }
 .pos-page-title { font-family:'Outfit',sans-serif; font-size:1.5rem; font-weight:700; margin:0; color:var(--text-primary); }
@@ -188,25 +188,25 @@ input,select,textarea { font-family:'Inter',sans-serif; }
 
 /* Categories */
 .pos-categories {
-  display:flex; gap:0.5rem; overflow-x:auto; padding-bottom:0.75rem;
+  display:flex; gap:0.55rem; overflow-x:auto; padding-bottom:0.6rem;
   flex-shrink:0; scrollbar-width:none;
 }
 .pos-categories::-webkit-scrollbar { display:none; }
 .pos-cat-pill {
-  display:flex; align-items:center; gap:0.4rem;
-  padding:0.45rem 0.9rem; border-radius:var(--radius-full);
+  display:flex; align-items:center; gap:0.5rem;
+  padding:0.65rem 1.2rem; border-radius:var(--radius-full);
   background:var(--bg-secondary); border:1.5px solid var(--border);
   cursor:pointer; transition:var(--transition);
-  white-space:nowrap; font-size:0.78rem;
-  color:var(--text-secondary); font-weight:500;
+  white-space:nowrap; font-size:0.9rem;
+  color:var(--text-secondary); font-weight:600;
 }
 .pos-cat-pill:hover { background:var(--bg-hover); border-color:var(--accent); color:var(--accent); }
 .pos-cat-pill.active {
   background:var(--accent); border-color:var(--accent);
   color:white; box-shadow:0 3px 10px var(--accent-glow);
 }
-.pos-cat-emoji { font-size:1rem; }
-.pos-cat-name { font-size:0.78rem; }
+.pos-cat-emoji { font-size:1.2rem; }
+.pos-cat-name { font-size:0.9rem; }
 
 /* Menu Grid */
 .pos-menu-scroll { flex:1; overflow-y:auto; padding-right:4px; }
@@ -972,8 +972,8 @@ input,select,textarea { font-family:'Inter',sans-serif; }
   .cash-input { font-size:1.5rem; padding:0.85rem 0.9rem; }
   .btn-modal { padding:0.85rem; font-size:0.9rem; }
   .change-display strong { font-size:1.7rem; }
-  .pos-categories { gap:0.35rem; }
-  .pos-cat-pill { padding:0.35rem 0.7rem; font-size:0.72rem; }
+  .pos-categories { gap:0.45rem; }
+  .pos-cat-pill { padding:0.6rem 1rem; font-size:0.85rem; }
   .settings-row { flex-direction:column; align-items:flex-start; gap:0.5rem; }
   .settings-input { width:100%; }
 }
