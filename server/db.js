@@ -129,7 +129,176 @@ db.exec(`
     FOREIGN KEY (inventory_id) REFERENCES inventory(id),
     UNIQUE(org_id, menu_item_id, inventory_id)
   );
+
+  -- ===================================================================
+  -- ERPNext-style Stock & Buying module
+  -- ===================================================================
+
+  -- Physical / logical stock locations. Every org gets one "Main Store".
+  CREATE TABLE IF NOT EXISTS warehouses (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    org_id TEXT NOT NULL,
+    name TEXT NOT NULL,
+    is_default INTEGER DEFAULT 0,
+    created_at TEXT DEFAULT (datetime('now')),
+    FOREIGN KEY (org_id) REFERENCES organizations(id),
+    UNIQUE(org_id, name)
+  );
+
+  -- Optional item categorisation (Frappe "Item Group").
+  CREATE TABLE IF NOT EXISTS item_groups (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    org_id TEXT NOT NULL,
+    name TEXT NOT NULL,
+    created_at TEXT DEFAULT (datetime('now')),
+    FOREIGN KEY (org_id) REFERENCES organizations(id),
+    UNIQUE(org_id, name)
+  );
+
+  -- Stock Ledger Entry — the immutable source of truth. Every increase or
+  -- decrease in stock is one row here; bins + inventory.qty are caches derived
+  -- from it. valuation_rate is the moving-average cost AFTER this movement.
+  CREATE TABLE IF NOT EXISTS stock_ledger_entries (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    org_id TEXT NOT NULL,
+    item_id INTEGER NOT NULL,
+    warehouse_id INTEGER NOT NULL,
+    posting_datetime TEXT DEFAULT (datetime('now')),
+    voucher_type TEXT NOT NULL,        -- Purchase Bill | Sales Order | Stock Adjustment | Opening Stock
+    voucher_id TEXT,                   -- id of the source document
+    qty_change REAL NOT NULL,          -- +incoming / -outgoing
+    incoming_rate REAL DEFAULT 0,      -- unit cost of incoming stock (0 for outgoing)
+    valuation_rate REAL DEFAULT 0,     -- moving-avg unit cost after this entry
+    balance_qty REAL NOT NULL,         -- item+warehouse qty after this entry
+    balance_value REAL NOT NULL,       -- item+warehouse stock value after this entry
+    notes TEXT DEFAULT '',
+    created_at TEXT DEFAULT (datetime('now')),
+    FOREIGN KEY (org_id) REFERENCES organizations(id),
+    FOREIGN KEY (item_id) REFERENCES inventory(id),
+    FOREIGN KEY (warehouse_id) REFERENCES warehouses(id)
+  );
+
+  -- Bin — cached current balance & valuation per item per warehouse.
+  CREATE TABLE IF NOT EXISTS bins (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    org_id TEXT NOT NULL,
+    item_id INTEGER NOT NULL,
+    warehouse_id INTEGER NOT NULL,
+    qty REAL NOT NULL DEFAULT 0,
+    valuation_rate REAL NOT NULL DEFAULT 0,
+    stock_value REAL NOT NULL DEFAULT 0,
+    FOREIGN KEY (org_id) REFERENCES organizations(id),
+    FOREIGN KEY (item_id) REFERENCES inventory(id),
+    FOREIGN KEY (warehouse_id) REFERENCES warehouses(id),
+    UNIQUE(org_id, item_id, warehouse_id)
+  );
+
+  -- Suppliers (Frappe "Supplier").
+  CREATE TABLE IF NOT EXISTS suppliers (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    org_id TEXT NOT NULL,
+    name TEXT NOT NULL,
+    contact_person TEXT DEFAULT '',
+    phone TEXT DEFAULT '',
+    email TEXT DEFAULT '',
+    address TEXT DEFAULT '',
+    gstin TEXT DEFAULT '',
+    active INTEGER DEFAULT 1,
+    created_at TEXT DEFAULT (datetime('now')),
+    FOREIGN KEY (org_id) REFERENCES organizations(id),
+    UNIQUE(org_id, name)
+  );
+
+  -- Purchase Bill (supplier invoice). Submitting it posts stock + payable.
+  CREATE TABLE IF NOT EXISTS purchase_bills (
+    id TEXT PRIMARY KEY,
+    org_id TEXT NOT NULL,
+    bill_number TEXT NOT NULL,         -- supplier's invoice no / internal no
+    supplier_id INTEGER NOT NULL,
+    warehouse_id INTEGER NOT NULL,
+    bill_date TEXT DEFAULT (date('now')),
+    due_date TEXT,
+    status TEXT DEFAULT 'Draft',       -- Draft | Submitted | Partially Paid | Paid | Cancelled
+    subtotal REAL NOT NULL DEFAULT 0,
+    tax REAL NOT NULL DEFAULT 0,
+    total REAL NOT NULL DEFAULT 0,
+    paid_amount REAL NOT NULL DEFAULT 0,
+    notes TEXT DEFAULT '',
+    created_at TEXT DEFAULT (datetime('now')),
+    FOREIGN KEY (org_id) REFERENCES organizations(id),
+    FOREIGN KEY (supplier_id) REFERENCES suppliers(id),
+    FOREIGN KEY (warehouse_id) REFERENCES warehouses(id)
+  );
+
+  CREATE TABLE IF NOT EXISTS purchase_bill_items (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    bill_id TEXT NOT NULL,
+    org_id TEXT NOT NULL,
+    item_id INTEGER NOT NULL,
+    item_name TEXT NOT NULL,
+    qty REAL NOT NULL DEFAULT 0,
+    rate REAL NOT NULL DEFAULT 0,      -- purchase unit cost
+    amount REAL NOT NULL DEFAULT 0,    -- qty * rate
+    FOREIGN KEY (bill_id) REFERENCES purchase_bills(id),
+    FOREIGN KEY (org_id) REFERENCES organizations(id),
+    FOREIGN KEY (item_id) REFERENCES inventory(id)
+  );
+
+  -- Expense Bill — non-stock business costs (rent, utilities, etc.).
+  CREATE TABLE IF NOT EXISTS expense_bills (
+    id TEXT PRIMARY KEY,
+    org_id TEXT NOT NULL,
+    expense_number TEXT NOT NULL,
+    category TEXT DEFAULT 'General',
+    payee TEXT DEFAULT '',
+    supplier_id INTEGER,               -- optional link to a supplier
+    expense_date TEXT DEFAULT (date('now')),
+    due_date TEXT,
+    status TEXT DEFAULT 'Submitted',   -- Submitted | Partially Paid | Paid | Cancelled
+    amount REAL NOT NULL DEFAULT 0,
+    tax REAL NOT NULL DEFAULT 0,
+    total REAL NOT NULL DEFAULT 0,
+    paid_amount REAL NOT NULL DEFAULT 0,
+    notes TEXT DEFAULT '',
+    created_at TEXT DEFAULT (datetime('now')),
+    FOREIGN KEY (org_id) REFERENCES organizations(id),
+    FOREIGN KEY (supplier_id) REFERENCES suppliers(id)
+  );
+
+  -- Payment Entry — money paid against a purchase or expense bill.
+  CREATE TABLE IF NOT EXISTS payments (
+    id TEXT PRIMARY KEY,
+    org_id TEXT NOT NULL,
+    payment_number TEXT NOT NULL,
+    against_type TEXT NOT NULL,        -- Purchase Bill | Expense Bill
+    against_id TEXT NOT NULL,
+    supplier_id INTEGER,
+    amount REAL NOT NULL DEFAULT 0,
+    method TEXT DEFAULT 'Cash',        -- Cash | Bank | UPI | Card | Cheque
+    payment_date TEXT DEFAULT (date('now')),
+    notes TEXT DEFAULT '',
+    created_at TEXT DEFAULT (datetime('now')),
+    FOREIGN KEY (org_id) REFERENCES organizations(id),
+    FOREIGN KEY (supplier_id) REFERENCES suppliers(id)
+  );
 `);
+
+// ===== LIGHTWEIGHT MIGRATIONS (additive, idempotent) =====
+// Upgrade the existing `inventory` table into a proper Item master without
+// dropping data. Each ALTER is guarded so re-runs are no-ops.
+(function migrateInventoryToItemMaster() {
+  const cols = db.prepare("PRAGMA table_info(inventory)").all().map(c => c.name);
+  const addCol = (name, ddl) => {
+    if (!cols.includes(name)) db.exec(`ALTER TABLE inventory ADD COLUMN ${ddl}`);
+  };
+  addCol('item_code', "item_code TEXT");                       // SKU
+  addCol('item_group', "item_group TEXT DEFAULT 'General'");
+  addCol('barcode', "barcode TEXT");
+  addCol('description', "description TEXT DEFAULT ''");
+  addCol('valuation_rate', "valuation_rate REAL NOT NULL DEFAULT 0"); // moving-avg cost
+  addCol('reorder_qty', "reorder_qty REAL NOT NULL DEFAULT 0");       // suggested purchase qty
+  addCol('is_stock_item', "is_stock_item INTEGER NOT NULL DEFAULT 1");
+})();
 
 // ===== SEED FUNCTION FOR NEW ORGS =====
 
@@ -138,6 +307,18 @@ function seedOrganizationData(orgId, shopName) {
   const counterRow = db.prepare('SELECT * FROM order_counter WHERE org_id = ?').get(orgId);
   if (!counterRow) {
     db.prepare('INSERT INTO order_counter (org_id, last_number) VALUES (?, 0)').run(orgId);
+  }
+
+  // Ensure a default warehouse exists (stock postings need one).
+  const whCount = db.prepare('SELECT COUNT(*) AS cnt FROM warehouses WHERE org_id = ?').get(orgId);
+  if (!whCount || whCount.cnt === 0) {
+    db.prepare('INSERT INTO warehouses (org_id, name, is_default) VALUES (?, ?, 1)').run(orgId, 'Main Store');
+  }
+
+  // Seed a few default item groups.
+  const insertGroup = db.prepare('INSERT OR IGNORE INTO item_groups (org_id, name) VALUES (?, ?)');
+  for (const g of ['General', 'Raw Material', 'Packaging', 'Beverages']) {
+    insertGroup.run(orgId, g);
   }
 
   // Seed default settings

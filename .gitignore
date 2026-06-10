@@ -3,7 +3,7 @@ node_modules/
 
 # Build outputs
 dist/
-client/dist/
+# client/dist is intentionally tracked so production gets the built frontend
 
 # Database
 server/*.db
@@ -27,6 +27,5 @@ npm-debug.log*
 *.tar.gz
 .env
 
-# Electron build output
+# Electron build output (not client/dist — that is tracked)
 dist/
-!client/dist/

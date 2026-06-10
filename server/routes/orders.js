@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { db } = require('../db');
 const { requireRole } = require('../middleware/auth');
+const { postMovement, getDefaultWarehouseId } = require('../stockLedger');
 const { v4: uuidv4 } = require('uuid');
 
 // GET all orders (with optional date filter)
@@ -69,17 +70,15 @@ router.post('/', requireRole(['Admin', 'Manager', 'Employee']), (req, res) => {
 
   const updateCounter = db.prepare('UPDATE order_counter SET last_number = ? WHERE org_id = ?');
 
-  // Recipe-driven inventory deduction.
+  // Recipe-driven inventory deduction — now posted through the stock ledger
+  // so every sale creates an immutable SLE (valuation-aware, reportable).
   const getRecipe = db.prepare(
     'SELECT inventory_id, qty_per_unit FROM menu_recipes WHERE org_id = ? AND menu_item_id = ?'
   );
-  const decStock = db.prepare(
-    'UPDATE inventory SET qty = qty - ? WHERE id = ? AND org_id = ?'
-  );
   const getStock = db.prepare('SELECT name, qty, alert_level FROM inventory WHERE id = ? AND org_id = ?');
+  const warehouseId = getDefaultWarehouseId(orgId);
 
-  // Accumulate total usage per inventory item across the whole order, so a low
-  // stock warning reflects the combined draw (e.g. buns used by two burgers).
+  // Accumulate total usage per inventory item across the whole order.
   const lowStock = [];
 
   // Transaction for atomicity — sale + stock deduction commit together.
@@ -89,12 +88,17 @@ router.post('/', requireRole(['Admin', 'Manager', 'Employee']), (req, res) => {
     for (const item of items) {
       insertItem.run(orderId, orgId, item.id, item.name, item.price, item.qty);
 
-      // Deduct each ingredient this menu item consumes. Items with no recipe
-      // are skipped entirely, so untracked items behave exactly as before.
+      // Deduct each ingredient through the ledger. Items with no recipe
+      // are skipped entirely — opt-in behaviour unchanged.
       const recipe = getRecipe.all(orgId, item.id);
       for (const ing of recipe) {
         const used = ing.qty_per_unit * (item.qty || 1);
-        decStock.run(used, ing.inventory_id, orgId);
+        postMovement({
+          orgId, itemId: ing.inventory_id, warehouseId,
+          qtyChange: -used,
+          voucherType: 'Sales Order', voucherId: orderId,
+          notes: `Sale: ${item.name}`
+        });
         const after = getStock.get(ing.inventory_id, orgId);
         if (after && after.qty <= after.alert_level) {
           lowStock.push({ name: after.name, qty: after.qty });

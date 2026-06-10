@@ -115,6 +115,46 @@ export const createUser = (data) => request('/users', { method: 'POST', body: JS
 export const updateUserRole = (id, data) => request(`/users/${id}`, { method: 'PUT', body: JSON.stringify(data) });
 export const deleteUser = (id) => request(`/users/${id}`, { method: 'DELETE' });
 
+// Warehouses
+export const getWarehouses = () => request('/warehouses');
+export const createWarehouse = (data) => request('/warehouses', { method: 'POST', body: JSON.stringify(data) });
+export const updateWarehouse = (id, data) => request(`/warehouses/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+export const deleteWarehouse = (id) => request(`/warehouses/${id}`, { method: 'DELETE' });
+
+// Suppliers
+export const getSuppliers = (params) => { const qs = params ? '?' + new URLSearchParams(params).toString() : ''; return request(`/suppliers${qs}`); };
+export const getSupplier = (id) => request(`/suppliers/${id}`);
+export const createSupplier = (data) => request('/suppliers', { method: 'POST', body: JSON.stringify(data) });
+export const updateSupplier = (id, data) => request(`/suppliers/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+export const deleteSupplier = (id) => request(`/suppliers/${id}`, { method: 'DELETE' });
+
+// Purchase Bills
+export const getPurchaseBills = (params) => { const qs = params ? '?' + new URLSearchParams(params).toString() : ''; return request(`/purchase-bills${qs}`); };
+export const getPurchaseBill = (id) => request(`/purchase-bills/${id}`);
+export const createPurchaseBill = (data) => request('/purchase-bills', { method: 'POST', body: JSON.stringify(data) });
+export const updatePurchaseBill = (id, data) => request(`/purchase-bills/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+export const submitPurchaseBill = (id) => request(`/purchase-bills/${id}/submit`, { method: 'POST' });
+export const cancelPurchaseBill = (id) => request(`/purchase-bills/${id}/cancel`, { method: 'POST' });
+
+// Expense Bills
+export const getExpenses = (params) => { const qs = params ? '?' + new URLSearchParams(params).toString() : ''; return request(`/expenses${qs}`); };
+export const getExpense = (id) => request(`/expenses/${id}`);
+export const createExpense = (data) => request('/expenses', { method: 'POST', body: JSON.stringify(data) });
+export const updateExpense = (id, data) => request(`/expenses/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+export const deleteExpense = (id) => request(`/expenses/${id}`, { method: 'DELETE' });
+
+// Payments
+export const getPayments = (params) => { const qs = params ? '?' + new URLSearchParams(params).toString() : ''; return request(`/payments${qs}`); };
+export const createPayment = (data) => request('/payments', { method: 'POST', body: JSON.stringify(data) });
+export const deletePayment = (id) => request(`/payments/${id}`, { method: 'DELETE' });
+
+// Stock Ledger
+export const getStockLedgerEntries = (params) => { const qs = params ? '?' + new URLSearchParams(params).toString() : ''; return request(`/stock/entries${qs}`); };
+export const getStockBalance = (params) => { const qs = params ? '?' + new URLSearchParams(params).toString() : ''; return request(`/stock/balance${qs}`); };
+export const getStockValuation = () => request('/stock/valuation');
+export const getReorderItems = () => request('/stock/reorder');
+export const postStockAdjustment = (data) => request('/stock/adjustment', { method: 'POST', body: JSON.stringify(data) });
+
 // Tables
 export const getTables = () => request('/tables');
 export const openTable = (table_number) => request('/tables', { method: 'POST', body: JSON.stringify({ table_number }) });
