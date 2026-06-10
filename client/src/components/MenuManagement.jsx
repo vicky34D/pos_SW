@@ -194,7 +194,7 @@ export default function MenuManagement({ showToast }) {
 
       {/* Menu Items Table */}
       <div className="report-card" style={{ flex: 1 }}>
-        <div style={{ overflowY: 'auto', maxHeight: 'calc(100vh - 300px)' }}>
+        <div style={{ overflowX: 'auto', overflowY: 'auto', maxHeight: 'calc(100vh - 300px)' }}>
           <table className="report-table menu-table">
             <thead>
               <tr>

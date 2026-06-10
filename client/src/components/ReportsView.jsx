@@ -129,7 +129,7 @@ export default function ReportsView() {
         <div className="report-section">
           <div className="report-card">
             <div className="report-card-header"><h5>Daily Breakdown</h5></div>
-            <div style={{ maxHeight: 400, overflowY: 'auto' }}>
+            <div style={{ maxHeight: 400, overflowY: 'auto', overflowX: 'auto' }}>
               <table className="report-table">
                 <thead>
                   <tr><th>Date</th><th>Orders</th><th>Cash</th><th>UPI</th><th>Card</th><th>Total</th></tr>
@@ -159,7 +159,7 @@ export default function ReportsView() {
         <div className="report-section">
           <div className="report-card">
             <div className="report-card-header"><h5>Monthly Report</h5></div>
-            <div style={{ maxHeight: 400, overflowY: 'auto' }}>
+            <div style={{ maxHeight: 400, overflowY: 'auto', overflowX: 'auto' }}>
               <table className="report-table">
                 <thead>
                   <tr><th>Month</th><th>Orders</th><th>Cash</th><th>UPI</th><th>Card</th><th>Total</th></tr>
@@ -189,7 +189,7 @@ export default function ReportsView() {
         <div className="report-section">
           <div className="report-card">
             <div className="report-card-header"><h5>Top Selling Items (All Time)</h5></div>
-            <div style={{ maxHeight: 400, overflowY: 'auto' }}>
+            <div style={{ maxHeight: 400, overflowY: 'auto', overflowX: 'auto' }}>
               <table className="report-table">
                 <thead>
                   <tr><th>#</th><th>Item</th><th>Qty Sold</th><th>Revenue</th></tr>
@@ -217,7 +217,7 @@ export default function ReportsView() {
         <div className="report-section">
           <div className="report-card">
             <div className="report-card-header"><h5>Recent Transactions</h5></div>
-            <div style={{ maxHeight: 400, overflowY: 'auto' }}>
+            <div style={{ maxHeight: 400, overflowY: 'auto', overflowX: 'auto' }}>
               <table className="report-table">
                 <thead>
                   <tr><th>Order #</th><th>Time</th><th>Customer</th><th>Items</th><th>Payment</th><th>Total</th></tr>
