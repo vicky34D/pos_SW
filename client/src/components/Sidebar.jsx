@@ -13,35 +13,36 @@ export default function Sidebar({ activeView, onViewChange, currentUser }) {
     settings: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>,
   }
 
+  // Items with mobileVisible:true appear in the bottom nav on mobile
   const navGroups = [
     {
       label: 'Sales',
       items: [
-        { id: 'pos', label: 'Point of Sale', roles: ['Admin','Manager','Employee','Viewer'] },
-        { id: 'tables', label: 'Tables', roles: ['Admin','Manager','Employee','Viewer'] },
-        { id: 'reports', label: 'Reports', roles: ['Admin','Manager','Employee'] },
+        { id: 'pos', label: 'Point of Sale', mobileLabel: 'POS', mobileVisible: true, roles: ['Admin','Manager','Employee','Viewer'] },
+        { id: 'tables', label: 'Tables', mobileLabel: 'Tables', mobileVisible: true, roles: ['Admin','Manager','Employee','Viewer'] },
+        { id: 'reports', label: 'Reports', mobileLabel: 'Reports', mobileVisible: true, roles: ['Admin','Manager','Employee'] },
       ]
     },
     {
       label: 'Inventory',
       items: [
-        { id: 'inventory', label: 'Item Master', roles: ['Admin','Manager','Employee','Viewer'] },
-        { id: 'stockledger', label: 'Stock Ledger', roles: ['Admin','Manager'] },
+        { id: 'inventory', label: 'Item Master', mobileVisible: false, roles: ['Admin','Manager','Employee','Viewer'] },
+        { id: 'stockledger', label: 'Stock Ledger', mobileVisible: false, roles: ['Admin','Manager'] },
       ]
     },
     {
       label: 'Buying',
       items: [
-        { id: 'suppliers', label: 'Suppliers', roles: ['Admin','Manager'] },
-        { id: 'purchase', label: 'Purchase Bills', roles: ['Admin','Manager'] },
-        { id: 'expenses', label: 'Expense Bills', roles: ['Admin','Manager'] },
+        { id: 'suppliers', label: 'Suppliers', mobileVisible: false, roles: ['Admin','Manager'] },
+        { id: 'purchase', label: 'Purchase Bills', mobileVisible: false, roles: ['Admin','Manager'] },
+        { id: 'expenses', label: 'Expense Bills', mobileVisible: false, roles: ['Admin','Manager'] },
       ]
     },
     {
       label: 'Admin',
       items: [
-        { id: 'menu', label: 'Menu Management', roles: ['Admin','Manager','Employee'] },
-        { id: 'team', label: 'Team', roles: ['Admin','Manager'] },
+        { id: 'menu', label: 'Menu Management', mobileLabel: 'Menu', mobileVisible: true, roles: ['Admin','Manager','Employee'] },
+        { id: 'team', label: 'Team', mobileVisible: false, roles: ['Admin','Manager'] },
       ]
     }
   ]
@@ -72,12 +73,12 @@ export default function Sidebar({ activeView, onViewChange, currentUser }) {
                 {visible.map(item => (
                   <button
                     key={item.id}
-                    className={`nav-item${activeView === item.id ? ' active' : ''}`}
+                    className={`nav-item${activeView === item.id ? ' active' : ''}${!item.mobileVisible ? ' mobile-hidden' : ''}`}
                     onClick={() => onViewChange(item.id)}
                     title={item.label}
                   >
                     {icons[item.id] || icons.settings}
-                    <span className="nav-label">{item.label}</span>
+                    <span className="nav-label">{item.mobileLabel || item.label}</span>
                   </button>
                 ))}
               </div>
@@ -111,6 +112,11 @@ export default function Sidebar({ activeView, onViewChange, currentUser }) {
             </div>
           </div>
         )}
+        {/* Mobile More button — taps open a drawer/overflow menu */}
+        <button className="nav-item mobile-more-btn" title="More" onClick={() => onViewChange('more')}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+          <span className="nav-label">More</span>
+        </button>
       </div>
     </aside>
   )
