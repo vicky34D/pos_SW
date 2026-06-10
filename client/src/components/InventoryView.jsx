@@ -115,12 +115,13 @@ export default function InventoryView({ showToast }) {
   return (
     <div className="frappe-page">
       <div className="frappe-page-head">
-        <div>
+        <div className="frappe-page-head-left">
+          <div className="frappe-breadcrumb">Inventory <span>›</span> Item Master</div>
           <h1 className="frappe-title">Item Master</h1>
-          <div className="frappe-breadcrumb">Inventory › Items</div>
         </div>
         <button className="frappe-btn frappe-btn-primary" onClick={openNew}>+ New Item</button>
       </div>
+      <div className="frappe-page-body">
 
       {/* Summary strip */}
       <div className="frappe-stat-row">
@@ -365,6 +366,7 @@ export default function InventoryView({ showToast }) {
           </div>
         </div>
       )}
+      </div>{/* frappe-page-body */}
     </div>
   )
 }

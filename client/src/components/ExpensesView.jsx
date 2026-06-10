@@ -83,12 +83,13 @@ export default function ExpensesView({ showToast }) {
   return (
     <div className="frappe-page">
       <div className="frappe-page-head">
-        <div>
+        <div className="frappe-page-head-left">
+          <div className="frappe-breadcrumb">Buying <span>›</span> Expense Bills</div>
           <h1 className="frappe-title">Expense Bills</h1>
-          <div className="frappe-breadcrumb">Buying › Expenses</div>
         </div>
         <button className="frappe-btn frappe-btn-primary" onClick={() => { setForm(emptyForm); setShowForm(true) }}>+ New Expense</button>
       </div>
+      <div className="frappe-page-body">
 
       <div className="frappe-stat-row">
         <div className="frappe-stat-card">
@@ -280,6 +281,7 @@ export default function ExpensesView({ showToast }) {
           </div>
         </div>
       )}
+      </div>{/* frappe-page-body */}
     </div>
   )
 }

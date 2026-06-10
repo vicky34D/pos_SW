@@ -57,11 +57,12 @@ export default function StockLedgerView({ showToast }) {
   return (
     <div className="frappe-page">
       <div className="frappe-page-head">
-        <div>
+        <div className="frappe-page-head-left">
+          <div className="frappe-breadcrumb">Inventory <span>›</span> Stock Ledger</div>
           <h1 className="frappe-title">Stock Ledger</h1>
-          <div className="frappe-breadcrumb">Inventory › Stock Ledger</div>
         </div>
       </div>
+      <div className="frappe-page-body">
 
       <div className="frappe-tabs">
         {[['ledger','Stock Ledger Entries'],['balance','Current Stock Balance']].map(([id, label]) => (
@@ -150,6 +151,7 @@ export default function StockLedgerView({ showToast }) {
           </table>
         </div>
       )}
+      </div>{/* frappe-page-body */}
     </div>
   )
 }

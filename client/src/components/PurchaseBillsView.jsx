@@ -108,12 +108,13 @@ export default function PurchaseBillsView({ showToast }) {
   return (
     <div className="frappe-page">
       <div className="frappe-page-head">
-        <div>
+        <div className="frappe-page-head-left">
+          <div className="frappe-breadcrumb">Buying <span>›</span> Purchase Bills</div>
           <h1 className="frappe-title">Purchase Bills</h1>
-          <div className="frappe-breadcrumb">Buying › Purchase Bills</div>
         </div>
         <button className="frappe-btn frappe-btn-primary" onClick={openNew}>+ New Bill</button>
       </div>
+      <div className="frappe-page-body">
 
       <div className="frappe-stat-row">
         <div className="frappe-stat-card">
@@ -343,6 +344,7 @@ export default function PurchaseBillsView({ showToast }) {
           </div>
         </div>
       )}
+      </div>{/* frappe-page-body */}
     </div>
   )
 }

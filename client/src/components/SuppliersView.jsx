@@ -63,12 +63,13 @@ export default function SuppliersView({ showToast }) {
   return (
     <div className="frappe-page">
       <div className="frappe-page-head">
-        <div>
+        <div className="frappe-page-head-left">
+          <div className="frappe-breadcrumb">Buying <span>›</span> Suppliers</div>
           <h1 className="frappe-title">Suppliers</h1>
-          <div className="frappe-breadcrumb">Buying › Suppliers</div>
         </div>
         <button className="frappe-btn frappe-btn-primary" onClick={openNew}>+ New Supplier</button>
       </div>
+      <div className="frappe-page-body">
 
       <div className="frappe-toolbar">
         <input className="frappe-search" placeholder="Search name, phone, email…" value={search} onChange={e => setSearch(e.target.value)} />
@@ -165,6 +166,7 @@ export default function SuppliersView({ showToast }) {
           </div>
         </div>
       )}
+      </div>{/* frappe-page-body */}
     </div>
   )
 }

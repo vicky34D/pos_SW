@@ -286,8 +286,8 @@ export default function App() {
   }
 
   return (
-    <div className="app-container">
-      <Sidebar 
+    <div className={`app-container${activeView === 'pos' ? ' pos-mode' : ''}`}>
+      <Sidebar
         activeView={activeView} 
         onViewChange={(view) => {
           if (view === 'logout') {
