@@ -373,9 +373,7 @@ export default function App() {
 
       {activeView === 'pos' && (
         <button className="mobile-cart-btn" onClick={() => setIsCartOpen(true)}>
-          🛒
-          <span className="cart-label">{activeTable !== null ? `T${activeTable}` : 'Cart'}</span>
-          {totalItems > 0 && <span className="cart-badge">{totalItems}</span>}
+          🛒 {activeTable !== null ? `T${activeTable}` : 'Cart'} {totalItems > 0 && <span className="cart-badge">{totalItems}</span>}
         </button>
       )}
 

@@ -1025,13 +1025,13 @@ input,select,textarea { font-family:'Inter',sans-serif; }
     /* leave a gap in the center for the cart FAB */
     padding-left: 0.5rem;
     padding-right: 0.5rem;
-    justify-content: space-between;
-    align-items: stretch;
+    justify-content: space-around;
+    align-items: center;
     grid-row: 2;
     z-index: 100;
     border-right: none;
     border-top: 1px solid var(--border);
-    overflow: visible;
+    overflow: hidden;
     background: var(--bg-secondary);
     box-shadow: 0 -2px 16px rgba(0,0,0,0.08);
   }
@@ -1127,40 +1127,18 @@ input,select,textarea { font-family:'Inter',sans-serif; }
     background:rgba(0,0,0,0.35); z-index:150;
   }
   .mobile-cart-btn {
-    display: flex; position: fixed;
-    bottom: 38px; /* center of 60px nav = 30px, button is 54px, so 30 - 27 + 60 - 60 + offset */
-    left: 50%;
-    transform: translateX(-50%);
-    background: linear-gradient(135deg, #7c3aed 0%, #9333ea 100%);
-    color: white; border: none;
-    width: 54px; height: 54px;
-    border-radius: 50%;
-    font-size: 1.25rem; font-weight: 700;
-    box-shadow: 0 4px 20px rgba(124, 58, 237, 0.5);
-    z-index: 110;
-    align-items: center; justify-content: center;
-    flex-direction: column;
-    gap: 0;
-    border: 3px solid var(--bg-secondary);
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    display:flex; position:fixed; bottom:72px; right:16px;
+    background: #7c3aed;
+    color:white; border:none;
+    padding:0.75rem 1.1rem; border-radius:var(--radius-full);
+    font-size:0.9rem; font-weight:700;
+    box-shadow:0 4px 18px rgba(124,58,237,0.35);
+    z-index:110; align-items:center; gap:0.4rem;
   }
-  .mobile-cart-btn:active {
-    transform: translateX(-50%) scale(0.92);
-  }
-  .mobile-cart-btn .cart-label {
-    font-size: 0.5rem; font-weight: 700; letter-spacing: 0.02em;
-    line-height: 1;
-    margin-top: -1px;
-  }
+  .mobile-cart-btn .cart-label { font-size: inherit; }
   .cart-badge {
-    position: absolute; top: -5px; right: -5px;
-    background: #ef4444; color: white;
-    border-radius: 50%; min-width: 19px; height: 19px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 0.6rem; font-weight: 800;
-    border: 2px solid var(--bg-secondary);
-    line-height: 1;
-    padding: 0 3px;
+    background:#ef4444; color:white;
+    border-radius:50%; padding:0.1rem 0.35rem; font-size:0.7rem; font-weight:800;
   }
   .mobile-close-cart {
     display:flex; position:absolute; top:0.85rem; right:0.85rem;
