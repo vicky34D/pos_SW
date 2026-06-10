@@ -1113,3 +1113,253 @@ input,select,textarea { font-family:'Inter',sans-serif; }
   .app-container { display:block!important; }
   .sidebar,.order-panel,.mobile-cart-btn { display:none!important; }
 }
+
+/* ===========================================================
+   FRAPPE-STYLE UI SYSTEM — Inventory & Buying Module
+   =========================================================== */
+
+/* --- Sidebar groups --- */
+.nav-section { margin-bottom: 0.15rem; }
+.nav-section-label {
+  font-size: 0.62rem; font-weight: 700; letter-spacing: 0.08em;
+  text-transform: uppercase; color: rgba(255,255,255,0.35);
+  padding: 0.55rem 1rem 0.2rem; pointer-events: none;
+}
+
+/* --- Page layout --- */
+.frappe-page {
+  padding: 1.5rem 1.75rem;
+  max-width: 1280px;
+  margin: 0 auto;
+  height: 100%;
+  overflow-y: auto;
+}
+.frappe-page-head {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;
+}
+.frappe-title { font-size: 1.45rem; font-weight: 700; color: var(--text-primary); margin: 0; }
+.frappe-breadcrumb { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.15rem; }
+.frappe-loading { padding: 3rem; text-align: center; color: var(--text-muted); font-size: 0.95rem; }
+
+/* --- Summary stat row --- */
+.frappe-stat-row {
+  display: flex; gap: 0.85rem; flex-wrap: wrap; margin-bottom: 1.25rem;
+}
+.frappe-stat-card {
+  background: var(--bg-secondary); border: 1px solid var(--border);
+  border-radius: 10px; padding: 0.85rem 1.2rem; min-width: 140px; flex: 1;
+}
+.frappe-stat-label { font-size: 0.72rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.35rem; }
+.frappe-stat-value { font-size: 1.5rem; font-weight: 700; color: var(--text-primary); }
+
+/* --- Tabs --- */
+.frappe-tabs {
+  display: flex; gap: 0; border-bottom: 2px solid var(--border);
+  margin-bottom: 1.1rem; flex-wrap: wrap;
+}
+.frappe-tab {
+  padding: 0.6rem 1.1rem; font-size: 0.82rem; font-weight: 600;
+  color: var(--text-muted); background: none; border: none; cursor: pointer;
+  border-bottom: 2px solid transparent; margin-bottom: -2px;
+  transition: color 0.15s, border-color 0.15s; white-space: nowrap;
+  display: flex; align-items: center; gap: 0.4rem;
+}
+.frappe-tab:hover { color: var(--accent); }
+.frappe-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+.tab-badge {
+  background: var(--danger); color: #fff;
+  font-size: 0.62rem; font-weight: 700; border-radius: 99px;
+  padding: 0 5px; line-height: 1.4;
+}
+
+/* --- Toolbar --- */
+.frappe-toolbar {
+  display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: center;
+  margin-bottom: 0.85rem;
+}
+.frappe-search {
+  flex: 1; min-width: 180px; max-width: 300px;
+  padding: 0.45rem 0.75rem; border: 1px solid var(--border);
+  border-radius: 7px; background: var(--bg-secondary); font-size: 0.82rem;
+  color: var(--text-primary); outline: none;
+}
+.frappe-search:focus { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-glow); }
+.frappe-select {
+  padding: 0.45rem 0.65rem; border: 1px solid var(--border);
+  border-radius: 7px; background: var(--bg-secondary); font-size: 0.82rem;
+  color: var(--text-primary); outline: none; cursor: pointer;
+}
+.frappe-select:focus { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-glow); }
+.frappe-count { font-size: 0.78rem; color: var(--text-muted); margin-left: auto; }
+
+/* --- Table --- */
+.frappe-table-wrap {
+  background: var(--bg-secondary); border: 1px solid var(--border);
+  border-radius: 10px; overflow: auto;
+}
+.frappe-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+.frappe-table thead th {
+  background: var(--bg-primary); padding: 0.6rem 0.85rem;
+  text-align: left; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.04em;
+  text-transform: uppercase; color: var(--text-muted); border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+.frappe-table tbody td { padding: 0.65rem 0.85rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.frappe-table tfoot td { padding: 0.55rem 0.85rem; font-size: 0.82rem; background: var(--bg-primary); border-top: 2px solid var(--border); }
+.frappe-table tbody tr:last-child td { border-bottom: none; }
+.frappe-row { transition: background 0.1s; cursor: pointer; }
+.frappe-row:hover { background: var(--bg-hover); }
+.row-warning { background: rgba(217,119,6,0.05); }
+.frappe-empty { text-align: center; color: var(--text-muted); padding: 2rem; font-size: 0.85rem; }
+.frappe-empty-state { text-align: center; color: var(--text-muted); padding: 3rem; font-size: 0.9rem; grid-column: 1/-1; }
+
+/* --- Buttons --- */
+.frappe-btn {
+  padding: 0.5rem 1.1rem; border-radius: 7px; font-size: 0.82rem;
+  font-weight: 600; cursor: pointer; border: 1px solid transparent;
+  transition: background 0.15s, box-shadow 0.15s; white-space: nowrap;
+}
+.frappe-btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+.frappe-btn-primary:hover:not(:disabled) { background: var(--accent-dark); }
+.frappe-btn-secondary { background: var(--bg-primary); color: var(--text-secondary); border-color: var(--border); }
+.frappe-btn-secondary:hover:not(:disabled) { background: var(--bg-elevated); }
+.frappe-btn-success { background: var(--success); color: #fff; }
+.frappe-btn-success:hover:not(:disabled) { background: #15803d; }
+.frappe-btn-danger { background: transparent; color: var(--danger); border-color: var(--danger); }
+.frappe-btn-danger:hover:not(:disabled) { background: var(--danger-bg); }
+.frappe-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.frappe-btn-sm { padding: 0.3rem 0.7rem; font-size: 0.75rem; }
+.frappe-icon-btn {
+  background: none; border: none; cursor: pointer; padding: 0.25rem 0.4rem;
+  border-radius: 5px; font-size: 0.85rem; transition: background 0.1s;
+}
+.frappe-icon-btn:hover { background: var(--bg-hover); }
+
+/* --- Badges --- */
+.badge {
+  display: inline-block; padding: 0.18rem 0.55rem; border-radius: 99px;
+  font-size: 0.7rem; font-weight: 700; white-space: nowrap;
+}
+.badge-green { background: var(--success-bg); color: var(--success); }
+.badge-orange { background: var(--warning-bg); color: var(--warning); }
+.badge-red { background: var(--danger-bg); color: var(--danger); }
+.badge-blue { background: var(--info-bg); color: var(--info); }
+.badge-grey { background: var(--bg-elevated); color: var(--text-muted); }
+
+/* --- Tag pill --- */
+.frappe-tag {
+  display: inline-block; background: var(--accent-soft); color: var(--accent);
+  padding: 0.15rem 0.5rem; border-radius: 99px; font-size: 0.7rem; font-weight: 600;
+}
+
+/* --- Alert banner --- */
+.frappe-alert-banner {
+  padding: 0.7rem 1rem; border-radius: 8px; font-size: 0.82rem; font-weight: 600;
+  margin-bottom: 1rem; background: var(--warning-bg); color: var(--warning);
+  border: 1px solid rgba(217,119,6,0.2);
+}
+.frappe-alert-banner.success { background: var(--success-bg); color: var(--success); border-color: rgba(22,163,74,0.2); }
+.frappe-alert-banner.warning { background: var(--warning-bg); color: var(--warning); border-color: rgba(217,119,6,0.2); }
+
+/* --- Form --- */
+.frappe-form-section { padding: 0.25rem 0; }
+.frappe-form-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1rem 1.25rem; margin-bottom: 0.5rem;
+}
+.frappe-field { display: flex; flex-direction: column; gap: 0.3rem; }
+.frappe-field label { font-size: 0.72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.frappe-field-full { grid-column: 1 / -1; }
+.frappe-input {
+  padding: 0.48rem 0.7rem; border: 1px solid var(--border);
+  border-radius: 7px; background: var(--bg-secondary); font-size: 0.85rem;
+  color: var(--text-primary); outline: none; width: 100%; box-sizing: border-box;
+}
+.frappe-input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-glow); }
+.frappe-input[type="date"] { color: var(--text-primary); }
+.frappe-hint { font-size: 0.72rem; color: var(--text-muted); }
+
+/* --- Section head --- */
+.frappe-section-head {
+  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--text-muted); border-bottom: 1px solid var(--border);
+  padding-bottom: 0.4rem; margin: 1.25rem 0 0.65rem;
+}
+
+/* --- Modal --- */
+.frappe-modal-overlay {
+  position: fixed; inset: 0; background: rgba(15,12,30,0.55);
+  z-index: 200; display: flex; align-items: center; justify-content: center;
+  padding: 1rem; backdrop-filter: blur(2px);
+}
+.frappe-modal {
+  background: var(--bg-secondary); border-radius: 14px;
+  width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+}
+.frappe-modal-lg { max-width: 820px; }
+.frappe-modal-head {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  padding: 1.1rem 1.5rem 0.85rem; border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; background: var(--bg-secondary); z-index: 1;
+}
+.frappe-modal-head h2 { font-size: 1.05rem; font-weight: 700; margin: 0; }
+.frappe-modal-close {
+  background: none; border: none; font-size: 1.1rem; cursor: pointer;
+  color: var(--text-muted); padding: 0.1rem 0.35rem; border-radius: 5px;
+  transition: background 0.1s; line-height: 1;
+}
+.frappe-modal-close:hover { background: var(--bg-elevated); color: var(--text-primary); }
+.frappe-modal .frappe-form-grid,
+.frappe-modal .frappe-table-wrap,
+.frappe-modal .frappe-section-head { padding-left: 1.5rem; padding-right: 1.5rem; }
+.frappe-modal .frappe-form-grid { padding-top: 1rem; padding-bottom: 0.5rem; }
+.frappe-modal-footer {
+  display: flex; justify-content: flex-end; gap: 0.6rem;
+  padding: 0.85rem 1.5rem 1.1rem; border-top: 1px solid var(--border);
+  flex-wrap: wrap; position: sticky; bottom: 0; background: var(--bg-secondary);
+}
+
+/* --- Detail grid (key-value pairs in modal) --- */
+.frappe-detail-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem 1.5rem;
+  padding: 1rem 1.5rem;
+}
+.frappe-detail-grid div { display: flex; flex-direction: column; gap: 0.2rem; }
+.frappe-detail-grid div.span-2 { grid-column: 1 / -1; }
+.frappe-detail-grid label { font-size: 0.7rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.frappe-detail-grid span { font-size: 0.88rem; color: var(--text-primary); }
+
+/* --- Supplier Card Grid --- */
+.frappe-card-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 0.85rem;
+}
+.frappe-supplier-card {
+  background: var(--bg-secondary); border: 1px solid var(--border);
+  border-radius: 12px; padding: 1rem 1.1rem;
+  display: flex; gap: 0.85rem; align-items: flex-start; cursor: pointer;
+  transition: box-shadow 0.15s, border-color 0.15s;
+}
+.frappe-supplier-card:hover { box-shadow: 0 4px 16px rgba(108,92,231,0.1); border-color: var(--accent-light); }
+.supplier-avatar {
+  width: 42px; height: 42px; border-radius: 10px;
+  background: var(--accent-soft); color: var(--accent);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem; font-weight: 700; flex-shrink: 0;
+}
+.supplier-info { flex: 1; min-width: 0; }
+.supplier-name { font-weight: 700; font-size: 0.9rem; color: var(--text-primary); margin-bottom: 0.25rem; }
+.supplier-meta { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.supplier-actions { display: flex; flex-direction: column; gap: 0.35rem; align-items: flex-end; }
+
+/* --- Utility --- */
+.fw-medium { font-weight: 600; }
+.fw-bold { font-weight: 700; }
+.text-muted { color: var(--text-muted); }
+.text-danger { color: var(--danger); }
+.text-green { color: var(--success); }
+.text-orange { color: var(--warning); }
+.text-primary { color: var(--accent); }
+.text-right { text-align: right; }
+.mb-1 { margin-bottom: 0.5rem; }

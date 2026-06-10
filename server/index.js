@@ -47,6 +47,13 @@ app.use('/api/recipes', authenticateToken, require('./routes/recipes'));
 app.use('/api/reports', authenticateToken, require('./routes/reports'));
 app.use('/api/users', authenticateToken, require('./routes/users'));
 app.use('/api/tables', authenticateToken, require('./routes/tables'));
+// ERPNext-style stock & buying module
+app.use('/api/warehouses', authenticateToken, require('./routes/warehouses'));
+app.use('/api/suppliers', authenticateToken, require('./routes/suppliers'));
+app.use('/api/purchase-bills', authenticateToken, require('./routes/purchaseBills'));
+app.use('/api/expenses', authenticateToken, require('./routes/expenses'));
+app.use('/api/payments', authenticateToken, require('./routes/payments'));
+app.use('/api/stock', authenticateToken, require('./routes/stockLedger'));
 
 // Settings routes (Protected)
 app.get('/api/settings', authenticateToken, (req, res) => {

@@ -11,6 +11,10 @@ import UserManagement from './components/UserManagement'
 import Toast from './components/Toast'
 import WelcomePage from './components/WelcomePage'
 import TablesView from './components/TablesView'
+import SuppliersView from './components/SuppliersView'
+import PurchaseBillsView from './components/PurchaseBillsView'
+import ExpensesView from './components/ExpensesView'
+import StockLedgerView from './components/StockLedgerView'
 import * as api from './api'
 
 const TOTAL_TABLES = 10
@@ -352,6 +356,18 @@ export default function App() {
         )}
         {activeView === 'team' && (
           <UserManagement showToast={showToast} currentUser={currentUser} />
+        )}
+        {activeView === 'suppliers' && (
+          <SuppliersView showToast={showToast} />
+        )}
+        {activeView === 'purchase' && (
+          <PurchaseBillsView showToast={showToast} />
+        )}
+        {activeView === 'expenses' && (
+          <ExpensesView showToast={showToast} />
+        )}
+        {activeView === 'stockledger' && (
+          <StockLedgerView showToast={showToast} />
         )}
       </main>
 
