@@ -1048,6 +1048,23 @@ input,select,textarea { font-family:'Inter',sans-serif; }
   .pos-cat-pill { padding:0.6rem 1rem; font-size:0.85rem; }
   .settings-row { flex-direction:column; align-items:flex-start; gap:0.5rem; }
   .settings-input { width:100%; }
+
+  /* --- Frappe UI Mobile overrides --- */
+  .frappe-page-head { padding: 0.6rem 0.75rem; }
+  .frappe-page-body { padding: 0.75rem; }
+  .frappe-stat-row { gap: 0.5rem; }
+  .frappe-stat-card { padding: 0.75rem; min-width: 100px; }
+  .frappe-stat-value { font-size: 1.3rem; }
+  .frappe-toolbar { padding: 0.5rem; flex-direction: column; align-items: stretch; gap: 0.5rem; }
+  .frappe-search { max-width: 100%; }
+  .frappe-select { width: 100%; }
+  .frappe-form-grid { grid-template-columns: 1fr; gap: 0.75rem; }
+  .frappe-detail-grid { grid-template-columns: 1fr; gap: 0.5rem 0; padding: 0.75rem 1rem; }
+  .frappe-modal-head { padding: 0.85rem 1rem; }
+  .frappe-modal .frappe-form-grid,
+  .frappe-modal .frappe-table-wrap,
+  .frappe-modal .frappe-section-head { padding-left: 1rem; padding-right: 1rem; }
+  .frappe-modal-footer { padding: 0.75rem 1rem 0.85rem; }
 }
 
 @media (max-width:380px) {
