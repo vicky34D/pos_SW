@@ -15,7 +15,7 @@ const categories = [
   { id: 'cigarettes', name: 'Cigarettes', emoji: '🚬' },
 ]
 
-export default function PosView({ onAddToOrder }) {
+export default function PosView({ onAddToOrder, activeTable }) {
   const [menuItems, setMenuItems] = useState([])
   const [activeCategory, setActiveCategory] = useState('all')
   const [search, setSearch] = useState('')
@@ -57,32 +57,52 @@ export default function PosView({ onAddToOrder }) {
       {/* Top Bar */}
       <div className="pos-topbar">
         <div className="pos-topbar-left">
-          <h1 className="pos-page-title">Menu</h1>
-          <span className="pos-date-badge">{today}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem' }}>
+            <span style={{ fontSize: '1.8rem', display: 'flex', alignItems: 'center' }}>🏍️</span>
+            <div>
+              <h1 className="pos-page-title" style={{ fontSize: '1.25rem', fontWeight: 800, margin: 0 }}>StreetWok POS</h1>
+              <span className="pos-date-badge" style={{ fontSize: '0.68rem', opacity: 0.75, display: 'block', marginTop: '1px' }}>{today}</span>
+            </div>
+          </div>
         </div>
-        <div className="pos-search">
-          <svg className="pos-search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-          <input
-            type="text"
-            placeholder="Search menu..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-          />
-          {search && (
-            <button className="pos-search-clear" onClick={() => setSearch('')}>✕</button>
-          )}
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap', width: '100%', maxWidth: 'min(640px, 100%)', justifyContent: 'flex-end' }}>
+          <div className="pos-search" style={{ flex: 1, margin: 0 }}>
+            <svg className="pos-search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <input
+              type="text"
+              placeholder="Search menu items..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
+            {search && (
+              <button className="pos-search-clear" onClick={() => setSearch('')}>✕</button>
+            )}
+          </div>
+
+          <div className="pos-status-badge" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: '12px', padding: '0.35rem 0.65rem' }}>
+            <div style={{ textAlign: 'right' }}>
+              <span style={{ display: 'block', fontSize: '0.62rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 700 }}>Status</span>
+              <span style={{ display: 'block', fontSize: '0.68rem', color: 'var(--text-secondary)', fontWeight: 500 }}>Table {activeTable !== null ? activeTable : 'Takeaway'}</span>
+            </div>
+            <div style={{ background: 'var(--accent)', color: 'white', borderRadius: '8px', padding: '0.2rem 0.5rem', fontWeight: 800, fontSize: '0.78rem' }}>
+              {activeTable !== null ? `T${activeTable}` : '🥡'}
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Category Pills */}
-      <div className="pos-categories">
+      <div className="pos-categories" style={{ marginTop: '0.5rem' }}>
         {categories.map(cat => (
           <button
             key={cat.id}
             className={`pos-cat-pill${activeCategory === cat.id ? ' active' : ''}`}
             onClick={() => setActiveCategory(cat.id)}
           >
-            <span className="pos-cat-emoji">{cat.emoji}</span>
+            <div className="pos-cat-emoji-wrapper">
+              <span className="pos-cat-emoji">{cat.emoji}</span>
+            </div>
             <span className="pos-cat-name">{cat.name}</span>
           </button>
         ))}

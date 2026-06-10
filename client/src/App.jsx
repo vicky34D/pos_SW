@@ -332,7 +332,7 @@ export default function App() {
               })}
             </div>
 
-            <PosView onAddToOrder={addToOrder} />
+            <PosView onAddToOrder={addToOrder} activeTable={activeTable} />
           </>
         )}
         {activeView === 'tables' && (
