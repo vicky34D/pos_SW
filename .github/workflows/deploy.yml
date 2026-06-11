@@ -75,6 +75,18 @@ jobs:
             # BEFORE the process is replaced. This is the fix for WAL data loss.
             pm2 stop pos-app || true
             node -e 'const db=require("better-sqlite3")("streetwok.db"); db.pragma("wal_checkpoint(TRUNCATE)"); console.log("WAL flushed to disk"); db.close();'
+
+            echo "=== 4b) One-time recipe & inventory seed v2 (guarded by marker) ==="
+            # Runs while the app is stopped (no concurrent writers). The marker
+            # makes this once-only so later recipe edits in the UI are never
+            # overwritten by redeploys.
+            MARKER=~/deploy_safety/.recipes_seed_v2_done
+            if [ ! -f "$MARKER" ]; then
+              (node seed_recipes.js && touch "$MARKER") || echo "WARN: recipe seed failed — will retry on next deploy"
+            else
+              echo "recipe seed v2 already applied — skipping"
+            fi
+
             pm2 start pos-app || pm2 restart pos-app
             pm2 save
 
