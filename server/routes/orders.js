@@ -123,4 +123,45 @@ router.post('/', requireRole(['Admin', 'Manager', 'Employee']), (req, res) => {
   res.status(201).json(order);
 });
 
+// DELETE order — Admin/Manager only. Returns the stock the sale consumed by
+// reversing this order's own ledger entries (NOT the current recipe, which
+// may have been edited since the sale), then removes the order + its items.
+// The ledger keeps both the sale and the return rows; order numbers are
+// never reused. Orders from before the stock module have no ledger trail,
+// so they delete without any stock movement.
+router.delete('/:id', requireRole(['Admin', 'Manager']), (req, res) => {
+  const orgId = req.user.org_id;
+  const order = db.prepare('SELECT * FROM orders WHERE id = ? AND org_id = ?').get(req.params.id, orgId);
+  if (!order) return res.status(404).json({ error: 'Order not found' });
+
+  // Net stock this order deducted, straight from its own ledger trail.
+  const consumed = db.prepare(`
+    SELECT item_id, SUM(qty_change) AS net
+    FROM stock_ledger_entries
+    WHERE org_id = ? AND voucher_type = 'Sales Order' AND voucher_id = ?
+    GROUP BY item_id
+  `).all(orgId, order.id);
+
+  const warehouseId = getDefaultWarehouseId(orgId);
+  let stockReturned = 0;
+
+  const removeOrder = db.transaction(() => {
+    for (const row of consumed) {
+      if (!(row.net < 0)) continue;
+      postMovement({
+        orgId, itemId: row.item_id, warehouseId,
+        qtyChange: -row.net,
+        voucherType: 'Stock Adjustment', voucherId: order.id,
+        notes: `Order #${order.order_number} deleted — stock returned`
+      });
+      stockReturned++;
+    }
+    db.prepare('DELETE FROM order_items WHERE order_id = ? AND org_id = ?').run(order.id, orgId);
+    db.prepare('DELETE FROM orders WHERE id = ? AND org_id = ?').run(order.id, orgId);
+  });
+  removeOrder();
+
+  res.json({ deleted: order.id, order_number: order.order_number, stock_items_returned: stockReturned });
+});
+
 module.exports = router;

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import * as api from '../api'
 
-export default function ReportsView() {
+export default function ReportsView({ currentUser, showToast }) {
   const [tab, setTab] = useState('today')
   const [summary, setSummary] = useState({})
   const [daily, setDaily] = useState([])
@@ -10,14 +10,29 @@ export default function ReportsView() {
   const [topItems, setTopItems] = useState([])
   const [orders, setOrders] = useState([])
 
-  useEffect(() => {
+  const canDeleteOrders = ['Admin', 'Manager'].includes(currentUser?.role)
+
+  const loadAll = () => {
     api.getReportSummary().then(setSummary).catch(() => {})
     api.getDailyReport().then(setDaily).catch(() => {})
     api.getMonthlyReport().then(setMonthly).catch(() => {})
     api.getTodayItems().then(setTodayItems).catch(() => {})
     api.getTopItems().then(setTopItems).catch(() => {})
     api.getOrders().then(setOrders).catch(() => {})
-  }, [])
+  }
+
+  useEffect(() => { loadAll() }, [])
+
+  const handleDeleteOrder = async (tx) => {
+    if (!window.confirm(`Delete order #${tx.order_number} (₹${tx.total.toFixed(2)})? Stock used by this order will be returned to inventory.`)) return
+    try {
+      await api.deleteOrder(tx.id)
+      showToast?.(`Order #${tx.order_number} deleted — stock returned`, 'success')
+      loadAll()
+    } catch (e) {
+      showToast?.(e.message || 'Failed to delete order', 'error')
+    }
+  }
 
   const exportCSV = () => {
     if (orders.length === 0) return
@@ -220,11 +235,11 @@ export default function ReportsView() {
             <div style={{ maxHeight: 400, overflowY: 'auto', overflowX: 'auto' }}>
               <table className="report-table">
                 <thead>
-                  <tr><th>Order #</th><th>Time</th><th>Customer</th><th>Items</th><th>Payment</th><th>Total</th></tr>
+                  <tr><th>Order #</th><th>Time</th><th>Customer</th><th>Items</th><th>Payment</th><th>Total</th>{canDeleteOrders && <th></th>}</tr>
                 </thead>
                 <tbody>
                   {orders.length === 0 ? (
-                    <tr><td colSpan="6" style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>No transactions yet</td></tr>
+                    <tr><td colSpan={canDeleteOrders ? 7 : 6} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>No transactions yet</td></tr>
                   ) : orders.slice(0, 50).map(tx => (
                     <tr key={tx.id}>
                       <td className="fw-bold">#{tx.order_number}</td>
@@ -238,6 +253,11 @@ export default function ReportsView() {
                         color: tx.payment_method === 'Cash' ? 'var(--success)' : tx.payment_method === 'UPI' ? 'var(--info)' : 'var(--warning)'
                       }}>{tx.payment_method}</span></td>
                       <td className="fw-bold text-primary">₹{tx.total.toFixed(2)}</td>
+                      {canDeleteOrders && (
+                        <td>
+                          <button className="frappe-icon-btn" title="Delete order (returns stock)" onClick={() => handleDeleteOrder(tx)}>🗑️</button>
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>

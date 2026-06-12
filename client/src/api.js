@@ -83,6 +83,7 @@ export const getOrders = (params) => {
   return request(`/orders${qs}`);
 };
 export const createOrder = (data) => request('/orders', { method: 'POST', body: JSON.stringify(data) });
+export const deleteOrder = (id) => request(`/orders/${id}`, { method: 'DELETE' });
 export const clearAllOrders = () => request('/orders/all', { method: 'DELETE' });
 
 // Inventory

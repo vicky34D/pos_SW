@@ -346,7 +346,7 @@ export default function App() {
           <InventoryView showToast={showToast} />
         )}
         {activeView === 'reports' && (
-          <ReportsView />
+          <ReportsView currentUser={currentUser} showToast={showToast} />
         )}
         {activeView === 'menu' && (
           <MenuManagement showToast={showToast} />
