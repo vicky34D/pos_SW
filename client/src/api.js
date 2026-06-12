@@ -5,25 +5,54 @@ const hasUsableRuntimeBase =
   !runtimeBase.includes('YOUR_CLOUD_SERVER_IP');
 const BASE = (hasUsableRuntimeBase ? runtimeBase : undefined) || import.meta.env.VITE_API_URL || '/api';
 
+const TOKEN_KEY = 'auth_token';
+const TOKEN_EXPIRY_KEY = 'auth_token_expires_at';
+// Login once and stay signed in on this device for the day. Matches the
+// server JWT lifetime (24h) so the stored token is never older than what
+// the server would accept anyway. Logout clears it immediately.
+const TOKEN_TTL_MS = 24 * 60 * 60 * 1000;
+
 let memoryToken = null;
 
 export const setAuthToken = (token) => {
-  if (token) {
-    memoryToken = token;
-  } else {
-    memoryToken = null;
+  if (!token) {
+    clearAuthToken();
+    return;
   }
-  // Clear any legacy tokens to enforce strict login
-  sessionStorage.removeItem('auth_token');
-  localStorage.removeItem('auth_token');
+  memoryToken = token;
+  try {
+    localStorage.setItem(TOKEN_KEY, token);
+    localStorage.setItem(TOKEN_EXPIRY_KEY, String(Date.now() + TOKEN_TTL_MS));
+  } catch {
+    // Storage unavailable (e.g. private mode) — session lives in memory only.
+  }
 };
 
-export const getAuthToken = () => memoryToken;
+export const getAuthToken = () => {
+  if (memoryToken) return memoryToken;
+  try {
+    const token = localStorage.getItem(TOKEN_KEY);
+    const expiresAt = Number(localStorage.getItem(TOKEN_EXPIRY_KEY) || 0);
+    if (token && Date.now() < expiresAt) {
+      memoryToken = token;
+      return token;
+    }
+    if (token) clearAuthToken(); // expired leftover from a previous day
+  } catch {
+    // Storage unavailable — nothing to restore.
+  }
+  return null;
+};
 
 export const clearAuthToken = () => {
   memoryToken = null;
-  sessionStorage.removeItem('auth_token');
-  localStorage.removeItem('auth_token');
+  try {
+    sessionStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(TOKEN_EXPIRY_KEY);
+  } catch {
+    // Storage unavailable — memory token already cleared.
+  }
 };
 
 async function request(path, options = {}) {
@@ -53,6 +82,12 @@ async function request(path, options = {}) {
   }
 
   if (!res.ok) {
+    // A rejected token (expired / server restarted with new secret) would
+    // otherwise stay stored and wedge every request — drop it so the next
+    // page load shows the login screen cleanly.
+    if (res.status === 401 && getAuthToken()) {
+      clearAuthToken();
+    }
     const err = await res.json().catch(() => ({ error: res.statusText }));
     throw new Error(err.error || 'Request failed');
   }
