@@ -6,6 +6,8 @@ const CATEGORIES = ['Rent','Utilities','Salary','Maintenance','Marketing','Packa
 
 const emptyForm = { category: 'Other', payee: '', supplier_id: '', expense_date: new Date().toISOString().slice(0,10), due_date: '', amount: '', tax: 0, notes: '' }
 
+const r2 = (n) => Math.round((Number(n) || 0) * 100) / 100
+
 export default function ExpensesView({ showToast }) {
   const [expenses, setExpenses] = useState([])
   const [suppliers, setSuppliers] = useState([])
@@ -19,6 +21,8 @@ export default function ExpensesView({ showToast }) {
   const [detail, setDetail] = useState(null)
   const [payingExp, setPayingExp] = useState(null)
   const [payForm, setPayForm] = useState({ amount: 0, method: 'Cash', payment_date: new Date().toISOString().slice(0,10), notes: '' })
+
+  const formTotal = r2((Number(form.amount) || 0) + (Number(form.tax) || 0))
 
   const load = useCallback(async () => {
     try {
@@ -231,6 +235,12 @@ export default function ExpensesView({ showToast }) {
               <div className="frappe-field">
                 <label>Tax (₹)</label>
                 <input className="frappe-input" type="number" step="0.01" placeholder="0" value={form.tax} onChange={e => setForm(f => ({ ...f, tax: Number(e.target.value) }))} />
+              </div>
+              <div className="frappe-field frappe-field-full">
+                <div className="frappe-total-bar">
+                  <span>Total Payable</span>
+                  <span className="frappe-total-bar-value">₹{formTotal.toFixed(2)}</span>
+                </div>
               </div>
               <div className="frappe-field frappe-field-full">
                 <label>Notes</label>

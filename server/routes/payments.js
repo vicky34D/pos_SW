@@ -8,12 +8,22 @@ const { db } = require('../db');
 const { requireRole } = require('../middleware/auth');
 const { v4: uuidv4 } = require('uuid');
 
+// Round money to 2 decimals (paise) so paid_amount never drifts.
+const round2 = (n) => Math.round((Number(n) || 0) * 100) / 100;
+// Tolerance for "fully paid" so legacy float drift doesn't strand a bill on
+// "Partially Paid" when paid_amount is off by a fraction of a paisa.
+const EPS = 0.005;
+
 function nextPaymentNumber(orgId) {
-  const last = db.prepare(
-    "SELECT payment_number FROM payments WHERE org_id = ? AND payment_number LIKE 'PAY-%' ORDER BY created_at DESC LIMIT 1"
-  ).get(orgId);
-  const num = last ? (parseInt(last.payment_number.split('-')[1], 10) + 1) : 1;
-  return `PAY-${String(num).padStart(5, '0')}`;
+  const rows = db.prepare(
+    "SELECT payment_number FROM payments WHERE org_id = ? AND payment_number LIKE 'PAY-%'"
+  ).all(orgId);
+  let max = 0;
+  for (const r of rows) {
+    const n = parseInt(r.payment_number.split('-')[1], 10);
+    if (Number.isFinite(n) && n > max) max = n;
+  }
+  return `PAY-${String(max + 1).padStart(5, '0')}`;
 }
 
 function reconcileBillStatus(orgId, againstType, againstId) {
@@ -21,8 +31,8 @@ function reconcileBillStatus(orgId, againstType, againstId) {
   const bill = db.prepare(`SELECT total, paid_amount FROM ${table} WHERE id = ? AND org_id = ?`).get(againstId, orgId);
   if (!bill) return;
   let status;
-  if (bill.paid_amount <= 0) status = againstType === 'Purchase Bill' ? 'Submitted' : 'Submitted';
-  else if (bill.paid_amount < bill.total) status = 'Partially Paid';
+  if (bill.paid_amount <= EPS) status = 'Submitted';
+  else if (bill.paid_amount < bill.total - EPS) status = 'Partially Paid';
   else status = 'Paid';
   db.prepare(`UPDATE ${table} SET status = ? WHERE id = ? AND org_id = ?`).run(status, againstId, orgId);
 }
@@ -56,7 +66,7 @@ router.post('/', requireRole(['Admin', 'Manager']), (req, res) => {
 
   const paymentId = uuidv4();
   const payNumber = nextPaymentNumber(orgId);
-  const amtNum = Number(amount);
+  const amtNum = round2(amount);
 
   const recordPayment = db.transaction(() => {
     db.prepare(`INSERT INTO payments (id, org_id, payment_number, against_type, against_id, supplier_id, amount, method, payment_date, notes)
@@ -65,8 +75,8 @@ router.post('/', requireRole(['Admin', 'Manager']), (req, res) => {
       supplier_id || bill.supplier_id || null, amtNum,
       method || 'Cash', payment_date || null, notes || ''
     );
-    // Update paid_amount on the bill
-    db.prepare(`UPDATE ${table} SET paid_amount = MIN(total, paid_amount + ?) WHERE id = ? AND org_id = ?`)
+    // Update paid_amount on the bill — ROUND keeps the stored REAL exact.
+    db.prepare(`UPDATE ${table} SET paid_amount = MIN(total, ROUND(paid_amount + ?, 2)) WHERE id = ? AND org_id = ?`)
       .run(amtNum, against_id, orgId);
     reconcileBillStatus(orgId, against_type, against_id);
   });
@@ -84,8 +94,8 @@ router.delete('/:id', requireRole(['Admin', 'Manager']), (req, res) => {
   const table = payment.against_type === 'Purchase Bill' ? 'purchase_bills' : 'expense_bills';
 
   const reversePayment = db.transaction(() => {
-    db.prepare(`UPDATE ${table} SET paid_amount = MAX(0, paid_amount - ?) WHERE id = ? AND org_id = ?`)
-      .run(payment.amount, payment.against_id, orgId);
+    db.prepare(`UPDATE ${table} SET paid_amount = MAX(0, ROUND(paid_amount - ?, 2)) WHERE id = ? AND org_id = ?`)
+      .run(round2(payment.amount), payment.against_id, orgId);
     reconcileBillStatus(orgId, payment.against_type, payment.against_id);
     db.prepare('DELETE FROM payments WHERE id = ? AND org_id = ?').run(req.params.id, orgId);
   });

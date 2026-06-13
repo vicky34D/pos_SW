@@ -1622,3 +1622,104 @@ input,select,textarea { font-family:'Inter',sans-serif; }
 .text-primary { color: var(--accent); }
 .text-right { text-align: right; }
 .mb-1 { margin-bottom: 0.5rem; }
+
+/* ===== Tables Dashboard ===== */
+.tbl-stat-sub { font-size: 0.95rem; font-weight: 600; color: var(--text-muted); }
+
+.tbl-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1rem;
+  padding: 0.25rem 0 1.5rem;
+}
+
+.tbl-card {
+  display: flex; flex-direction: column;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  transition: var(--transition);
+}
+.tbl-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.tbl-card.is-engaged { border-top-color: var(--accent); }
+.tbl-card.is-empty { background: var(--bg-primary); }
+.tbl-card.is-active { box-shadow: 0 0 0 2px var(--accent), var(--shadow-md); }
+
+.tbl-card-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.85rem 1rem 0.6rem;
+}
+.tbl-card-title {
+  display: flex; align-items: center; gap: 0.5rem;
+  font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 1rem;
+  color: var(--text-primary);
+}
+.tbl-card-icon { font-size: 1.1rem; }
+
+.tbl-status {
+  font-size: 0.66rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.4px; padding: 0.2rem 0.6rem; border-radius: var(--radius-full);
+  white-space: nowrap;
+}
+.tbl-status.occupied { background: var(--accent-soft); color: var(--accent); }
+.tbl-status.free { background: var(--bg-elevated); color: var(--text-muted); }
+
+.tbl-customer { padding: 0 1rem 0.4rem; font-size: 0.78rem; color: var(--text-secondary); }
+
+.tbl-card-body {
+  flex: 1; min-height: 64px; max-height: 168px; overflow-y: auto;
+  padding: 0.3rem 1rem 0.5rem;
+}
+.tbl-items { list-style: none; margin: 0; padding: 0; }
+.tbl-items li {
+  display: flex; justify-content: space-between; gap: 0.5rem;
+  font-size: 0.83rem; padding: 0.3rem 0; color: var(--text-secondary);
+  border-bottom: 1px dashed var(--border);
+}
+.tbl-items li:last-child { border-bottom: none; }
+.tbl-item-qty { color: var(--accent); font-weight: 700; }
+.tbl-item-price { font-weight: 600; color: var(--text-primary); white-space: nowrap; }
+
+.tbl-empty {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 60px; height: 100%; color: var(--text-muted);
+  font-size: 0.82rem; font-style: italic;
+}
+
+.tbl-card-foot {
+  padding: 0.7rem 1rem 0.85rem;
+  border-top: 1px solid var(--border);
+  background: var(--bg-secondary);
+}
+.tbl-card.is-empty .tbl-card-foot { background: transparent; border-top-color: transparent; padding-top: 0; }
+.tbl-total {
+  display: flex; justify-content: space-between; align-items: baseline;
+  margin-bottom: 0.6rem;
+}
+.tbl-total > span:first-child { font-size: 0.8rem; font-weight: 600; color: var(--text-muted); }
+.tbl-total-value { font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 700; color: var(--accent); }
+
+.tbl-action {
+  width: 100%; padding: 0.6rem; border-radius: var(--radius-md);
+  font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: var(--transition);
+  border: 1px solid var(--border); background: var(--bg-secondary); color: var(--text-secondary);
+}
+.tbl-action:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+.tbl-action.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.tbl-action.primary:hover { background: var(--accent-dark); border-color: var(--accent-dark); color: #fff; }
+
+@media (max-width: 640px) {
+  .tbl-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 0.7rem; }
+}
+
+/* Total readout used in bill/expense forms */
+.frappe-total-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.6rem 0.9rem; border-radius: var(--radius-md);
+  background: var(--accent-soft); border: 1px solid var(--border);
+  font-weight: 600; color: var(--text-secondary); font-size: 0.85rem;
+}
+.frappe-total-bar-value { font-family: 'Outfit', sans-serif; font-size: 1.15rem; font-weight: 700; color: var(--accent); }

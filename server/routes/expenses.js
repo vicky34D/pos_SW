@@ -6,12 +6,21 @@ const { v4: uuidv4 } = require('uuid');
 
 const EXPENSE_CATEGORIES = ['Rent', 'Utilities', 'Salary', 'Maintenance', 'Marketing', 'Packaging', 'Other'];
 
+// Round money to 2 decimals (paise) so totals/balances never drift.
+const round2 = (n) => Math.round((Number(n) || 0) * 100) / 100;
+
+// Next sequence number = max existing suffix + 1. Ordering by created_at was
+// only second-precise, so two expenses in the same second collided (EXP-00002 x2).
 function nextExpenseNumber(orgId) {
-  const last = db.prepare(
-    "SELECT expense_number FROM expense_bills WHERE org_id = ? AND expense_number LIKE 'EXP-%' ORDER BY created_at DESC LIMIT 1"
-  ).get(orgId);
-  const num = last ? (parseInt(last.expense_number.split('-')[1], 10) + 1) : 1;
-  return `EXP-${String(num).padStart(5, '0')}`;
+  const rows = db.prepare(
+    "SELECT expense_number FROM expense_bills WHERE org_id = ? AND expense_number LIKE 'EXP-%'"
+  ).all(orgId);
+  let max = 0;
+  for (const r of rows) {
+    const n = parseInt(r.expense_number.split('-')[1], 10);
+    if (Number.isFinite(n) && n > max) max = n;
+  }
+  return `EXP-${String(max + 1).padStart(5, '0')}`;
 }
 
 // GET all expense bills
@@ -54,14 +63,14 @@ router.post('/', requireRole(['Admin', 'Manager']), (req, res) => {
 
   const billId = uuidv4();
   const expNumber = nextExpenseNumber(orgId);
-  const amtNum = Number(amount) || 0;
-  const taxNum = Number(tax) || 0;
+  const amtNum = round2(amount);
+  const taxNum = round2(tax);
 
   db.prepare(`INSERT INTO expense_bills
     (id, org_id, expense_number, category, payee, supplier_id, expense_date, due_date, amount, tax, total, notes)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(billId, orgId, expNumber, category || 'Other', payee || '', supplier_id || null,
-    expense_date || null, due_date || null, amtNum, taxNum, amtNum + taxNum, notes || '');
+    expense_date || null, due_date || null, amtNum, taxNum, round2(amtNum + taxNum), notes || '');
 
   res.status(201).json(db.prepare('SELECT * FROM expense_bills WHERE id = ?').get(billId));
 });
@@ -74,14 +83,14 @@ router.put('/:id', requireRole(['Admin', 'Manager']), (req, res) => {
   if (existing.status === 'Paid') return res.status(400).json({ error: 'Cannot edit a fully paid expense' });
 
   const { category, payee, supplier_id, expense_date, due_date, amount, tax, notes, status } = req.body;
-  const amtNum = amount !== undefined ? Number(amount) : existing.amount;
-  const taxNum = tax !== undefined ? Number(tax) : existing.tax;
+  const amtNum = amount !== undefined ? round2(amount) : round2(existing.amount);
+  const taxNum = tax !== undefined ? round2(tax) : round2(existing.tax);
 
   db.prepare(`UPDATE expense_bills SET category=?, payee=?, supplier_id=?, expense_date=?, due_date=?,
               amount=?, tax=?, total=?, notes=?, status=? WHERE id=? AND org_id=?`).run(
     category ?? existing.category, payee ?? existing.payee, supplier_id ?? existing.supplier_id,
     expense_date ?? existing.expense_date, due_date ?? existing.due_date,
-    amtNum, taxNum, amtNum + taxNum, notes ?? existing.notes,
+    amtNum, taxNum, round2(amtNum + taxNum), notes ?? existing.notes,
     status ?? existing.status, req.params.id, orgId
   );
   res.json(db.prepare('SELECT * FROM expense_bills WHERE id = ?').get(req.params.id));

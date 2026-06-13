@@ -1,80 +1,96 @@
 import React from 'react'
 
+const TOTAL_TABLES = 10
+const fmt = (n) => '₹' + Number(n || 0).toLocaleString('en-IN')
+
 export default function TablesView({ tables, activeTable, onSelectTable }) {
-  const TOTAL_TABLES = 10;
-  
+  const nums = Array.from({ length: TOTAL_TABLES }, (_, i) => i + 1)
+
+  // Live floor summary
+  const summary = nums.reduce((acc, num) => {
+    const items = tables[num]?.items || []
+    if (items.length > 0) {
+      acc.active += 1
+      acc.amount += items.reduce((s, it) => s + it.price * it.qty, 0)
+      acc.items += items.reduce((s, it) => s + it.qty, 0)
+    }
+    return acc
+  }, { active: 0, amount: 0, items: 0 })
+
   return (
     <div className="view-section">
       <div className="top-header">
         <div className="header-left">
           <div className="header-title">Tables Dashboard</div>
-          <div className="header-subtitle">Manage dine-in tables and view current orders</div>
+          <div className="header-subtitle">Live view of dine-in tables and open orders</div>
         </div>
       </div>
-      
-      <div className="tables-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem', padding: '1rem' }}>
-        {Array.from({ length: TOTAL_TABLES }, (_, i) => i + 1).map(num => {
-          const tableData = tables[num] || { items: [], customerName: '', orderType: 'dine-in' };
-          const hasItems = tableData.items.length > 0;
-          const total = tableData.items.reduce((s, item) => s + (item.price * item.qty), 0);
-          const itemCount = tableData.items.reduce((s, item) => s + item.qty, 0);
+
+      <div className="frappe-stat-row">
+        <div className="frappe-stat-card">
+          <div className="frappe-stat-label">Active Tables</div>
+          <div className="frappe-stat-value">{summary.active}<span className="tbl-stat-sub"> / {TOTAL_TABLES}</span></div>
+        </div>
+        <div className="frappe-stat-card">
+          <div className="frappe-stat-label">Items in Service</div>
+          <div className="frappe-stat-value">{summary.items}</div>
+        </div>
+        <div className="frappe-stat-card">
+          <div className="frappe-stat-label">Open Amount</div>
+          <div className="frappe-stat-value text-primary">{fmt(summary.amount)}</div>
+        </div>
+      </div>
+
+      <div className="tbl-grid">
+        {nums.map(num => {
+          const t = tables[num] || { items: [], customerName: '', orderType: 'dine-in' }
+          const items = t.items || []
+          const engaged = items.length > 0
+          const total = items.reduce((s, it) => s + it.price * it.qty, 0)
+          const itemCount = items.reduce((s, it) => s + it.qty, 0)
+          const isActive = activeTable === num
 
           return (
-            <div key={num} className="report-card" style={{ display: 'flex', flexDirection: 'column', height: '100%', borderTop: hasItems ? '4px solid var(--primary)' : '4px solid #cbd5e1' }}>
-              <div className="report-card-header" style={{ borderBottom: '1px solid var(--border)', paddingBottom: '0.75rem', marginBottom: '0.75rem' }}>
-                <h5 style={{ margin: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div key={num} className={`tbl-card${engaged ? ' is-engaged' : ' is-empty'}${isActive ? ' is-active' : ''}`}>
+              <div className="tbl-card-head">
+                <div className="tbl-card-title">
+                  <span className="tbl-card-icon">{engaged ? '🪑' : '🍽️'}</span>
                   <span>Table {num}</span>
-                  {hasItems ? (
-                    <span style={{ fontSize: '0.75rem', padding: '0.2rem 0.6rem', background: 'var(--primary-light)', color: 'var(--primary)', borderRadius: '1rem', fontWeight: 600 }}>
-                      Engaged ({itemCount} items)
-                    </span>
-                  ) : (
-                    <span style={{ fontSize: '0.75rem', padding: '0.2rem 0.6rem', background: '#f1f5f9', color: '#64748b', borderRadius: '1rem', fontWeight: 600 }}>
-                      Empty
-                    </span>
-                  )}
-                </h5>
-                {tableData.customerName && (
-                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.4rem' }}>
-                    👤 {tableData.customerName}
-                  </div>
-                )}
+                </div>
+                <span className={`tbl-status${engaged ? ' occupied' : ' free'}`}>
+                  {engaged ? `${itemCount} item${itemCount > 1 ? 's' : ''}` : 'Free'}
+                </span>
               </div>
-              
-              <div style={{ flex: 1, overflowY: 'auto', maxHeight: '180px', paddingRight: '0.5rem' }}>
-                {hasItems ? (
-                  <ul style={{ listStyle: 'none', padding: 0, margin: 0, fontSize: '0.85rem' }}>
-                    {tableData.items.map((item, idx) => (
-                      <li key={idx} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.6rem' }}>
-                        <span style={{ display: 'flex', gap: '0.4rem' }}>
-                          <span style={{color: 'var(--text-muted)', fontWeight: 600}}>{item.qty}x</span> 
-                          <span>{item.name}</span>
-                        </span>
-                        <span style={{fontWeight: 600}}>₹{item.price * item.qty}</span>
+
+              {t.customerName && <div className="tbl-customer">👤 {t.customerName}</div>}
+
+              <div className="tbl-card-body">
+                {engaged ? (
+                  <ul className="tbl-items">
+                    {items.map((it, idx) => (
+                      <li key={idx}>
+                        <span className="tbl-item-name"><span className="tbl-item-qty">{it.qty}×</span> {it.name}</span>
+                        <span className="tbl-item-price">{fmt(it.price * it.qty)}</span>
                       </li>
                     ))}
                   </ul>
                 ) : (
-                  <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', fontStyle: 'italic', textAlign: 'center', marginTop: '2rem' }}>
-                    No active order for this table
-                  </div>
+                  <div className="tbl-empty">No active order</div>
                 )}
               </div>
 
-              <div style={{ marginTop: '1rem', borderTop: '1px solid var(--border)', paddingTop: '1rem' }}>
-                {hasItems ? (
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                    <span style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-muted)' }}>Subtotal:</span>
-                    <span style={{ fontWeight: 700, color: 'var(--primary)', fontSize: '1.2rem' }}>₹{total}</span>
+              <div className="tbl-card-foot">
+                {engaged && (
+                  <div className="tbl-total">
+                    <span>Total</span>
+                    <span className="tbl-total-value">{fmt(total)}</span>
                   </div>
-                ) : null}
-                
-                <button 
-                  className={hasItems ? "pastel-btn-primary" : "pastel-btn-secondary"} 
-                  style={{ width: '100%', padding: '0.75rem', fontSize: '0.9rem' }}
+                )}
+                <button
+                  className={`tbl-action${engaged ? ' primary' : ''}`}
                   onClick={() => onSelectTable(num)}
                 >
-                  {hasItems ? '✏️ Edit Order / Add Items' : '🍽️ Start New Order'}
+                  {engaged ? 'Edit Order →' : '+ Start Order'}
                 </button>
               </div>
             </div>

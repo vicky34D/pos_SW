@@ -9,12 +9,22 @@ const { requireRole } = require('../middleware/auth');
 const { postMovement, getDefaultWarehouseId } = require('../stockLedger');
 const { v4: uuidv4 } = require('uuid');
 
+// Round money to 2 decimals (paise). Keeps stored REALs exact so totals and
+// balances never drift (the cause of bills stuck on "Partially Paid").
+const round2 = (n) => Math.round((Number(n) || 0) * 100) / 100;
+
+// Next sequence number = max existing suffix + 1. Ordering by created_at was
+// only second-precise, so two bills in the same second produced duplicates.
 function nextBillNumber(orgId) {
-  const last = db.prepare(
-    "SELECT bill_number FROM purchase_bills WHERE org_id = ? AND bill_number LIKE 'PB-%' ORDER BY created_at DESC LIMIT 1"
-  ).get(orgId);
-  const num = last ? (parseInt(last.bill_number.split('-')[1], 10) + 1) : 1;
-  return `PB-${String(num).padStart(5, '0')}`;
+  const rows = db.prepare(
+    "SELECT bill_number FROM purchase_bills WHERE org_id = ? AND bill_number LIKE 'PB-%'"
+  ).all(orgId);
+  let max = 0;
+  for (const r of rows) {
+    const n = parseInt(r.bill_number.split('-')[1], 10);
+    if (Number.isFinite(n) && n > max) max = n;
+  }
+  return `PB-${String(max + 1).padStart(5, '0')}`;
 }
 
 // GET all purchase bills (with summary)
@@ -67,9 +77,10 @@ router.post('/', requireRole(['Admin', 'Manager']), (req, res) => {
   const whId = warehouse_id || getDefaultWarehouseId(orgId);
 
   let subtotal = 0;
-  for (const it of items) { subtotal += (Number(it.qty) || 0) * (Number(it.rate) || 0); }
-  const tax = Number(req.body.tax) || 0;
-  const total = subtotal + tax;
+  for (const it of items) { subtotal += round2((Number(it.qty) || 0) * (Number(it.rate) || 0)); }
+  subtotal = round2(subtotal);
+  const tax = round2(req.body.tax);
+  const total = round2(subtotal + tax);
 
   const insertBill = db.transaction(() => {
     db.prepare(`
@@ -81,7 +92,7 @@ router.post('/', requireRole(['Admin', 'Manager']), (req, res) => {
       if (!it.item_id) continue;
       const item = db.prepare('SELECT name FROM inventory WHERE id = ? AND org_id = ?').get(it.item_id, orgId);
       if (!item) continue;
-      const amount = (Number(it.qty) || 0) * (Number(it.rate) || 0);
+      const amount = round2((Number(it.qty) || 0) * (Number(it.rate) || 0));
       db.prepare(`INSERT INTO purchase_bill_items (bill_id, org_id, item_id, item_name, qty, rate, amount)
                   VALUES (?, ?, ?, ?, ?, ?, ?)`
       ).run(billId, orgId, it.item_id, item.name, it.qty, it.rate, amount);
@@ -164,7 +175,7 @@ router.put('/:id', requireRole(['Admin', 'Manager']), (req, res) => {
       for (const it of items) {
         const item = db.prepare('SELECT name FROM inventory WHERE id = ? AND org_id = ?').get(it.item_id, orgId);
         if (!item) continue;
-        const amount = (Number(it.qty) || 0) * (Number(it.rate) || 0);
+        const amount = round2((Number(it.qty) || 0) * (Number(it.rate) || 0));
         subtotal += amount;
         db.prepare(`INSERT INTO purchase_bill_items (bill_id, org_id, item_id, item_name, qty, rate, amount)
                     VALUES (?, ?, ?, ?, ?, ?, ?)`).run(req.params.id, orgId, it.item_id, item.name, it.qty, it.rate, amount);
@@ -173,12 +184,13 @@ router.put('/:id', requireRole(['Admin', 'Manager']), (req, res) => {
       const row = db.prepare('SELECT COALESCE(SUM(amount),0) AS s FROM purchase_bill_items WHERE bill_id = ?').get(req.params.id);
       subtotal = row.s;
     }
-    const taxVal = tax !== undefined ? Number(tax) : bill.tax;
+    subtotal = round2(subtotal);
+    const taxVal = tax !== undefined ? round2(tax) : round2(bill.tax);
     db.prepare(`UPDATE purchase_bills SET supplier_id=?, warehouse_id=?, bill_date=?, due_date=?, subtotal=?, tax=?, total=?, notes=?
                 WHERE id=? AND org_id=?`).run(
       supplier_id ?? bill.supplier_id, warehouse_id ?? bill.warehouse_id,
       bill_date ?? bill.bill_date, due_date ?? bill.due_date,
-      subtotal, taxVal, subtotal + taxVal, notes ?? bill.notes,
+      subtotal, taxVal, round2(subtotal + taxVal), notes ?? bill.notes,
       req.params.id, orgId
     );
   });

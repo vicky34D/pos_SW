@@ -6,6 +6,8 @@ const STATUS_COLORS = { Draft:'badge-grey', Submitted:'badge-blue', 'Partially P
 const emptyForm = { supplier_id: '', warehouse_id: '', bill_date: new Date().toISOString().slice(0,10), due_date: '', notes: '', tax: 0, items: [] }
 const emptyItem = { item_id: '', qty: 1, rate: 0 }
 
+const r2 = (n) => Math.round((Number(n) || 0) * 100) / 100
+
 export default function PurchaseBillsView({ showToast }) {
   const [bills, setBills] = useState([])
   const [suppliers, setSuppliers] = useState([])
@@ -62,8 +64,8 @@ export default function PurchaseBillsView({ showToast }) {
     })
   }
 
-  const computedSubtotal = form.items.reduce((s, it) => s + (Number(it.qty) || 0) * (Number(it.rate) || 0), 0)
-  const computedTotal = computedSubtotal + Number(form.tax || 0)
+  const computedSubtotal = r2(form.items.reduce((s, it) => s + r2((Number(it.qty) || 0) * (Number(it.rate) || 0)), 0))
+  const computedTotal = r2(computedSubtotal + Number(form.tax || 0))
 
   const handleSaveDraft = async () => {
     if (!form.supplier_id) return showToast('Select a supplier', 'error')
@@ -270,7 +272,7 @@ export default function PurchaseBillsView({ showToast }) {
                       </td>
                       <td><input className="frappe-input" type="number" min="0.001" step="0.001" value={row.qty} onChange={e => setItemRow(i, 'qty', Number(e.target.value))} /></td>
                       <td><input className="frappe-input" type="number" min="0" step="0.01" value={row.rate} onChange={e => setItemRow(i, 'rate', Number(e.target.value))} /></td>
-                      <td>₹{((Number(row.qty)||0) * (Number(row.rate)||0)).toFixed(2)}</td>
+                      <td>₹{r2((Number(row.qty)||0) * (Number(row.rate)||0)).toFixed(2)}</td>
                       <td><button className="frappe-icon-btn" onClick={() => setForm(f => ({ ...f, items: f.items.filter((_, idx) => idx !== i) }))}>✕</button></td>
                     </tr>
                   ))}
