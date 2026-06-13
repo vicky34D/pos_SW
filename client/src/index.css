@@ -1751,3 +1751,99 @@ input,select,textarea { font-family:'Inter',sans-serif; }
   font-weight: 600; color: var(--text-secondary); font-size: 0.85rem;
 }
 .frappe-total-bar-value { font-family: 'Outfit', sans-serif; font-size: 1.15rem; font-weight: 700; color: var(--accent); }
+
+/* ============================================================
+   PREMIUM MOTION LAYER
+   App-wide smooth animation + refined micro-interactions.
+   Namespaced pm-* keyframes; entrances use fill-mode backwards so
+   they never lock hover transforms. Honors prefers-reduced-motion.
+   ============================================================ */
+:root {
+  --ease-out:    cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease-spring: cubic-bezier(0.34, 1.40, 0.64, 1);
+  --shadow-float: 0 12px 32px rgba(16, 32, 56, 0.12);
+}
+
+/* Crisper text + smooth scrolling = premium baseline */
+body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-rendering: optimizeLegibility; }
+.main-content, .pos-menu-scroll, .order-list-area, .frappe-modal, .modal-box, .frappe-page-body { scroll-behavior: smooth; }
+
+@keyframes pm-rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes pm-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes pm-pop  { from { opacity: 0; transform: translateY(8px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+/* View transitions on navigation */
+.frappe-page, .view-section, .pos-view, .report-section {
+  animation: pm-rise 0.34s var(--ease-out) backwards;
+}
+
+/* Card / row / surface entrances */
+.report-card, .frappe-stat-card, .tbl-card, .stat-card, .supplier-card,
+.pos-item-card, .order-item, .frappe-row {
+  animation: pm-rise 0.32s var(--ease-out) backwards;
+}
+.frappe-row { animation-name: pm-fade; animation-duration: 0.24s; }
+
+/* Staggered cascade for the key grids (first 8 items) */
+.frappe-stat-row > .frappe-stat-card:nth-child(2),
+.tbl-grid > .tbl-card:nth-child(2),
+.pos-menu-grid > .pos-item-card:nth-child(2) { animation-delay: 0.04s; }
+.frappe-stat-row > .frappe-stat-card:nth-child(3),
+.tbl-grid > .tbl-card:nth-child(3),
+.pos-menu-grid > .pos-item-card:nth-child(3) { animation-delay: 0.08s; }
+.tbl-grid > .tbl-card:nth-child(4),
+.pos-menu-grid > .pos-item-card:nth-child(4) { animation-delay: 0.12s; }
+.tbl-grid > .tbl-card:nth-child(5),
+.pos-menu-grid > .pos-item-card:nth-child(5) { animation-delay: 0.16s; }
+.tbl-grid > .tbl-card:nth-child(6),
+.pos-menu-grid > .pos-item-card:nth-child(6) { animation-delay: 0.20s; }
+.tbl-grid > .tbl-card:nth-child(7),
+.pos-menu-grid > .pos-item-card:nth-child(7) { animation-delay: 0.24s; }
+.tbl-grid > .tbl-card:nth-child(8),
+.pos-menu-grid > .pos-item-card:nth-child(8) { animation-delay: 0.28s; }
+
+/* Modals: fade the scrim, spring the panel */
+.modal-overlay, .frappe-modal-overlay { animation: pm-fade 0.2s var(--ease-out); }
+.frappe-modal { animation: pm-pop 0.3s var(--ease-spring) backwards; }
+
+/* Consistent press feedback + hover lift on every button */
+.frappe-btn, .btn-modal, .payment-btn, .tbl-action, .btn-action,
+.cash-quick-btn, .frappe-icon-btn, .order-type-btn, .cash-input, .pay-icon {
+  transition: background 0.18s var(--ease-out), border-color 0.18s var(--ease-out),
+              color 0.18s var(--ease-out), transform 0.12s var(--ease-out),
+              box-shadow 0.18s var(--ease-out);
+}
+.frappe-btn:active:not(:disabled), .btn-modal:active, .payment-btn:active,
+.tbl-action:active, .btn-action:active:not(:disabled), .cash-quick-btn:active,
+.frappe-icon-btn:active, .order-type-btn:active { transform: scale(0.96); }
+
+.frappe-btn-primary:hover:not(:disabled), .frappe-btn-success:hover:not(:disabled) {
+  transform: translateY(-1px); box-shadow: 0 6px 18px rgba(36, 144, 239, 0.28);
+}
+.payment-btn:hover { transform: translateY(-3px); box-shadow: var(--shadow-float); border-color: var(--accent); }
+
+/* Subtle elevation on informational cards */
+.frappe-stat-card { transition: transform 0.22s var(--ease-out), box-shadow 0.22s var(--ease-out); }
+.frappe-stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-float); }
+
+/* Nav items glide on hover */
+.nav-item { transition: background 0.18s var(--ease-out), color 0.18s var(--ease-out), transform 0.18s var(--ease-out); }
+.nav-item:hover { transform: translateX(3px); }
+
+/* Premium focus rings */
+.frappe-input:focus, .frappe-select:focus, .frappe-search:focus, .customer-input:focus,
+.bill-cash-input:focus, .cash-input:focus, .search-wrapper input:focus, .pos-search input:focus {
+  outline: none; border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+  transition: border-color 0.15s var(--ease-out), box-shadow 0.15s var(--ease-out);
+}
+
+/* Respect users who prefer less motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
