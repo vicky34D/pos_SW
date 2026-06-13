@@ -527,6 +527,34 @@ input,select,textarea { font-family:'Inter',sans-serif; }
 .btn-checkout:hover { background:var(--accent-dark); transform:translateY(-1px); box-shadow:0 6px 20px var(--accent-glow); }
 .btn-checkout:disabled { opacity:0.4; cursor:not-allowed; transform:none; box-shadow:none; }
 
+/* Swipe-to-pay checkout */
+.swipe-track {
+  grid-column:1/-1; position:relative; height:54px;
+  border-radius:var(--radius-full); background:var(--accent-soft);
+  border:1px solid rgba(36,144,239,0.25); overflow:hidden;
+  user-select:none; touch-action:none; cursor:pointer;
+}
+.swipe-track:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+.swipe-fill { position:absolute; left:0; top:0; bottom:0; background:var(--accent-glow); }
+.swipe-label {
+  position:absolute; inset:0 1rem 0 3rem; display:flex; align-items:center; justify-content:center;
+  font-weight:700; font-size:0.9rem; color:var(--accent); white-space:nowrap; pointer-events:none;
+}
+.swipe-track.is-dragging .swipe-label { opacity:0.5; }
+.swipe-handle {
+  position:absolute; top:4px; left:4px; width:46px; height:46px;
+  display:flex; align-items:center; justify-content:center;
+  background:var(--accent); color:#fff; border-radius:50%;
+  box-shadow:0 2px 8px var(--accent-glow); cursor:grab; touch-action:none;
+}
+.swipe-track.is-dragging .swipe-handle { cursor:grabbing; }
+.swipe-track.is-confirmed { background:var(--success-bg); border-color:rgba(40,167,69,0.4); }
+.swipe-track.is-confirmed .swipe-fill { background:var(--success); }
+.swipe-track.is-confirmed .swipe-label { color:var(--success); }
+.swipe-track.is-confirmed .swipe-handle { background:var(--success); }
+.swipe-track.is-disabled { opacity:0.45; cursor:not-allowed; }
+.swipe-track.is-disabled .swipe-handle { background:var(--text-muted); cursor:not-allowed; }
+
 /* ===== BUTTONS ===== */
 .btn-add-stock {
   background:var(--accent); color:white; border:none;
