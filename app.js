@@ -135,6 +135,13 @@ let orderListEl, subtotalEl, taxEl, totalEl, checkoutTotalEl, emptyCartEl;
 let menuGridEl, categoryScrollEl, searchEl;
 let payBtn, clearOrderBtn, printOrderBtn;
 
+// Mobile UI & Modals
+let hamburgerMenuEl, offcanvasOverlayEl, closeOffcanvasEl;
+let floatingCartBarEl, cartItemCountEl, cartTotalPriceEl, openCartModalBtn, cartModalEl, closeCartModalEl;
+let productDetailModalEl, closeProductModalEl, detailEmojiEl, detailTitleEl, detailDescEl, detailPriceBadgeEl, detailQtyMinusEl, detailQtyPlusEl, detailQtyValEl, btnDetailAddEl;
+let currentDetailItem = null;
+let currentDetailQty = 1;
+
 // ===================================================================
 // INITIALIZATION
 // ===================================================================
@@ -153,6 +160,29 @@ document.addEventListener('DOMContentLoaded', () => {
     payBtn = document.getElementById('btn-pay');
     clearOrderBtn = document.getElementById('btn-clear-order');
     printOrderBtn = document.getElementById('btn-print-order');
+
+    // Mobile UI references
+    hamburgerMenuEl = document.getElementById('hamburger-menu');
+    offcanvasOverlayEl = document.getElementById('offcanvas-overlay');
+    closeOffcanvasEl = document.getElementById('close-offcanvas');
+    floatingCartBarEl = document.getElementById('floating-cart-bar');
+    cartItemCountEl = document.getElementById('cart-item-count');
+    cartTotalPriceEl = document.getElementById('cart-total-price');
+    openCartModalBtn = document.getElementById('open-cart-modal-btn');
+    cartModalEl = document.getElementById('cart-modal');
+    closeCartModalEl = document.getElementById('close-cart-modal');
+    
+    // Product Detail references
+    productDetailModalEl = document.getElementById('product-detail-modal');
+    closeProductModalEl = document.getElementById('close-product-modal');
+    detailEmojiEl = document.getElementById('detail-emoji');
+    detailTitleEl = document.getElementById('detail-title');
+    detailDescEl = document.getElementById('detail-desc');
+    detailPriceBadgeEl = document.getElementById('detail-price-badge');
+    detailQtyMinusEl = document.getElementById('detail-qty-minus');
+    detailQtyPlusEl = document.getElementById('detail-qty-plus');
+    detailQtyValEl = document.getElementById('detail-qty-val');
+    btnDetailAddEl = document.getElementById('btn-detail-add');
 
     // Load data
     loadFromLocalStorage();
@@ -240,6 +270,51 @@ function saveBasicData() {
 // ===================================================================
 
 function setupEventListeners() {
+    // Mobile Offcanvas
+    if(hamburgerMenuEl) hamburgerMenuEl.addEventListener('click', () => offcanvasOverlayEl.classList.remove('hidden'));
+    if(closeOffcanvasEl) closeOffcanvasEl.addEventListener('click', () => offcanvasOverlayEl.classList.add('hidden'));
+    
+    // Cart Modal
+    if(openCartModalBtn) openCartModalBtn.addEventListener('click', () => cartModalEl.classList.remove('hidden'));
+    if(closeCartModalEl) closeCartModalEl.addEventListener('click', () => cartModalEl.classList.add('hidden'));
+    
+    // Product Detail Modal
+    if(closeProductModalEl) closeProductModalEl.addEventListener('click', () => productDetailModalEl.classList.add('hidden'));
+    
+    if(detailQtyMinusEl) {
+        detailQtyMinusEl.addEventListener('click', () => {
+            if(currentDetailQty > 1) {
+                currentDetailQty--;
+                detailQtyValEl.textContent = currentDetailQty;
+            }
+        });
+    }
+    
+    if(detailQtyPlusEl) {
+        detailQtyPlusEl.addEventListener('click', () => {
+            currentDetailQty++;
+            detailQtyValEl.textContent = currentDetailQty;
+        });
+    }
+    
+    if(btnDetailAddEl) {
+        btnDetailAddEl.addEventListener('click', () => {
+            if(currentDetailItem) {
+                for(let i=0; i<currentDetailQty; i++) {
+                    addToOrder(currentDetailItem.id, currentDetailItem.name, currentDetailItem.price, currentDetailItem.emoji);
+                }
+                productDetailModalEl.classList.add('hidden');
+            }
+        });
+    }
+
+    // Close offcanvas when clicking nav item
+    document.querySelectorAll('.offcanvas-menu .nav-item').forEach(item => {
+        item.addEventListener('click', () => {
+            if(offcanvasOverlayEl) offcanvasOverlayEl.classList.add('hidden');
+        });
+    });
+
     // Navigation
     document.querySelectorAll('.nav-item').forEach(item => {
         item.addEventListener('click', function () {
@@ -426,17 +501,28 @@ function renderMenuGrid() {
 
         card.addEventListener('click', (e) => {
             if (!e.target.classList.contains('card-add-btn')) {
-                addToOrder(item.id, item.name, item.price, item.emoji);
+                openProductDetail(item);
             }
         });
 
         card.querySelector('.card-add-btn').addEventListener('click', (e) => {
             e.stopPropagation();
-            addToOrder(item.id, item.name, item.price, item.emoji);
+            openProductDetail(item);
         });
 
         menuGridEl.appendChild(card);
     });
+}
+
+function openProductDetail(item) {
+    currentDetailItem = item;
+    currentDetailQty = 1;
+    if(detailEmojiEl) detailEmojiEl.textContent = item.emoji || '🍽️';
+    if(detailTitleEl) detailTitleEl.textContent = item.name;
+    if(detailDescEl) detailDescEl.textContent = item.desc || 'A delicious treat from our premium menu. Freshly prepared and served hot.';
+    if(detailPriceBadgeEl) detailPriceBadgeEl.textContent = item.price.toFixed(2);
+    if(detailQtyValEl) detailQtyValEl.textContent = currentDetailQty;
+    if(productDetailModalEl) productDetailModalEl.classList.remove('hidden');
 }
 
 // ===================================================================
@@ -536,6 +622,18 @@ function updateOrderDisplay() {
     // Update payment modal total
     const paymentTotal = document.getElementById('payment-total');
     if (paymentTotal) paymentTotal.textContent = `₹${total.toFixed(2)}`;
+
+    // Update floating cart bar
+    const totalItems = currentOrder.reduce((sum, item) => sum + item.qty, 0);
+    if(floatingCartBarEl) {
+        if(totalItems > 0) {
+            floatingCartBarEl.classList.remove('hidden');
+            if(cartItemCountEl) cartItemCountEl.textContent = `${totalItems} items selected`;
+            if(cartTotalPriceEl) cartTotalPriceEl.textContent = `₹${total.toFixed(2)}`;
+        } else {
+            floatingCartBarEl.classList.add('hidden');
+        }
+    }
 }
 
 // ===================================================================

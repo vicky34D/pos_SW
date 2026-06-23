@@ -3,11 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StreetWok POS - The Biker's Cafe</title>
-    <meta name="description" content="StreetWok POS System - Point of Sale for The Biker's Cafe">
+    <title>StreetWok POS - Mobile</title>
+    <meta name="description" content="StreetWok POS System - Mobile Interface">
 
     <!-- Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    
+    <!-- Google Fonts for modern typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <!-- Custom CSS -->
     <link rel="stylesheet" href="styles.css">
@@ -16,63 +21,59 @@
     <!-- Toast Notification Container -->
     <div class="toast-container" id="toast-container"></div>
 
-    <!-- Main App Container -->
-    <div class="app-container">
+    <!-- ===== TOP MOBILE NAV ===== -->
+    <header class="mobile-header">
+        <div class="hamburger-menu" id="hamburger-menu">
+            <i class="bi bi-list"></i>
+        </div>
+        <div class="location-selector">
+            <i class="bi bi-geo-alt-fill text-danger"></i> Rembang, Ind <i class="bi bi-chevron-down ms-1" style="font-size: 0.8rem;"></i>
+        </div>
+        <div class="settings-icon nav-item" id="nav-settings" data-view="settings">
+            <i class="bi bi-gear"></i>
+        </div>
+    </header>
 
-        <!-- ===== LEFT SIDEBAR ===== -->
-        <aside class="sidebar">
-            <div class="sidebar-brand">SW</div>
-
-            <div class="nav-group">
-                <div class="nav-item active" id="nav-pos" data-view="pos" title="Point of Sale">
-                    <i class="bi bi-grid-1x2-fill"></i>
-                </div>
-                <span class="nav-label">POS</span>
-
-                <div class="nav-item" id="nav-inventory" data-view="inventory" title="Inventory">
-                    <i class="bi bi-box-seam-fill"></i>
-                </div>
-                <span class="nav-label">Stock</span>
-
-                <div class="nav-item" id="nav-reports" data-view="reports" title="Reports">
-                    <i class="bi bi-bar-chart-line-fill"></i>
-                </div>
-                <span class="nav-label">Reports</span>
-
-                <div class="nav-item" id="nav-menu" data-view="menu" title="Menu">
-                    <i class="bi bi-journal-text"></i>
-                </div>
-                <span class="nav-label">Menu</span>
+    <!-- ===== OFFCANVAS SIDEBAR ===== -->
+    <div class="offcanvas-overlay hidden" id="offcanvas-overlay">
+        <aside class="offcanvas-menu">
+            <div class="offcanvas-header">
+                <div class="sidebar-brand">SW</div>
+                <i class="bi bi-x-lg" id="close-offcanvas"></i>
             </div>
-
-            <div class="nav-spacer"></div>
-
+            
             <div class="nav-group">
-                <div class="nav-item" id="nav-settings" data-view="settings" title="Settings">
-                    <i class="bi bi-gear-fill"></i>
+                <div class="nav-item active" id="nav-pos" data-view="pos">
+                    <i class="bi bi-grid-1x2-fill"></i> <span class="nav-label">POS</span>
                 </div>
-                <span class="nav-label">Settings</span>
+                <div class="nav-item" id="nav-inventory" data-view="inventory">
+                    <i class="bi bi-box-seam-fill"></i> <span class="nav-label">Stock</span>
+                </div>
+                <div class="nav-item" id="nav-reports" data-view="reports">
+                    <i class="bi bi-bar-chart-line-fill"></i> <span class="nav-label">Reports</span>
+                </div>
+                <div class="nav-item" id="nav-menu" data-view="menu">
+                    <i class="bi bi-journal-text"></i> <span class="nav-label">Menu</span>
+                </div>
             </div>
         </aside>
+    </div>
 
-        <!-- ===== MAIN CONTENT AREA ===== -->
+    <!-- ===== MAIN CONTENT AREA ===== -->
+    <div class="app-container">
         <main class="main-content">
 
             <!-- POS VIEW -->
             <div class="view-section" id="pos-view">
-                <div class="top-header">
-                    <div class="header-left">
-                        <div class="header-title">Point of Sale</div>
-                        <div class="header-subtitle" id="current-date-display"></div>
-                    </div>
+                <div class="pos-top-section">
                     <div class="search-wrapper">
                         <i class="bi bi-search search-icon"></i>
                         <input type="text" id="menu-search" placeholder="Search menu items...">
+                        <button class="filter-btn"><i class="bi bi-funnel-fill"></i></button>
                     </div>
                 </div>
 
                 <div class="category-section">
-                    <div class="section-label">Categories</div>
                     <div class="category-scroll" id="category-scroll">
                         <!-- Categories rendered dynamically -->
                     </div>
@@ -83,6 +84,9 @@
                         <!-- Menu cards rendered dynamically -->
                     </div>
                 </div>
+                
+                <!-- Spacer for floating bar -->
+                <div style="height: 100px;"></div>
             </div>
 
             <!-- INVENTORY VIEW -->
@@ -90,16 +94,15 @@
                 <div class="top-header">
                     <div class="header-left">
                         <div class="header-title">Inventory Management</div>
-                        <div class="header-subtitle">Track and manage your stock levels</div>
                     </div>
                     <button class="btn-add-stock" id="btn-add-new-stock">
-                        <i class="bi bi-plus-lg"></i> Add Item
+                        <i class="bi bi-plus-lg"></i> Add
                     </button>
                 </div>
                 <div class="inventory-grid" id="inventory-grid">
                     <!-- Stock cards rendered dynamically -->
                 </div>
-                <button class="btn-save-stock" id="btn-save-stock">
+                <button class="btn-save-stock mt-4 w-100" id="btn-save-stock">
                     <i class="bi bi-check-lg"></i> Save All Changes
                 </button>
             </div>
@@ -109,13 +112,10 @@
                 <div class="top-header">
                     <div class="header-left">
                         <div class="header-title">Sales & Revenue</div>
-                        <div class="header-subtitle">Track your business performance</div>
                     </div>
-                    <div class="date-filter">
-                        <button class="btn-export" id="btn-export-csv">
-                            <i class="bi bi-download"></i> Export CSV
-                        </button>
-                    </div>
+                    <button class="btn-export" id="btn-export-csv">
+                        <i class="bi bi-download"></i> Export
+                    </button>
                 </div>
 
                 <div class="stats-grid">
@@ -142,16 +142,16 @@
                         <div class="report-card-header">
                             <h5>Daily Breakdown</h5>
                         </div>
-                        <div style="max-height: 250px; overflow-y: auto;">
+                        <div class="table-responsive">
                             <table class="report-table">
                                 <thead>
                                     <tr>
                                         <th>Date</th>
                                         <th>Orders</th>
-                                        <th>Cash Sales</th>
-                                        <th>UPI Sales</th>
-                                        <th>Card Sales</th>
-                                        <th>Total Revenue</th>
+                                        <th>Cash</th>
+                                        <th>UPI</th>
+                                        <th>Card</th>
+                                        <th>Total</th>
                                     </tr>
                                 </thead>
                                 <tbody id="daily-sales-body"></tbody>
@@ -165,15 +165,15 @@
                         <div class="report-card-header">
                             <h5>Recent Transactions</h5>
                         </div>
-                        <div style="max-height: 300px; overflow-y: auto;">
+                        <div class="table-responsive">
                             <table class="report-table">
                                 <thead>
                                     <tr>
-                                        <th>Order #</th>
+                                        <th>#</th>
                                         <th>Time</th>
                                         <th>Customer</th>
                                         <th>Items</th>
-                                        <th>Payment</th>
+                                        <th>Method</th>
                                         <th>Total</th>
                                     </tr>
                                 </thead>
@@ -189,7 +189,6 @@
                 <div class="top-header">
                     <div class="header-left">
                         <div class="header-title">Menu Management</div>
-                        <div class="header-subtitle">Add, edit or remove menu items</div>
                     </div>
                     <button class="btn-add-stock" id="btn-add-new-menu-item">
                         <i class="bi bi-plus-lg"></i> Add Item
@@ -205,7 +204,6 @@
                 <div class="top-header">
                     <div class="header-left">
                         <div class="header-title">Settings</div>
-                        <div class="header-subtitle">Configure your POS system</div>
                     </div>
                 </div>
 
@@ -240,31 +238,49 @@
                 <div class="settings-section">
                     <div class="settings-title">Danger Zone</div>
                     <div class="settings-row">
-                        <span class="settings-label">Clear all transaction history</span>
                         <button class="btn-danger-action" id="btn-clear-transactions">Clear Transactions</button>
                     </div>
                     <div class="settings-row">
-                        <span class="settings-label">Reset everything to defaults</span>
                         <button class="btn-danger-action" id="btn-reset-all">Reset All Data</button>
                     </div>
                 </div>
             </div>
 
         </main>
+    </div>
 
-        <!-- ===== RIGHT ORDER PANEL ===== -->
-        <aside class="order-panel">
-            <div class="order-header">
-                <div class="order-header-top">
-                    <h4>Current Order</h4>
-                    <span class="order-number" id="order-id-display">#001</span>
-                </div>
-                <div class="order-type-toggle">
-                    <button class="order-type-btn active" data-type="dine-in">Dine In</button>
-                    <button class="order-type-btn" data-type="takeaway">Takeaway</button>
-                    <button class="order-type-btn" data-type="delivery">Delivery</button>
-                </div>
+    <!-- ===== FLOATING BOTTOM CART BAR ===== -->
+    <div class="floating-cart-bar hidden" id="floating-cart-bar">
+        <div class="cart-bar-info">
+            <span class="cart-item-count" id="cart-item-count">0 items selected</span>
+            <span class="cart-total-price" id="cart-total-price">₹0.00</span>
+        </div>
+        <button class="cart-bar-btn" id="open-cart-modal-btn">
+            <i class="bi bi-bag"></i>
+        </button>
+    </div>
+
+    <!-- ===== CART MODAL (Screen 3) ===== -->
+    <div class="full-modal hidden" id="cart-modal">
+        <div class="full-modal-header">
+            <i class="bi bi-arrow-left" id="close-cart-modal"></i>
+            <h3>Current Order</h3>
+            <i class="bi bi-three-dots"></i>
+        </div>
+        
+        <div class="full-modal-content">
+            <!-- Hidden inputs needed for app.js -->
+            <div style="display: none;">
                 <input type="text" class="customer-input" id="customer-name" placeholder="Customer name (optional)">
+                <span id="order-id-display">#001</span>
+                <span id="current-date-display"></span>
+                <button class="btn-clear" id="btn-clear-order">Clear</button>
+                <button class="btn-print" id="btn-print-order">Print</button>
+                <span id="checkout-total">₹0.00</span>
+                <!-- Kept order types for compatibility -->
+                <button class="order-type-btn active" data-type="dine-in">Dine In</button>
+                <button class="order-type-btn" data-type="takeaway">Takeaway</button>
+                <button class="order-type-btn" data-type="delivery">Delivery</button>
             </div>
 
             <div class="order-list-area" id="order-list">
@@ -274,41 +290,87 @@
                 </div>
             </div>
 
-            <div class="billing-section">
-                <div class="bill-row">
-                    <span>Subtotal</span>
-                    <span id="subtotal">₹0.00</span>
+            <div class="billing-section-wrapper">
+                <div class="billing-section">
+                    <h4>Order Summary</h4>
+                    <div class="bill-row">
+                        <span>Item total</span>
+                        <span id="subtotal">₹0.00</span>
+                    </div>
+                    <div class="bill-row">
+                        <span>Discount</span>
+                        <span>₹0.00</span> <!-- Static for now to match UI -->
+                    </div>
+                    <div class="bill-row">
+                        <span>Tax (<span id="tax-rate-display">5</span>%)</span>
+                        <span id="tax">₹0.00</span>
+                    </div>
+                    <div class="bill-row total">
+                        <span>Total</span>
+                        <span id="total">₹0.00</span>
+                    </div>
                 </div>
-                <div class="bill-row">
-                    <span>GST (<span id="tax-rate-display">5</span>%)</span>
-                    <span id="tax">₹0.00</span>
-                </div>
-                <div class="bill-row total">
-                    <span>Total</span>
-                    <span id="total">₹0.00</span>
+
+                <div class="checkout-action-wrapper">
+                    <button class="btn-checkout-large" id="btn-pay" disabled>
+                        Proceed Transactions
+                    </button>
                 </div>
             </div>
-
-            <div class="action-section">
-                <div class="action-grid">
-                    <button class="btn-action btn-clear" id="btn-clear-order">
-                        <i class="bi bi-trash3"></i> Clear
-                    </button>
-                    <button class="btn-action btn-print" id="btn-print-order">
-                        <i class="bi bi-printer"></i> Print
-                    </button>
-                    <button class="btn-action btn-checkout" id="btn-pay" disabled>
-                        <i class="bi bi-credit-card"></i> Checkout — <span id="checkout-total">₹0.00</span>
-                    </button>
-                </div>
-            </div>
-        </aside>
-
+        </div>
     </div>
 
-    <!-- ===== MODALS ===== -->
+    <!-- ===== PRODUCT DETAILS MODAL (Screen 2) ===== -->
+    <div class="full-modal hidden" id="product-detail-modal">
+        <div class="product-bg-art"></div>
+        <div class="full-modal-header transparent">
+            <i class="bi bi-arrow-left text-white" id="close-product-modal"></i>
+            <i class="bi bi-heart text-white"></i>
+        </div>
+        
+        <div class="product-detail-content">
+            <div class="product-detail-image-wrapper">
+                <div class="product-detail-image">
+                    <span class="product-detail-emoji" id="detail-emoji">🍔</span>
+                </div>
+                <div class="product-detail-price-badge">
+                    <span class="currency">₹</span><span id="detail-price-badge">0.00</span>
+                </div>
+            </div>
+            
+            <div class="product-detail-card">
+                <h2 id="detail-title">Product Name</h2>
+                <p id="detail-desc">Product description</p>
+                
+                <div class="product-detail-extras">
+                    <h4>Extras Provided</h4>
+                    <div class="extra-row">
+                        <span><i class="bi bi-fire text-danger me-2"></i> Spicy Level</span>
+                        <select class="extra-select"><option>Medium</option><option>High</option><option>Low</option></select>
+                    </div>
+                </div>
+                
+                <div class="product-detail-add-section">
+                    <div class="qty-selector-large">
+                        <span class="qty-label">Number of orders</span>
+                        <div class="qty-controls-detail">
+                            <button id="detail-qty-minus"><i class="bi bi-dash"></i></button>
+                            <span id="detail-qty-val">1</span>
+                            <button id="detail-qty-plus"><i class="bi bi-plus"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="product-bottom-action">
+             <button class="btn-add-to-cart-large" id="btn-detail-add">
+                Add Item(s)
+            </button>
+        </div>
+    </div>
 
-    <!-- Payment Modal -->
+    <!-- ===== PAYMENT MODAL ===== -->
     <div class="modal-overlay hidden" id="payment-modal">
         <div class="modal-box">
             <div class="modal-title">Select Payment Method</div>
@@ -336,13 +398,13 @@
         </div>
     </div>
 
-    <!-- Receipt Modal -->
+    <!-- ===== RECEIPT MODAL ===== -->
     <div class="modal-overlay hidden" id="receipt-modal">
         <div class="modal-box" style="max-width: 380px;">
             <div class="receipt-box" id="receipt-content">
                 <!-- Receipt content generated dynamically -->
             </div>
-            <div class="modal-actions" style="margin-top: 1rem;">
+            <div class="modal-actions mt-3">
                 <button class="btn-modal btn-modal-cancel" onclick="closeModal('receipt-modal')">Close</button>
                 <button class="btn-modal btn-modal-confirm" onclick="window.print()">
                     <i class="bi bi-printer"></i> Print
@@ -351,7 +413,7 @@
         </div>
     </div>
 
-    <!-- Add New Stock Modal -->
+    <!-- ===== ADD STOCK MODAL ===== -->
     <div class="modal-overlay hidden" id="add-stock-modal">
         <div class="modal-box">
             <div class="modal-title">Add New Stock Item</div>
@@ -375,7 +437,7 @@
                 </select>
             </div>
             <div class="modal-form-group">
-                <label>Low Stock Alert (when qty falls below)</label>
+                <label>Low Stock Alert (qty)</label>
                 <input type="number" id="new-stock-alert" value="5" min="0">
             </div>
             <div class="modal-actions">
@@ -385,7 +447,7 @@
         </div>
     </div>
 
-    <!-- Add New Menu Item Modal -->
+    <!-- ===== ADD MENU MODAL ===== -->
     <div class="modal-overlay hidden" id="add-menu-modal">
         <div class="modal-box">
             <div class="modal-title" id="menu-modal-title">Add New Menu Item</div>
