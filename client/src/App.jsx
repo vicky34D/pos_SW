@@ -54,6 +54,7 @@ export default function App() {
     : quickCustomerName
 
   const totalItems = currentOrder.reduce((sum, item) => sum + item.qty, 0)
+  const cartSubtotal = currentOrder.reduce((sum, item) => sum + item.price * item.qty, 0)
 
   const showToast = useCallback((message, type = 'info') => {
     const id = Date.now()
@@ -372,8 +373,19 @@ export default function App() {
       </main>
 
       {activeView === 'pos' && (
-        <button className="mobile-cart-btn" onClick={() => setIsCartOpen(true)}>
-          🛒 {activeTable !== null ? `T${activeTable}` : 'Cart'} {totalItems > 0 && <span className="cart-badge">{totalItems}</span>}
+        <button
+          className={`mobile-cart-btn${totalItems > 0 ? ' has-items' : ''}`}
+          onClick={() => setIsCartOpen(true)}
+        >
+          <span className="mcb-label">
+            {totalItems > 0
+              ? `${totalItems} item${totalItems !== 1 ? 's' : ''} selected`
+              : (activeTable !== null ? `Table ${activeTable} · cart` : 'Your cart')}
+          </span>
+          <span className="mcb-right">
+            {totalItems > 0 && <span className="mcb-total">₹{cartSubtotal.toFixed(0)}</span>}
+            <span className="mcb-bag">🛍️</span>
+          </span>
         </button>
       )}
 

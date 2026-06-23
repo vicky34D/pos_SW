@@ -130,7 +130,7 @@ export default function PosView({ onAddToOrder, activeTable }) {
                   {item.description && <div className="pos-item-desc">{item.description}</div>}
                 </div>
                 <div className="pos-item-bottom">
-                  <span className="pos-item-price">₹{item.price}</span>
+                  <span className="pos-item-price"><span className="cur">₹</span>{item.price}</span>
                   <span className="pos-item-add">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
                   </span>
