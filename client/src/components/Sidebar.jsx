@@ -1,4 +1,4 @@
-export default function Sidebar({ activeView, onViewChange, currentUser }) {
+export default function Sidebar({ activeView, onViewChange, currentUser, onClose }) {
   const icons = {
     pos: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>,
     tables: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="10" width="18" height="4" rx="1"/><path d="M5 14v7M19 14v7M2 10l2-6h16l2 6"/></svg>,
@@ -59,6 +59,11 @@ export default function Sidebar({ activeView, onViewChange, currentUser }) {
           <div className="brand-name">StreetWok</div>
           <div className="brand-tagline">POS · ERP</div>
         </div>
+        {onClose && (
+          <button className="sidebar-close-btn" onClick={onClose} aria-label="Close sidebar">
+            ✕
+          </button>
+        )}
       </div>
 
       {/* Navigation */}
@@ -73,7 +78,7 @@ export default function Sidebar({ activeView, onViewChange, currentUser }) {
                 {visible.map(item => (
                   <button
                     key={item.id}
-                    className={`nav-item${activeView === item.id ? ' active' : ''}${!item.mobileVisible ? ' mobile-hidden' : ''}`}
+                    className={`nav-item${activeView === item.id ? ' active' : ''}`}
                     onClick={() => onViewChange(item.id)}
                     title={item.label}
                   >
@@ -112,11 +117,6 @@ export default function Sidebar({ activeView, onViewChange, currentUser }) {
             </div>
           </div>
         )}
-        {/* Mobile More button — taps open a drawer/overflow menu */}
-        <button className="nav-item mobile-more-btn" title="More" onClick={() => onViewChange('more')}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
-          <span className="nav-label">More</span>
-        </button>
       </div>
     </aside>
   )

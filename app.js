@@ -491,16 +491,29 @@ function renderMenuGrid() {
         card.className = 'menu-card';
         card.dataset.itemId = item.id;
 
+        // Generate dynamic mock discount badge (e.g. 10%, 15%, 20% or 25%)
+        const discountRate = item.id.charCodeAt(item.id.length - 1) % 4 === 0 
+            ? 20 
+            : (item.id.charCodeAt(item.id.length - 1) % 3 === 0 ? 10 : 0);
+        const discountTagHtml = discountRate > 0 ? `<span class="discount-badge">-${discountRate}%</span>` : '';
+
         card.innerHTML = `
-            <span class="menu-card-emoji">${item.emoji || '🍽️'}</span>
-            <h5 title="${item.name}">${item.name}</h5>
-            ${item.desc ? `<div class="item-variant">${item.desc}</div>` : ''}
-            <span class="price">₹${item.price}</span>
-            <button class="card-add-btn">Add +</button>
+            ${discountTagHtml}
+            <div class="menu-card-image-wrapper">
+                <span class="menu-card-emoji">${item.emoji || '🍽️'}</span>
+            </div>
+            <div class="menu-card-info">
+                <h5 title="${item.name}">${item.name}</h5>
+                <div class="item-variant">${item.desc || 'With Spicy Sauce'}</div>
+            </div>
+            <div class="menu-card-bottom">
+                <span class="price">₹${item.price}</span>
+                <button class="card-add-btn"><i class="bi bi-plus-lg"></i></button>
+            </div>
         `;
 
         card.addEventListener('click', (e) => {
-            if (!e.target.classList.contains('card-add-btn')) {
+            if (!e.target.closest('.card-add-btn')) {
                 openProductDetail(item);
             }
         });
