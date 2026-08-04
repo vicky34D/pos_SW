@@ -85,7 +85,7 @@ export default function PosView({ onAddToOrder, activeTable }) {
               <span style={{ display: 'block', fontSize: '0.62rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 700 }}>Status</span>
               <span style={{ display: 'block', fontSize: '0.68rem', color: 'var(--text-secondary)', fontWeight: 500 }}>Table {activeTable !== null ? activeTable : 'Takeaway'}</span>
             </div>
-            <div style={{ background: 'var(--accent)', color: 'white', borderRadius: '8px', padding: '0.2rem 0.5rem', fontWeight: 800, fontSize: '0.78rem' }}>
+            <div style={{ background: activeTable !== null ? 'var(--brand)' : 'var(--accent)', color: 'white', borderRadius: '9px', padding: '0.25rem 0.55rem', fontWeight: 800, fontSize: '0.78rem', boxShadow: activeTable !== null ? '0 3px 8px var(--brand-glow)' : 'none' }}>
               {activeTable !== null ? `T${activeTable}` : '🥡'}
             </div>
           </div>

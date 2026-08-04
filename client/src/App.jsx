@@ -15,7 +15,9 @@ import SuppliersView from './components/SuppliersView'
 import PurchaseBillsView from './components/PurchaseBillsView'
 import ExpensesView from './components/ExpensesView'
 import StockLedgerView from './components/StockLedgerView'
+import OrderHistoryView from './components/OrderHistoryView'
 import * as api from './api'
+import { computeTotals } from './lib/totals'
 
 const TOTAL_TABLES = 10
 
@@ -39,12 +41,24 @@ export default function App() {
   const [settings, setSettings] = useState({ shop_name: 'StreetWok', tagline: "The Biker's Cafe", tax_rate: '5' })
   const [toasts, setToasts] = useState([])
 
+  // Discount per cart context ('quick' or a table number): { mode, value }
+  const [discounts, setDiscounts] = useState({})
+  // Parked (held) orders + the recall modal
+  const [parkedOrders, setParkedOrders] = useState([])
+  const [showParkedModal, setShowParkedModal] = useState(false)
+
   const saveTimer = useRef(null)
 
   // Derived current order based on active table or quick order
   const currentOrder = activeTable !== null
     ? (tables[activeTable]?.items || [])
     : quickOrder
+
+  const discountKey = activeTable !== null ? activeTable : 'quick'
+  const discount = discounts[discountKey] || { mode: 'flat', value: 0 }
+  const setDiscount = useCallback((next) => {
+    setDiscounts(prev => ({ ...prev, [discountKey]: next }))
+  }, [discountKey])
 
   const orderType = activeTable !== null
     ? (tables[activeTable]?.orderType || 'dine-in')
@@ -81,6 +95,7 @@ export default function App() {
     return Promise.allSettled([
       api.getSettings().then(setSettings),
       api.getOrderCounter().then(data => setOrderCounter(data.last_number)),
+      api.getParkedOrders().then(setParkedOrders).catch(() => {}),
       api.getTables().then(serverTables => {
         const tablesMap = {}
         serverTables.forEach(t => {
@@ -171,6 +186,20 @@ export default function App() {
     }
   }, [activeTable, saveTableToServer])
 
+  const setItemNote = useCallback((itemId, note) => {
+    if (activeTable !== null) {
+      setTables(prev => {
+        const tableData = prev[activeTable] || { items: [], customerName: '', orderType: 'dine-in' }
+        const updated = tableData.items.map(i => i.id === itemId ? { ...i, note } : i)
+        const newTableData = { ...tableData, items: updated }
+        saveTableToServer(activeTable, newTableData)
+        return { ...prev, [activeTable]: newTableData }
+      })
+    } else {
+      setQuickOrder(prev => prev.map(i => i.id === itemId ? { ...i, note } : i))
+    }
+  }, [activeTable, saveTableToServer])
+
   const setOrderType = useCallback((type) => {
     if (activeTable !== null) {
       setTables(prev => {
@@ -197,7 +226,17 @@ export default function App() {
     }
   }, [activeTable, saveTableToServer])
 
+  const clearDiscount = useCallback(() => {
+    setDiscounts(prev => {
+      if (!(discountKey in prev)) return prev
+      const next = { ...prev }
+      delete next[discountKey]
+      return next
+    })
+  }, [discountKey])
+
   const clearOrder = useCallback(() => {
+    clearDiscount()
     if (activeTable !== null) {
       setTables(prev => {
         const newTableData = { items: [], customerName: '', orderType: 'dine-in' }
@@ -208,13 +247,10 @@ export default function App() {
       setQuickOrder([])
       setQuickCustomerName('')
     }
-  }, [activeTable, saveTableToServer])
+  }, [activeTable, saveTableToServer, clearDiscount])
 
   const handleCheckout = useCallback(async (paymentMethod) => {
-    const taxRate = parseFloat(settings.tax_rate) / 100
-    const subtotal = currentOrder.reduce((s, i) => s + i.price * i.qty, 0)
-    const tax = Math.round(subtotal * taxRate * 100) / 100
-    const total = Math.round((subtotal + tax) * 100) / 100
+    const { subtotal, discountAmount, tax, total } = computeTotals(currentOrder, settings.tax_rate, discount)
 
     try {
       const order = await api.createOrder({
@@ -222,10 +258,11 @@ export default function App() {
         order_type: orderType,
         payment_method: paymentMethod,
         items: currentOrder,
-        subtotal, tax, total,
+        subtotal, tax, total, discount: discountAmount,
         table_number: activeTable
       })
       setOrderCounter(order.order_number)
+      clearDiscount()
 
       // If it's a table order, close the table on server
       if (activeTable !== null) {
@@ -253,7 +290,53 @@ export default function App() {
       showToast(err.message, 'error')
       return null
     }
-  }, [currentOrder, customerName, orderType, activeTable, settings, showToast])
+  }, [currentOrder, customerName, orderType, activeTable, settings, discount, clearDiscount, showToast])
+
+  // Hold the current quick order for later, then reset the cart.
+  const holdOrder = useCallback(async () => {
+    if (activeTable !== null || quickOrder.length === 0) return
+    try {
+      await api.parkOrder({
+        label: quickCustomerName || '',
+        customer_name: quickCustomerName || '',
+        order_type: quickOrderType,
+        items: quickOrder,
+        discount: discounts['quick'] || null,
+      })
+      const list = await api.getParkedOrders()
+      setParkedOrders(list)
+      setQuickOrder([])
+      setQuickCustomerName('')
+      clearDiscount()
+      showToast('Order held', 'success')
+    } catch (err) {
+      showToast(err.message || 'Could not hold order', 'error')
+    }
+  }, [activeTable, quickOrder, quickCustomerName, quickOrderType, discounts, clearDiscount, showToast])
+
+  // Recall a parked order into the quick cart and remove it from the held list.
+  const recallParked = useCallback(async (parked) => {
+    setActiveTable(null)
+    setQuickOrder(parked.items || [])
+    setQuickCustomerName(parked.customer_name || '')
+    setQuickOrderType(parked.order_type || 'takeaway')
+    setDiscounts(prev => ({ ...prev, quick: parked.discount || { mode: 'flat', value: 0 } }))
+    setShowParkedModal(false)
+    setActiveView('pos')
+    try {
+      await api.deleteParkedOrder(parked.id)
+      setParkedOrders(prev => prev.filter(p => p.id !== parked.id))
+    } catch { /* keep it in the list if the delete failed */ }
+  }, [])
+
+  const deleteParked = useCallback(async (id) => {
+    try {
+      await api.deleteParkedOrder(id)
+      setParkedOrders(prev => prev.filter(p => p.id !== id))
+    } catch (err) {
+      showToast(err.message || 'Could not remove held order', 'error')
+    }
+  }, [showToast])
 
   // Count active tables (tables with items)
   const activeTables = Object.entries(tables).filter(([, t]) => t.items.length > 0)
@@ -295,9 +378,8 @@ export default function App() {
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
         </button>
         <div className="mobile-location">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2.5" style={{ marginRight: '4px', verticalAlign: 'middle' }}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-          <span style={{ verticalAlign: 'middle' }}>Rembang, Ind</span>
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginLeft: '4px', verticalAlign: 'middle' }}><polyline points="6 9 12 15 18 9"/></svg>
+          <span className="mobile-brand-mark">SW</span>
+          <span style={{ verticalAlign: 'middle' }}>{settings.shop_name || 'StreetWok'}</span>
         </div>
         <button className="mobile-settings-gear" onClick={() => {
           setActiveView('settings');
@@ -330,6 +412,17 @@ export default function App() {
           <>
             {/* Table Selector Bar */}
             <div className="table-bar">
+              {parkedOrders.length > 0 && (
+                <button
+                  className="table-chip held-chip"
+                  onClick={() => setShowParkedModal(true)}
+                  title="Recall a held order"
+                >
+                  <span className="table-chip-icon">⏸️</span>
+                  <span className="table-chip-label">Held</span>
+                  <span className="table-chip-badge">{parkedOrders.length}</span>
+                </button>
+              )}
               <button
                 className={`table-chip${activeTable === null ? ' active' : ''}${quickOrder.length > 0 ? ' has-items' : ''}`}
                 onClick={() => selectTable(null)}
@@ -373,6 +466,9 @@ export default function App() {
         )}
         {activeView === 'reports' && (
           <ReportsView currentUser={currentUser} showToast={showToast} />
+        )}
+        {activeView === 'orders' && (
+          <OrderHistoryView settings={settings} showToast={showToast} />
         )}
         {activeView === 'menu' && (
           <MenuManagement showToast={showToast} />
@@ -427,12 +523,51 @@ export default function App() {
           orderCounter={orderCounter}
           settings={settings}
           updateQty={updateQty}
+          setItemNote={setItemNote}
+          discount={discount}
+          setDiscount={setDiscount}
           clearOrder={clearOrder}
           onCheckout={handleCheckout}
+          onHold={holdOrder}
           showToast={showToast}
           activeTable={activeTable}
         />
       </div>
+
+      {showParkedModal && (
+        <div className="modal-overlay" onClick={() => setShowParkedModal(false)}>
+          <div className="modal-box" onClick={e => e.stopPropagation()}>
+            <div className="modal-title">Held Orders</div>
+            {parkedOrders.length === 0 ? (
+              <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>No held orders.</p>
+            ) : (
+              <div className="parked-list">
+                {parkedOrders.map(p => {
+                  const count = (p.items || []).reduce((s, i) => s + i.qty, 0)
+                  const value = (p.items || []).reduce((s, i) => s + i.price * i.qty, 0)
+                  return (
+                    <div key={p.id} className="parked-row">
+                      <div className="parked-row-main">
+                        <div className="parked-row-name">{p.customer_name || 'Walk-in'}</div>
+                        <div className="parked-row-meta">
+                          {count} item{count !== 1 ? 's' : ''} · ₹{value.toFixed(0)} · {p.order_type}
+                        </div>
+                      </div>
+                      <div className="parked-row-actions">
+                        <button className="btn-modal btn-modal-confirm" onClick={() => recallParked(p)}>Recall</button>
+                        <button className="parked-del" title="Discard" onClick={() => deleteParked(p.id)}>🗑</button>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+            <div className="modal-actions" style={{ marginTop: '1rem' }}>
+              <button className="btn-modal btn-modal-cancel" onClick={() => setShowParkedModal(false)}>Close</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <Toast toasts={toasts} />
     </div>

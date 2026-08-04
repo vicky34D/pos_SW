@@ -33,11 +33,11 @@ export default function WelcomePage({ onGetStarted }) {
       <div className="pastel-header"></div>
       <div className="pastel-login-card" style={{ textAlign: 'center', padding: '40px' }}>
         <div className="pastel-hero">
-          <span className="pastel-hero-glyph">📈</span>
+          <span className="pastel-hero-glyph">🏍️</span>
         </div>
         <h1 className="pastel-title">StreetWok POS</h1>
         <p className="pastel-subtitle" style={{ marginBottom: '25px' }}>
-          Maximize efficiency and drive your business growth. Sign in to get started.
+          The Biker's Cafe · Point of Sale. Sign in to start taking orders.
         </p>
 
         {error && <div className="error-message" style={{ marginBottom: '15px' }}>{error}</div>}

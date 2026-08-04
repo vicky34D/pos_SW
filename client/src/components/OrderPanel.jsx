@@ -1,5 +1,7 @@
 import { useState, useMemo } from 'react'
 import SwipeButton from './SwipeButton'
+import Receipt from './Receipt'
+import { computeTotals } from '../lib/totals'
 
 const categoryLabels = {
   burgers: 'Burger', fries: 'Fries', strips: 'Strips',
@@ -10,18 +12,20 @@ const categoryLabels = {
 
 export default function OrderPanel({
   currentOrder, orderType, setOrderType, customerName, setCustomerName,
-  orderCounter, settings, updateQty, clearOrder, onCheckout, showToast,
-  activeTable
+  orderCounter, settings, updateQty, setItemNote, discount, setDiscount,
+  clearOrder, onCheckout, onHold, showToast, activeTable
 }) {
   const [showPayModal, setShowPayModal] = useState(false)
   const [receipt, setReceipt] = useState(null)
   const [cashMode, setCashMode] = useState(false)
   const [cashReceived, setCashReceived] = useState('')
+  const [openNoteId, setOpenNoteId] = useState(null)
 
-  const taxRate = parseFloat(settings.tax_rate || 5) / 100
-  const subtotal = useMemo(() => currentOrder.reduce((s, i) => s + i.price * i.qty, 0), [currentOrder])
-  const tax = Math.round(subtotal * taxRate * 100) / 100
-  const total = Math.round((subtotal + tax) * 100) / 100
+  const activeDiscount = discount || { mode: 'flat', value: 0 }
+  const { subtotal, discountAmount, tax, total } = useMemo(
+    () => computeTotals(currentOrder, settings.tax_rate || 5, discount || { mode: 'flat', value: 0 }),
+    [currentOrder, settings.tax_rate, discount]
+  )
   const totalItems = currentOrder.reduce((s, i) => s + i.qty, 0)
 
   // Cash tendered → change to return to the customer
@@ -68,10 +72,10 @@ export default function OrderPanel({
       order_number: orderCounter + 1,
       customer_name: customerName || 'Walk-in',
       created_at: new Date().toISOString(),
-      items: currentOrder.map(i => ({ item_name: i.name, item_price: i.price, quantity: i.qty })),
+      items: currentOrder.map(i => ({ item_name: i.name, item_price: i.price, quantity: i.qty, notes: i.note || '' })),
       order_type: orderType,
       payment_method: 'Pending',
-      subtotal, tax, total
+      subtotal, tax, total, discount: discountAmount
     })
   }
 
@@ -114,34 +118,58 @@ export default function OrderPanel({
           <>
             <div className="order-items-count">{totalItems} item{totalItems !== 1 ? 's' : ''} in cart</div>
             {currentOrder.map(item => (
-              <div key={item.id} className="order-item">
-                <div className="order-item-left">
-                  <span className="order-item-emoji">{item.emoji}</span>
-                  <div className="order-item-details">
-                    <div className="order-item-title">{item.name}</div>
-                    <div className="order-item-meta">
-                      {item.category && (
-                        <span className="order-item-category">{categoryLabels[item.category] || item.category}</span>
-                      )}
-                      {item.description && (
-                        <span className="order-item-desc-text">{item.description}</span>
-                      )}
+              <div key={item.id} className="order-item-wrap">
+                <div className="order-item">
+                  <div className="order-item-left">
+                    <span className="order-item-emoji">{item.emoji}</span>
+                    <div className="order-item-details">
+                      <div className="order-item-title">{item.name}</div>
+                      <div className="order-item-meta">
+                        {item.category && (
+                          <span className="order-item-category">{categoryLabels[item.category] || item.category}</span>
+                        )}
+                        {item.description && (
+                          <span className="order-item-desc-text">{item.description}</span>
+                        )}
+                      </div>
+                      <div className="order-item-price">₹{item.price} × {item.qty} = <strong>₹{(item.price * item.qty).toFixed(0)}</strong></div>
                     </div>
-                    <div className="order-item-price">₹{item.price} × {item.qty} = <strong>₹{(item.price * item.qty).toFixed(0)}</strong></div>
+                  </div>
+                  <div className="order-item-right">
+                    <div className="qty-controls">
+                      <button
+                        className={`qty-btn${item.qty === 1 ? ' delete-btn' : ''}`}
+                        onClick={() => updateQty(item.id, -1)}
+                      >
+                        {item.qty === 1 ? '✕' : '−'}
+                      </button>
+                      <span className="qty-display">{item.qty}</span>
+                      <button className="qty-btn" onClick={() => updateQty(item.id, 1)}>+</button>
+                    </div>
+                    {setItemNote && (
+                      <button
+                        className={`order-item-note-btn${item.note ? ' has-note' : ''}`}
+                        title={item.note ? 'Edit note' : 'Add note'}
+                        onClick={() => setOpenNoteId(openNoteId === item.id ? null : item.id)}
+                      >
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                        Note
+                      </button>
+                    )}
                   </div>
                 </div>
-                <div className="order-item-right">
-                  <div className="qty-controls">
-                    <button
-                      className={`qty-btn${item.qty === 1 ? ' delete-btn' : ''}`}
-                      onClick={() => updateQty(item.id, -1)}
-                    >
-                      {item.qty === 1 ? '✕' : '−'}
-                    </button>
-                    <span className="qty-display">{item.qty}</span>
-                    <button className="qty-btn" onClick={() => updateQty(item.id, 1)}>+</button>
+                {setItemNote && (openNoteId === item.id || item.note) && (
+                  <div className="order-item-note-row">
+                    <input
+                      className="order-item-note-input"
+                      placeholder="e.g. extra spicy, no onion"
+                      value={item.note || ''}
+                      autoFocus={openNoteId === item.id}
+                      onChange={e => setItemNote(item.id, e.target.value)}
+                      onBlur={() => setOpenNoteId(null)}
+                    />
                   </div>
-                </div>
+                )}
               </div>
             ))}
           </>
@@ -151,6 +179,40 @@ export default function OrderPanel({
       {/* Billing */}
       <div className="billing-section">
         <div className="bill-row"><span>Subtotal ({totalItems} items)</span><span>₹{subtotal.toFixed(2)}</span></div>
+
+        {currentOrder.length > 0 && setDiscount && (
+          <div className="bill-discount">
+            <span className="bill-discount-label">Discount</span>
+            <div className="bill-discount-controls">
+              <div className="discount-mode-toggle">
+                <button
+                  className={activeDiscount.mode === 'flat' ? 'active' : ''}
+                  onClick={() => setDiscount({ mode: 'flat', value: activeDiscount.value })}
+                >₹</button>
+                <button
+                  className={activeDiscount.mode === 'percent' ? 'active' : ''}
+                  onClick={() => setDiscount({ mode: 'percent', value: activeDiscount.value })}
+                >%</button>
+              </div>
+              <input
+                type="number"
+                inputMode="decimal"
+                min="0"
+                className="discount-input"
+                placeholder="0"
+                value={activeDiscount.value || ''}
+                onChange={e => setDiscount({ mode: activeDiscount.mode, value: e.target.value })}
+              />
+            </div>
+          </div>
+        )}
+        {discountAmount > 0 && (
+          <div className="bill-row bill-row-discount">
+            <span>Discount{activeDiscount.mode === 'percent' ? ` (${activeDiscount.value}%)` : ''}</span>
+            <span>−₹{discountAmount.toFixed(2)}</span>
+          </div>
+        )}
+
         <div className="bill-row"><span>GST ({settings.tax_rate || 5}%)</span><span>₹{tax.toFixed(2)}</span></div>
         <div className="bill-row total"><span>Total</span><span>₹{total.toFixed(2)}</span></div>
 
@@ -195,6 +257,12 @@ export default function OrderPanel({
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
             Print KOT
           </button>
+          {onHold && activeTable === null && currentOrder.length > 0 && (
+            <button className="btn-action btn-hold" onClick={onHold}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>
+              Hold order
+            </button>
+          )}
           <SwipeButton
             label={`Swipe to pay · ₹${total.toFixed(2)}`}
             disabled={currentOrder.length === 0}
@@ -302,38 +370,7 @@ export default function OrderPanel({
       {receipt && (
         <div className="modal-overlay" onClick={() => setReceipt(null)}>
           <div className="modal-box" style={{ maxWidth: 380 }} onClick={e => e.stopPropagation()}>
-            <div className="receipt-box">
-              <div className="receipt-header">
-                <div className="receipt-brand">{settings.shop_name || 'StreetWok'}</div>
-                <div className="receipt-tagline">{settings.tagline || "The Biker's Cafe"}</div>
-              </div>
-              <div className="receipt-info">
-                <div>Order #{receipt.order_number} | {receipt.order_type || orderType}</div>
-                <div>{new Date(receipt.created_at).toLocaleDateString('en-IN')} {new Date(receipt.created_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</div>
-                <div>Customer: {receipt.customer_name}</div>
-                <div>Payment: {receipt.payment_method}</div>
-              </div>
-              <div className="receipt-items">
-                {receipt.items.map((item, i) => (
-                  <div key={i} className="receipt-item">
-                    <span>{item.item_name} ×{item.quantity}</span>
-                    <span>₹{(item.item_price * item.quantity).toFixed(2)}</span>
-                  </div>
-                ))}
-              </div>
-              <div>
-                <div className="receipt-total-row"><span>Subtotal</span><span>₹{receipt.subtotal.toFixed(2)}</span></div>
-                <div className="receipt-total-row"><span>GST ({settings.tax_rate || 5}%)</span><span>₹{receipt.tax.toFixed(2)}</span></div>
-                <div className="receipt-total-row grand-total"><span>TOTAL</span><span>₹{receipt.total.toFixed(2)}</span></div>
-                {receipt.cash_received != null && (
-                  <>
-                    <div className="receipt-total-row"><span>Cash Received</span><span>₹{receipt.cash_received.toFixed(2)}</span></div>
-                    <div className="receipt-total-row"><span>Change Returned</span><span>₹{receipt.change_due.toFixed(2)}</span></div>
-                  </>
-                )}
-              </div>
-              <div className="receipt-footer">Thank you for visiting {settings.shop_name || 'StreetWok'}! 🏍️</div>
-            </div>
+            <Receipt receipt={{ order_type: orderType, ...receipt }} settings={settings} />
             <div className="modal-actions" style={{ marginTop: '1rem' }}>
               <button className="btn-modal btn-modal-cancel" onClick={() => setReceipt(null)}>Close</button>
             </div>
