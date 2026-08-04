@@ -300,6 +300,32 @@ db.exec(`
   addCol('is_stock_item', "is_stock_item INTEGER NOT NULL DEFAULT 1");
 })();
 
+// Orders feature upgrades: per-order discount, per-item notes/modifiers, and
+// a parked_orders table for held (paused) orders. All additive + idempotent.
+(function migrateOrderFeatures() {
+  const orderCols = db.prepare("PRAGMA table_info(orders)").all().map(c => c.name);
+  if (!orderCols.includes('discount')) {
+    db.exec("ALTER TABLE orders ADD COLUMN discount REAL NOT NULL DEFAULT 0");
+  }
+  const itemCols = db.prepare("PRAGMA table_info(order_items)").all().map(c => c.name);
+  if (!itemCols.includes('notes')) {
+    db.exec("ALTER TABLE order_items ADD COLUMN notes TEXT DEFAULT ''");
+  }
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS parked_orders (
+      id TEXT PRIMARY KEY,
+      org_id TEXT NOT NULL,
+      label TEXT DEFAULT '',
+      customer_name TEXT DEFAULT '',
+      order_type TEXT DEFAULT 'takeaway',
+      items TEXT DEFAULT '[]',
+      discount TEXT DEFAULT '',
+      created_at TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY (org_id) REFERENCES organizations(id)
+    );
+  `);
+})();
+
 // ===== SEED FUNCTION FOR NEW ORGS =====
 
 function seedOrganizationData(orgId, shopName) {

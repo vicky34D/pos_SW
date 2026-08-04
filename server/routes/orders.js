@@ -46,7 +46,7 @@ router.get('/:id', (req, res) => {
 // POST create order (checkout)
 router.post('/', requireRole(['Admin', 'Manager', 'Employee']), (req, res) => {
   const orgId = req.user.org_id;
-  const { customer_name, order_type, payment_method, items, subtotal, tax, total } = req.body;
+  const { customer_name, order_type, payment_method, items, subtotal, tax, total, discount } = req.body;
 
   if (!items || !items.length || !payment_method) {
     return res.status(400).json({ error: 'items and payment_method are required' });
@@ -59,13 +59,13 @@ router.post('/', requireRole(['Admin', 'Manager', 'Employee']), (req, res) => {
   const orderId = `SW-${Date.now()}-${uuidv4().substring(0, 8)}`;
 
   const insertOrder = db.prepare(`
-    INSERT INTO orders (id, org_id, order_number, customer_name, order_type, payment_method, subtotal, tax, total)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO orders (id, org_id, order_number, customer_name, order_type, payment_method, subtotal, tax, total, discount)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
   const insertItem = db.prepare(`
-    INSERT INTO order_items (order_id, org_id, menu_item_id, item_name, item_price, quantity)
-    VALUES (?, ?, ?, ?, ?, ?)
+    INSERT INTO order_items (order_id, org_id, menu_item_id, item_name, item_price, quantity, notes)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
   `);
 
   const updateCounter = db.prepare('UPDATE order_counter SET last_number = ? WHERE org_id = ?');
@@ -83,10 +83,10 @@ router.post('/', requireRole(['Admin', 'Manager', 'Employee']), (req, res) => {
 
   // Transaction for atomicity — sale + stock deduction commit together.
   const createOrder = db.transaction(() => {
-    insertOrder.run(orderId, orgId, nextNumber, customer_name || 'Walk-in', order_type || 'dine-in', payment_method, subtotal, tax, total);
+    insertOrder.run(orderId, orgId, nextNumber, customer_name || 'Walk-in', order_type || 'dine-in', payment_method, subtotal, tax, total, discount || 0);
 
     for (const item of items) {
-      insertItem.run(orderId, orgId, item.id, item.name, item.price, item.qty);
+      insertItem.run(orderId, orgId, item.id, item.name, item.price, item.qty, item.note || '');
 
       // Deduct each ingredient through the ledger. Items with no recipe
       // are skipped entirely — opt-in behaviour unchanged.

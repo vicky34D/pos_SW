@@ -47,6 +47,7 @@ app.use('/api/recipes', authenticateToken, require('./routes/recipes'));
 app.use('/api/reports', authenticateToken, require('./routes/reports'));
 app.use('/api/users', authenticateToken, require('./routes/users'));
 app.use('/api/tables', authenticateToken, require('./routes/tables'));
+app.use('/api/parked', authenticateToken, require('./routes/parked'));
 // ERPNext-style stock & buying module
 app.use('/api/warehouses', authenticateToken, require('./routes/warehouses'));
 app.use('/api/suppliers', authenticateToken, require('./routes/suppliers'));

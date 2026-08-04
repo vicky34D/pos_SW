@@ -191,6 +191,11 @@ export const getStockValuation = () => request('/stock/valuation');
 export const getReorderItems = () => request('/stock/reorder');
 export const postStockAdjustment = (data) => request('/stock/adjustment', { method: 'POST', body: JSON.stringify(data) });
 
+// Parked (held) orders
+export const getParkedOrders = () => request('/parked');
+export const parkOrder = (data) => request('/parked', { method: 'POST', body: JSON.stringify(data) });
+export const deleteParkedOrder = (id) => request(`/parked/${id}`, { method: 'DELETE' });
+
 // Tables
 export const getTables = () => request('/tables');
 export const openTable = (table_number) => request('/tables', { method: 'POST', body: JSON.stringify({ table_number }) });
