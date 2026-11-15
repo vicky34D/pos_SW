@@ -107,6 +107,7 @@ router.get('/top-items', (req, res) => {
   const orgId = req.user.org_id;
   const rows = db.prepare(`
     SELECT
+      menu_item_id as id,
       item_name as name,
       SUM(quantity) as total_qty,
       SUM(item_price * quantity) as total_revenue
