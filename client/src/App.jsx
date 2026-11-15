@@ -21,6 +21,17 @@ import { computeTotals } from './lib/totals'
 
 const TOTAL_TABLES = 10
 
+// The quick (takeaway) cart lives only on this device, so keep a copy in
+// localStorage — a refresh or an accidental tab close no longer loses it.
+const QUICK_CART_KEY = 'sw_quick_cart'
+const readQuickCart = () => {
+  try {
+    const saved = JSON.parse(localStorage.getItem(QUICK_CART_KEY) || 'null')
+    if (saved && Array.isArray(saved.items)) return saved
+  } catch { /* corrupt or unavailable storage — start empty */ }
+  return { items: [], customerName: '', orderType: 'takeaway', discount: null }
+}
+
 export default function App() {
   const [activeView, setActiveView] = useState('loading')
   const [startupError, setStartupError] = useState(null)
@@ -33,21 +44,34 @@ export default function App() {
   const [tables, setTables] = useState({}) // { tableNumber: { items, customerName, orderType } }
 
   // Current order state (derived from active table or quick order)
-  const [quickOrder, setQuickOrder] = useState([])
-  const [quickCustomerName, setQuickCustomerName] = useState('')
-  const [quickOrderType, setQuickOrderType] = useState('takeaway')
+  const [savedQuick] = useState(readQuickCart)
+  const [quickOrder, setQuickOrder] = useState(savedQuick.items)
+  const [quickCustomerName, setQuickCustomerName] = useState(savedQuick.customerName || '')
+  const [quickOrderType, setQuickOrderType] = useState(savedQuick.orderType || 'takeaway')
 
   const [orderCounter, setOrderCounter] = useState(0)
   const [settings, setSettings] = useState({ shop_name: 'StreetWok', tagline: "The Biker's Cafe", tax_rate: '5' })
   const [toasts, setToasts] = useState([])
 
   // Discount per cart context ('quick' or a table number): { mode, value }
-  const [discounts, setDiscounts] = useState({})
+  const [discounts, setDiscounts] = useState(() => (savedQuick.discount ? { quick: savedQuick.discount } : {}))
   // Parked (held) orders + the recall modal
   const [parkedOrders, setParkedOrders] = useState([])
   const [showParkedModal, setShowParkedModal] = useState(false)
 
   const saveTimer = useRef(null)
+  const toastSeq = useRef(0)
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(QUICK_CART_KEY, JSON.stringify({
+        items: quickOrder,
+        customerName: quickCustomerName,
+        orderType: quickOrderType,
+        discount: discounts.quick || null,
+      }))
+    } catch { /* storage unavailable — cart stays in memory only */ }
+  }, [quickOrder, quickCustomerName, quickOrderType, discounts.quick])
 
   // Derived current order based on active table or quick order
   const currentOrder = activeTable !== null
@@ -72,8 +96,10 @@ export default function App() {
   const cartSubtotal = currentOrder.reduce((sum, item) => sum + item.price * item.qty, 0)
 
   const showToast = useCallback((message, type = 'info') => {
-    const id = Date.now()
-    setToasts(prev => [...prev, { id, message, type }])
+    // Sequence-based ids: two toasts in the same millisecond used to collide.
+    const id = ++toastSeq.current
+    // Keep at most 3 on screen so rapid taps don't bury the menu in toasts.
+    setToasts(prev => [...prev, { id, message, type }].slice(-3))
     setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 2500)
   }, [])
 
@@ -166,8 +192,8 @@ export default function App() {
         return [...prev, { id: item.id, name: item.name, price: item.price, emoji: item.emoji, category: item.category, description: item.description, qty: 1 }]
       })
     }
-    showToast(`${item.name} added`, 'success')
-  }, [activeTable, showToast, saveTableToServer])
+    // No toast here: the menu card shows the running quantity instead.
+  }, [activeTable, saveTableToServer])
 
   const updateQty = useCallback((itemId, delta) => {
     if (activeTable !== null) {
@@ -366,6 +392,9 @@ export default function App() {
     }
     
     api.clearAuthToken()
+    setQuickOrder([])
+    setQuickCustomerName('')
+    setDiscounts({})
     setCurrentUser(null)
     setActiveView('login')
   }
@@ -451,7 +480,7 @@ export default function App() {
               })}
             </div>
 
-            <PosView onAddToOrder={addToOrder} activeTable={activeTable} />
+            <PosView onAddToOrder={addToOrder} cartItems={currentOrder} />
           </>
         )}
         {activeView === 'tables' && (
