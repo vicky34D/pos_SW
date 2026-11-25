@@ -505,7 +505,7 @@ export default function App() {
           </span>
           <span className="mcb-right">
             {totalItems > 0 && <span className="mcb-total">₹{cartSubtotal.toFixed(0)}</span>}
-            <span className="mcb-bag">🛍️</span>
+            <span className="mcb-bag" key={totalItems}>🛍️</span>
           </span>
         </button>
       )}
