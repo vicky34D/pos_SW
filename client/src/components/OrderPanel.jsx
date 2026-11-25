@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import SwipeButton from './SwipeButton'
 import Receipt from './Receipt'
 import { computeTotals } from '../lib/totals'
+import { getCategories } from '../lib/categories'
 
 const categoryLabels = {
   burgers: 'Burger', fries: 'Fries', strips: 'Strips',
@@ -126,7 +127,7 @@ export default function OrderPanel({
                       <div className="order-item-title">{item.name}</div>
                       <div className="order-item-meta">
                         {item.category && (
-                          <span className="order-item-category">{categoryLabels[item.category] || item.category}</span>
+                          <span className="order-item-category">{categoryLabels[item.category] || getCategories().find(c => c.id === item.category)?.name || item.category}</span>
                         )}
                         {item.description && (
                           <span className="order-item-desc-text">{item.description}</span>
