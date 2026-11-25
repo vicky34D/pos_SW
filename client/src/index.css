@@ -2176,3 +2176,336 @@ body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
     overflow-y: auto !important;
   }
 }
+
+/* ===========================================================
+   INSTAGRAM-STYLE THEME  (feat/insta-redesign)
+   Clean white surfaces, the system font stack, black and
+   white with #0095f6 blue for actions and highlights.
+   Layered last so it overrides the earlier graphite theme
+   without touching any component logic.
+   =========================================================== */
+
+:root {
+  --ig-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --ig-gradient: #0095f6;
+  --ig-gradient-soft: #f5f5f5;
+  --ig-blue: #0095f6;
+  --ig-blue-dark: #1877f2;
+  --ig-pink: #0095f6;
+
+  --bg-primary:    #fafafa;
+  --bg-secondary:  #ffffff;
+  --bg-card:       #ffffff;
+  --bg-elevated:   #efefef;
+  --bg-hover:      #f2f2f2;
+  --bg-active:     #e6e6e6;
+  --accent:        #0095f6;
+  --accent-dark:   #1877f2;
+  --accent-light:  #47afff;
+  --accent-glow:   rgba(0,149,246,0.25);
+  --accent-soft:   rgba(0,149,246,0.08);
+  --brand:         #262626;
+  --brand-dark:    #000000;
+  --brand-glow:    rgba(0,0,0,0.16);
+  --text-primary:  #262626;
+  --text-secondary:#4a4a4a;
+  --text-muted:    #8e8e8e;
+  --border:        #dbdbdb;
+  --border-hover:  #c7c7c7;
+  --danger:        #ed4956;
+  --danger-bg:     rgba(237,73,86,0.10);
+  --success:       #00a35c;
+  --success-bg:    rgba(0,163,92,0.10);
+  --radius-sm:     8px;
+  --radius-md:     12px;
+  --radius-lg:     16px;
+  --radius-xl:     20px;
+  --shadow-sm:     0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md:     0 6px 18px rgba(0,0,0,0.06);
+  --shadow-lg:     0 18px 40px rgba(0,0,0,0.10);
+  --ease-out:      cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring:   cubic-bezier(0.34, 1.56, 0.64, 1);
+  --transition:    background-color 0.2s var(--ease-out), color 0.2s var(--ease-out),
+                   border-color 0.2s var(--ease-out), box-shadow 0.2s var(--ease-out),
+                   transform 0.2s var(--ease-out), opacity 0.2s var(--ease-out);
+}
+
+/* --- Typography: Instagram uses the platform system font --- */
+html, body, #root, button, input, select, textarea { font-family: var(--ig-font); }
+h1, h2, h3, h4, h5, h6,
+.header-title, .pos-page-title, .modal-title, .pos-item-name, .pos-item-price,
+.stat-value, .modal-total-value, .bill-row.total, .order-header h4,
+.mcb-total, .frappe-total-bar-value, .team-summary-value, .report-card-header h5,
+.settings-title, .cash-input, .bill-cash-input, .change-display strong {
+  font-family: var(--ig-font);
+}
+.header-title, .pos-page-title { font-weight: 700; letter-spacing: -0.02em; }
+
+/* Brand wordmark in Instagram-style script */
+.brand-name, .pastel-title, .receipt-brand {
+  font-family: var(--ig-font); font-weight: 700; letter-spacing: -0.02em;
+}
+.brand-logo, .mobile-brand-mark, .pastel-hero {
+  background: #000; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+.pastel-hero-glyph { filter: none; }
+
+/* --- Sidebar: Instagram desktop nav --- */
+.sidebar { background: #fff; border-right: 1px solid var(--border); }
+.sidebar-brand { height: 64px; min-height: 64px; border-bottom: none; }
+.nav-item {
+  margin: 2px 0.5rem; width: calc(100% - 1rem); border-radius: var(--radius-md);
+  padding: 0.62rem 0.8rem; color: var(--text-primary); font-size: 0.9rem;
+}
+.nav-item svg { stroke: var(--text-primary); width: 20px; height: 20px; transition: transform 0.25s var(--ease-spring); }
+.nav-item:hover { background: var(--bg-hover); color: var(--text-primary); transform: none; }
+.nav-item:hover svg { stroke: var(--text-primary); transform: scale(1.1); }
+.nav-item.active { background: transparent; color: var(--text-primary); font-weight: 700; }
+.nav-item.active svg { stroke: var(--text-primary); stroke-width: 2.6; }
+.nav-item.active::before { display: none; }
+.nav-item:active svg { transform: scale(0.9); }
+.user-avatar, .team-avatar {
+  background: #000; box-shadow: 0 0 0 2px #fff, 0 0 0 3.5px #dbdbdb;
+}
+
+/* --- Search: Instagram's soft grey pill --- */
+.pos-search input, .search-wrapper input {
+  background: var(--bg-elevated); border: 1px solid transparent; border-radius: var(--radius-sm);
+}
+.pos-search input:focus, .search-wrapper input:focus {
+  background: #fff; border-color: var(--border); box-shadow: none;
+}
+
+/* --- Categories as Stories --- */
+.pos-categories { gap: 0.9rem; padding: 0.4rem 0.25rem 0.9rem; }
+.pos-cat-pill { min-width: 72px; padding: 0.25rem; color: var(--text-primary); font-weight: 400; }
+.pos-cat-emoji-wrapper {
+  width: 64px; height: 64px; padding: 3px; position: relative;
+  background: #dbdbdb; border: none; box-shadow: none;
+  transition: transform 0.3s var(--ease-spring), background 0.3s var(--ease-out);
+}
+.pos-cat-emoji-wrapper::before {
+  content: ''; position: absolute; inset: 3px; border-radius: 50%;
+  background: #fff; box-shadow: inset 0 0 0 2px #fff;
+}
+.pos-cat-emoji {
+  position: absolute; inset: 5px; z-index: 1; border-radius: 50%;
+  background: #fafafa; font-size: 1.7rem;
+}
+.pos-cat-name { font-size: 0.74rem; color: var(--text-primary); max-width: 76px; overflow: hidden; text-overflow: ellipsis; }
+.pos-cat-pill:hover { color: var(--text-primary); }
+.pos-cat-pill:hover .pos-cat-emoji-wrapper { transform: scale(1.05); }
+.pos-cat-pill:active .pos-cat-emoji-wrapper { transform: scale(0.92); }
+.pos-cat-pill.active .pos-cat-emoji-wrapper {
+  background: var(--ig-gradient); border: none; transform: scale(1.04);
+  box-shadow: 0 6px 16px rgba(0,149,246,0.25);
+  animation: ig-story-ring 0.5s var(--ease-spring);
+}
+.pos-cat-pill.active .pos-cat-name { font-weight: 600; color: var(--text-primary); }
+@keyframes ig-story-ring {
+  0% { transform: scale(0.88); }
+  60% { transform: scale(1.1); }
+  100% { transform: scale(1.04); }
+}
+
+/* --- Menu items as posts --- */
+.pos-item-card {
+  border: 1px solid #efefef; border-radius: var(--radius-lg); box-shadow: none;
+  padding: 0.5rem 0.5rem 0.75rem;
+  transition: transform 0.25s var(--ease-spring), box-shadow 0.25s var(--ease-out), border-color 0.2s var(--ease-out);
+  -webkit-tap-highlight-color: transparent;
+}
+.pos-item-card:hover { transform: translateY(-2px); border-color: var(--border); box-shadow: var(--shadow-md); }
+.pos-item-card:active { transform: scale(0.95); transition-duration: 0.08s; }
+.pos-item-emoji {
+  background: #f5f5f5; border: none; border-radius: var(--radius-md);
+  filter: drop-shadow(0 6px 8px rgba(0,0,0,0.08));
+}
+.pos-item-name { font-weight: 600; letter-spacing: -0.01em; }
+.pos-item-price { font-weight: 700; color: var(--text-primary); }
+.pos-item-add {
+  background: var(--ig-blue); border-radius: 50%;
+  transition: transform 0.3s var(--ease-spring), background 0.2s;
+}
+.pos-item-card:hover .pos-item-add { transform: scale(1.12) rotate(90deg); }
+.pos-item-card:active .pos-item-add { transform: scale(0.85) rotate(90deg); background: #000; }
+/* Quicker, smaller entrance so filtering/searching doesn't feel sluggish */
+.pos-item-card { animation: ig-post-in 0.32s var(--ease-out) backwards; }
+@keyframes ig-post-in { from { opacity: 0; transform: translateY(6px) scale(0.98); } to { opacity: 1; transform: none; } }
+
+/* --- Order / cart panel --- */
+.order-panel { background: #fff; }
+.order-header { border-bottom: 1px solid #efefef; }
+.order-header h4 { font-weight: 700; font-size: 1.05rem; }
+.order-type-toggle { background: var(--bg-elevated); border-radius: var(--radius-sm); }
+.order-type-btn { border-radius: 6px; font-size: 0.74rem; color: var(--text-muted); }
+.order-type-btn.active { background: #fff; color: var(--text-primary); box-shadow: 0 1px 3px rgba(0,0,0,0.12); }
+.customer-input { background: var(--bg-elevated); border-color: transparent; border-radius: var(--radius-sm); }
+.customer-input:focus { background: #fff; border-color: var(--border); box-shadow: none; }
+.order-item-category { background: var(--bg-elevated); color: var(--text-secondary); }
+.order-item-price strong { color: var(--text-primary); }
+.qty-controls { background: var(--bg-elevated); border-radius: var(--radius-full); }
+.qty-btn { border-radius: 50%; transition: transform 0.2s var(--ease-spring), background 0.15s, color 0.15s; }
+.qty-btn:hover { background: var(--text-primary); color: #fff; }
+.qty-btn:active { transform: scale(0.82); }
+.qty-display { animation: ig-count 0.3s var(--ease-spring); }
+@keyframes ig-count { from { transform: scale(1.4); } to { transform: scale(1); } }
+.order-item-wrap { animation: ig-slide-in 0.3s var(--ease-out); }
+@keyframes ig-slide-in { from { opacity: 0; transform: translateX(14px); } to { opacity: 1; transform: none; } }
+.billing-section { background: #fafafa; border-top: 1px solid #efefef; }
+.bill-row.total span:last-child { color: var(--text-primary); }
+.bill-row.total { border-top: 1px solid var(--border); }
+
+/* --- Action buttons --- */
+.btn-action { border-radius: var(--radius-sm); font-weight: 600; font-size: 0.82rem; }
+.btn-clear { background: #fff; color: var(--danger); border: 1px solid var(--border); }
+.btn-clear:hover { background: var(--danger-bg); color: var(--danger); border-color: var(--danger); }
+.btn-print { background: var(--bg-elevated); color: var(--text-primary); border: 1px solid transparent; }
+.btn-print:hover { background: var(--bg-active); color: var(--text-primary); }
+.btn-action:active:not(:disabled) { transform: scale(0.95); }
+.btn-add-stock, .btn-modal-confirm, .pastel-btn-primary, .btn-checkout {
+  background: var(--ig-blue); border-radius: var(--radius-sm); font-weight: 600;
+  box-shadow: none; transition: var(--transition);
+}
+.btn-add-stock:hover, .btn-modal-confirm:hover, .pastel-btn-primary:hover, .btn-checkout:hover {
+  background: var(--ig-blue-dark); transform: none; box-shadow: 0 6px 16px var(--accent-glow);
+}
+.btn-add-stock:active, .btn-modal-confirm:active, .pastel-btn-primary:active, .btn-checkout:active {
+  transform: scale(0.96);
+}
+.btn-modal { border-radius: var(--radius-sm); }
+.btn-modal-cancel { background: var(--bg-elevated); border-color: transparent; color: var(--text-primary); }
+.btn-modal-cancel:hover { background: var(--bg-active); }
+
+/* --- Swipe to pay (smooth, finger-synced via --x / --p) --- */
+.swipe-track {
+  --x: 0px; --p: 0;
+  height: 58px; border: none; background: var(--bg-elevated);
+  border-radius: var(--radius-full); isolation: isolate;
+  transition: transform 0.2s var(--ease-out), box-shadow 0.3s var(--ease-out);
+}
+.swipe-track:active:not(.is-disabled) { transform: scale(0.99); }
+.swipe-fill {
+  width: calc(var(--x) + 56px); border-radius: var(--radius-full);
+  background: var(--ig-blue); opacity: calc(0.25 + var(--p) * 0.75);
+  transition: width 0.45s var(--ease-spring), opacity 0.3s var(--ease-out);
+}
+.swipe-handle {
+  top: 5px; left: 5px; width: 48px; height: 48px;
+  background: #000; color: #fff;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.18);
+  transform: translateX(var(--x)) rotate(calc(var(--p) * 360deg));
+  transition: transform 0.45s var(--ease-spring), background 0.25s, color 0.25s;
+}
+.swipe-track.is-dragging .swipe-fill,
+.swipe-track.is-dragging .swipe-handle { transition: none; }
+.swipe-track.is-dragging .swipe-handle { box-shadow: 0 6px 20px rgba(0,149,246,0.35); }
+.swipe-label {
+  inset: 0 1.25rem 0 3.75rem; color: var(--text-primary); font-weight: 600;
+  opacity: calc(1 - var(--p) * 1.4);
+  transform: translateX(calc(var(--p) * 18px));
+  transition: opacity 0.3s var(--ease-out), transform 0.45s var(--ease-spring);
+}
+.swipe-track.is-dragging .swipe-label { opacity: calc(1 - var(--p) * 1.4); transition: none; }
+.swipe-label-text {
+  background: linear-gradient(90deg, #262626 0%, #262626 40%, #0095f6 50%, #262626 60%, #262626 100%);
+  background-size: 250% 100%;
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  animation: ig-shimmer 2.6s linear infinite;
+}
+@keyframes ig-shimmer { from { background-position: 100% 0; } to { background-position: -150% 0; } }
+.swipe-track.is-confirmed { background: var(--accent-soft); }
+.swipe-track.is-confirmed .swipe-fill { background: var(--ig-blue); opacity: 1; width: 100%; }
+.swipe-track.is-confirmed .swipe-handle { background: #fff; color: var(--ig-blue); transform: translateX(var(--x)) scale(1.05); }
+.swipe-track.is-confirmed .swipe-label { opacity: 1; transform: none; color: #fff; inset: 0 3.75rem 0 1.25rem; }
+.swipe-track.is-confirmed .swipe-label,
+.swipe-track.is-confirmed .swipe-handle { transition-duration: 0.1s; }
+.swipe-track.is-confirmed .swipe-label-text { animation: none; background: none; color: #fff; }
+.swipe-check { stroke-dasharray: 24; stroke-dashoffset: 24; animation: ig-check 0.35s var(--ease-out) forwards; }
+@keyframes ig-check { to { stroke-dashoffset: 0; } }
+.swipe-track.is-disabled { opacity: 0.5; }
+.swipe-track.is-disabled .swipe-handle { background: #fff; color: var(--text-muted); }
+.swipe-track.is-disabled .swipe-label-text { animation: none; background: none; color: var(--text-muted); }
+
+/* --- Payment modal --- */
+.modal-overlay { background: rgba(0,0,0,0.55); }
+.modal-box { border: none; border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); }
+.modal-title { font-weight: 700; font-size: 1.1rem; }
+.modal-total { background: var(--ig-gradient-soft); border: none; }
+.modal-total-value { color: var(--text-primary); }
+.payment-btn {
+  background: #fff; border: 1px solid var(--border); border-radius: var(--radius-md); color: var(--text-primary);
+  transition: transform 0.25s var(--ease-spring), border-color 0.2s, box-shadow 0.2s;
+}
+.payment-btn:hover { border-color: var(--text-primary); color: var(--text-primary); background: #fff; transform: translateY(-3px); box-shadow: var(--shadow-md); }
+.payment-btn:active { transform: scale(0.94); }
+.payment-btn .pay-icon { transition: transform 0.3s var(--ease-spring); }
+.payment-btn:hover .pay-icon { transform: scale(1.2); }
+.cash-quick-btn { background: #fff; border-color: var(--border); color: var(--text-primary); border-radius: var(--radius-sm); }
+.cash-quick-btn:hover { border-color: var(--text-primary); background: #fff; color: var(--text-primary); }
+.cash-quick-btn:active { transform: scale(0.94); }
+
+/* --- Inputs, tabs, chips --- */
+.modal-form-group input, .modal-form-group select, .settings-input, .frappe-input, .frappe-select {
+  border-radius: var(--radius-sm); background: #fafafa;
+}
+.modal-form-group input:focus, .modal-form-group select:focus { border-color: var(--text-muted); box-shadow: none; }
+.report-tab.active, .inventory-filter-btn.active, .table-chip.active {
+  background: var(--text-primary); border-color: var(--text-primary); box-shadow: none;
+}
+.inventory-filter-btn, .table-chip { border-radius: var(--radius-full); }
+.table-chip.active .table-chip-badge { color: var(--text-primary); }
+.stat-card, .report-card, .stock-card, .team-card, .team-summary-card, .menu-mgmt-card {
+  border-color: #efefef; border-radius: var(--radius-lg);
+}
+.stat-card.revenue::before { background: var(--ig-blue); }
+
+/* --- Toasts: Instagram-style dark pill at the bottom --- */
+.toast-container { top: auto; bottom: 1.5rem; right: 50%; transform: translateX(50%); align-items: center; }
+.toast {
+  background: #262626; color: #fff; border: none; border-radius: var(--radius-md);
+  min-width: 0; box-shadow: var(--shadow-lg); animation: ig-toast 0.4s var(--ease-spring);
+}
+.toast.success, .toast.error, .toast.info { border-left: none; }
+@keyframes ig-toast { from { opacity: 0; transform: translateY(20px) scale(0.95); } to { opacity: 1; transform: none; } }
+
+/* --- Mobile --- */
+@keyframes ig-sheet { from { transform: translateY(100%); } to { transform: translateY(0); } }
+@keyframes ig-bump { 0% { transform: scale(1); } 40% { transform: scale(1.28); } 100% { transform: scale(1); } }
+@media (max-width: 768px) {
+  .mobile-app-header { background: rgba(255,255,255,0.92); border-bottom: 1px solid #efefef; }
+  .mobile-location { font-family: var(--ig-font); font-weight: 700; font-size: 1.05rem; }
+
+  /* Cart drawer: animate transform (GPU) instead of `right`, which janked */
+  .order-panel-container {
+    right: 0; transform: translateX(105%);
+    transition: transform 0.38s var(--ease-out);
+    will-change: transform; border-radius: 20px 0 0 20px; overflow: hidden;
+  }
+  .order-panel-container.open { right: 0; transform: translateX(0); }
+  .cart-overlay { background: rgba(0,0,0,0.45); animation: pm-fade 0.25s var(--ease-out); }
+
+  /* Floating cart bar */
+  .mobile-cart-btn {
+    background: var(--text-primary); border-radius: var(--radius-full);
+    transition: transform 0.25s var(--ease-spring), box-shadow 0.2s;
+  }
+  .mobile-cart-btn.has-items { background: #000; box-shadow: 0 14px 30px rgba(0,0,0,0.3); }
+  .mobile-cart-btn:active { transform: scale(0.96); }
+  .mobile-cart-btn .mcb-bag { animation: ig-bump 0.4s var(--ease-spring); }
+
+  /* Bottom sheets */
+  .modal-box { border-radius: 20px 20px 0 0; animation: ig-sheet 0.35s var(--ease-out); }
+  .modal-box::before {
+    content: ''; display: block; width: 40px; height: 4px; border-radius: 4px;
+    background: #dbdbdb; margin: -0.4rem auto 0.9rem;
+  }
+
+  .pos-cat-pill { min-width: 64px; }
+  .pos-cat-emoji-wrapper { width: 56px; height: 56px; }
+  .pos-cat-emoji { font-size: 1.45rem; }
+  .pos-cat-name { font-size: 0.68rem; max-width: 66px; }
+  .pos-item-card { border-radius: var(--radius-md); }
+  .pos-item-emoji { border-radius: 10px; }
+  .toast-container { bottom: calc(110px + env(safe-area-inset-bottom)); }
+}
