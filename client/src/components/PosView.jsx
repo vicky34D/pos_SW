@@ -1,22 +1,11 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import * as api from '../api'
+import { getCategories } from '../lib/categories'
 
-const categories = [
-  { id: 'all', name: 'All', emoji: '🍽️' },
-  { id: 'burgers', name: 'Burgers', emoji: '🍔' },
-  { id: 'fries', name: 'Fries', emoji: '🍟' },
-  { id: 'strips', name: 'Strips', emoji: '🍗' },
-  { id: 'drinks', name: 'Chai & Coffee', emoji: '☕' },
-  { id: 'popcorn', name: 'Popcorn', emoji: '🍿' },
-  { id: 'snacks', name: 'Snacks', emoji: '🧀' },
-  { id: 'wings', name: 'Wings', emoji: '🍗' },
-  { id: 'momos', name: 'Momos', emoji: '🥟' },
-  { id: 'combos', name: 'Combos', emoji: '🎁' },
-  { id: 'cigarettes', name: 'Cigarettes', emoji: '🚬' },
-]
 
 export default function PosView({ onAddToOrder, activeTable }) {
   const [menuItems, setMenuItems] = useState([])
+  const categories = useMemo(() => [{ id: 'all', name: 'All', emoji: '🍽️' }, ...getCategories()], [])
   const [activeCategory, setActiveCategory] = useState('all')
   const [search, setSearch] = useState('')
 

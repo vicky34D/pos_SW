@@ -1,21 +1,13 @@
 import { useState, useEffect } from 'react'
 import * as api from '../api'
+import { getCategories, addCategory } from '../lib/categories'
 
-const categoryOptions = [
-  { id: 'burgers', name: 'Burgers', emoji: '🍔' },
-  { id: 'fries', name: 'Fries', emoji: '🍟' },
-  { id: 'strips', name: 'Strips', emoji: '🍗' },
-  { id: 'drinks', name: 'Chai & Coffee', emoji: '☕' },
-  { id: 'popcorn', name: 'Popcorn', emoji: '🍿' },
-  { id: 'snacks', name: 'Snacks', emoji: '🧀' },
-  { id: 'wings', name: 'Wings', emoji: '🍗' },
-  { id: 'momos', name: 'Momos', emoji: '🥟' },
-  { id: 'combos', name: 'Combos', emoji: '🎁' },
-  { id: 'cigarettes', name: 'Cigarettes', emoji: '🚬' },
-]
 
 export default function MenuManagement({ showToast }) {
   const [items, setItems] = useState([])
+  const [categoryOptions, setCategoryOptions] = useState(getCategories())
+  const [showCatModal, setShowCatModal] = useState(false)
+  const [catForm, setCatForm] = useState({ name: '', emoji: '' })
   const [showModal, setShowModal] = useState(false)
   const [editItem, setEditItem] = useState(null)
   const [form, setForm] = useState({ name: '', price: '', category: 'burgers', description: '' })
@@ -46,6 +38,19 @@ export default function MenuManagement({ showToast }) {
   }
 
   useEffect(() => { fetchItems() }, [])
+
+  const handleAddCategory = () => {
+    try {
+      const cat = addCategory(catForm.name, catForm.emoji)
+      setCategoryOptions(getCategories())
+      setForm(f => ({ ...f, category: cat.id }))
+      setCatForm({ name: '', emoji: '' })
+      setShowCatModal(false)
+      showToast(`Category "${cat.name}" added`, 'success')
+    } catch (e) {
+      showToast(e.message, 'error')
+    }
+  }
 
   const openAdd = () => {
     setEditItem(null)
@@ -168,6 +173,10 @@ export default function MenuManagement({ showToast }) {
           <div className="header-title">Menu Management</div>
           <div className="header-subtitle">{items.length} items across {categoryOptions.length} categories</div>
         </div>
+        <button className="btn-add-stock" onClick={() => setShowCatModal(true)} style={{ marginRight: '0.5rem' }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
+          Add Category
+        </button>
         <button className="btn-add-stock" onClick={openAdd}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
           Add Item
@@ -234,6 +243,26 @@ export default function MenuManagement({ showToast }) {
           </table>
         </div>
       </div>
+
+      {showCatModal && (
+        <div className="modal-overlay" onClick={() => setShowCatModal(false)}>
+          <div className="modal-box" onClick={e => e.stopPropagation()}>
+            <div className="modal-title">Add New Category</div>
+            <div className="modal-form-group">
+              <label>Category Name</label>
+              <input value={catForm.name} onChange={e => setCatForm({ ...catForm, name: e.target.value })} placeholder="e.g. Biryani" autoFocus />
+            </div>
+            <div className="modal-form-group">
+              <label>Emoji (optional)</label>
+              <input value={catForm.emoji} onChange={e => setCatForm({ ...catForm, emoji: e.target.value })} placeholder="🍛" />
+            </div>
+            <div className="modal-actions">
+              <button className="btn-modal btn-modal-cancel" onClick={() => setShowCatModal(false)}>Cancel</button>
+              <button className="btn-modal btn-modal-confirm" onClick={handleAddCategory}>Add Category</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showModal && (
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
