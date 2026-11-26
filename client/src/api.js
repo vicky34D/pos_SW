@@ -129,6 +129,8 @@ export const createInventoryItem = (data) => request('/inventory', { method: 'PO
 export const updateInventoryItem = (id, data) => request(`/inventory/${id}`, { method: 'PUT', body: JSON.stringify(data) });
 export const bulkUpdateInventory = (updates) => request('/inventory', { method: 'PUT', body: JSON.stringify({ updates }) });
 export const resetAllStock = () => request('/inventory/reset-stock', { method: 'POST', body: JSON.stringify({ confirm: 'RESET' }), timeoutMs: 60000 });
+export const getStartFreshSummary = () => request('/admin/start-fresh');
+export const startFresh = () => request('/admin/start-fresh', { method: 'POST', body: JSON.stringify({ confirm: 'DELETE' }), timeoutMs: 60000 });
 export const deleteInventoryItem = (id) => request(`/inventory/${id}`, { method: 'DELETE' });
 
 // Recipes (menu item -> inventory ingredient mapping)

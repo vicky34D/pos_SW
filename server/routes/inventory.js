@@ -131,10 +131,21 @@ router.post('/reset-stock', requireRole(['Admin']), (req, res) => {
   const items = db.prepare('SELECT id, qty FROM inventory WHERE org_id = ?').all(orgId);
   let changed = 0;
   db.transaction(() => {
+    // Zero each warehouse balance on its own: zeroing only the total could
+    // leave +stock (and its value) in one warehouse and -stock in another.
+    const bins = db.prepare('SELECT item_id, warehouse_id, qty, stock_value FROM bins WHERE org_id = ?').all(orgId);
+    const touched = new Set();
+    for (const b of bins) {
+      if (Math.abs(b.qty) > 0.00005) {
+        postMovement({ orgId, itemId: b.item_id, warehouseId: b.warehouse_id, qtyChange: -b.qty,
+          voucherType: 'Stock Adjustment', notes: 'Reset all stock to zero' });
+        touched.add(b.item_id);
+      } else if (Math.abs(b.stock_value) > 0.005) touched.add(b.item_id);
+    }
+    db.prepare('UPDATE bins SET qty = 0, stock_value = 0 WHERE org_id = ?').run(orgId);
     for (const it of items) {
-      const before = db.prepare('SELECT COALESCE(SUM(qty), 0) AS qty FROM bins WHERE org_id = ? AND item_id = ?').get(orgId, it.id).qty;
-      if (Math.abs(before) > 0.00005 || Math.abs(it.qty) > 0.00005) changed++;
-      setQtyViaLedger(orgId, it.id, 0, 'Reset all stock to zero');
+      if (touched.has(it.id) || Math.abs(it.qty) > 0.00005) changed++;
+      refreshItemCache(orgId, it.id);
     }
   })();
   res.json({ success: true, items: items.length, changed });

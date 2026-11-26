@@ -32,3 +32,6 @@ dist/
 
 # Claude API key for bill scanning (never commit)
 server/ai.env
+
+# Automatic database backups made before "Start fresh"
+server/backups/
