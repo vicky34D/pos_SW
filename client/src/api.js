@@ -152,6 +152,8 @@ export const updateSettings = (data) => request('/settings', { method: 'PUT', bo
 export const getUsers = () => request('/users');
 export const createUser = (data) => request('/users', { method: 'POST', body: JSON.stringify(data) });
 export const updateUserRole = (id, data) => request(`/users/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+export const setUserPassword = (id, data) => request(`/users/${id}/password`, { method: 'POST', body: JSON.stringify(data) });
+export const makeUserOwner = (id) => request(`/users/${id}/make-owner`, { method: 'POST' });
 export const deleteUser = (id) => request(`/users/${id}`, { method: 'DELETE' });
 
 // Warehouses

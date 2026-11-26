@@ -36,7 +36,8 @@ app.get('/api/session', authenticateToken, (req, res) => {
       org_id: user.org_id,
       email: user.email,
       name: user.name,
-      role: user.role
+      role: user.role,
+      is_owner: !!user.is_owner
     }
   });
 });
