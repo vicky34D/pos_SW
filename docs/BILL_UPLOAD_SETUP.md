@@ -7,8 +7,9 @@ Claude Haiku 5.5 reads it, and the app automatically:
 2. Finds the supplier by GSTIN or name, or creates it.
 3. Matches every product line to your item master, or creates a new item.
 4. Skips non-items (handling fee, delivery, ₹0 lines).
-5. Creates a **Submitted** purchase bill: stock goes up and the item's average cost is updated.
-6. Refuses to import the same supplier invoice number twice.
+5. Converts packs to the item's unit: uses the item's **Pack size** (Item Master), or the size printed on the bill (e.g. "1 L pouch", "5 kg").
+6. Creates the purchase bill as **Paid** (a UPI payment is recorded, since uploaded bills are already paid): stock goes up and the item's average cost is updated.
+7. Refuses to import the same supplier invoice number twice.
 
 Nothing existing is overwritten. Every change goes through the stock ledger, so a
 wrong import is undone by opening the bill and pressing **Cancel**.
@@ -64,8 +65,16 @@ sudo nginx -t && sudo systemctl reload nginx
 3. Read the ⚠ warnings:
    - **Unit warning**: the bill's unit differs from the item's (for example 4 packs vs an item counted in litres). Fix the stock in Item Master if needed.
    - **Total warning**: the imported total differs from the printed total by more than ₹1.
-4. Imported bills are unpaid. Record the payment as usual (Flipkart orders are usually prepaid).
+4. Imported bills are saved as Paid. To change the payment method, open the bill's payment.
 5. Something wrong? Open the bill → **Cancel** (stock is reversed) → fix → upload again.
+
+## Pack sizes
+If a bill only says "4 packs" (no size), set the item's **Pack size on bills** in Item Master once
+(Milk counted in litre, 500 ml packs → 0.5). Every later bill converts automatically.
+
+## Starting fresh
+Item Master → **Reset all stock to 0** (Admin only, type RESET). Every item's stock becomes 0;
+items, bills and sales history are kept, and each change is logged as a Stock Adjustment.
 
 ## Tips
 - Original PDFs read best. For photos, lay the bill flat in good light with all edges visible.

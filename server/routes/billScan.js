@@ -14,6 +14,12 @@ const { db } = require('../db');
 const { requireRole } = require('../middleware/auth');
 const { postMovement, getDefaultWarehouseId } = require('../stockLedger');
 const { nextBillNumber } = require('./purchaseBills');
+const { nextPaymentNumber } = require('./payments');
+
+// Bills uploaded here are already paid for (online orders), so each import
+// also records a full payment and the bill shows as Paid.
+const PAID_ON_UPLOAD = true;
+const PAID_METHOD = 'UPI';
 const { v4: uuidv4 } = require('uuid');
 
 // Load only the dedicated key file, so no other server setting can change.
@@ -62,14 +68,16 @@ const SCHEMA = {
             items: {
               type: 'object',
               additionalProperties: false,
-              required: ['name', 'matched_item_id', 'qty', 'unit', 'rate', 'tax'],
+              required: ['name', 'matched_item_id', 'qty', 'unit', 'rate', 'tax', 'pack_size', 'pack_unit'],
               properties: {
                 name: { type: 'string' },
                 matched_item_id: { type: 'integer' },
                 qty: { type: 'number' },
                 unit: { type: 'string' },
                 rate: { type: 'number' },
-                tax: { type: 'number' }
+                tax: { type: 'number' },
+                pack_size: { type: 'number' },
+                pack_unit: { type: 'string' }
               }
             }
           },
@@ -93,7 +101,8 @@ Rules:
 - rate: price for ONE unit AFTER discounts and BEFORE GST (taxable value divided by qty). Round to 2 decimals.
 - tax: total GST for that whole line (CGST + SGST + IGST + cess). 0 if none.
 - round_off: any round-off amount printed on the invoice, else 0. grand_total: the invoice's final payable total.
-- When you match an item and the bill prints the pack size, give qty and rate in THAT item's unit (e.g. 4 x 500 ml milk for an item counted in "litre" -> qty 2, unit "litre", rate per litre). If the pack size is not printed, keep the bill's own qty and unit.
+- Keep qty, unit and rate exactly as the bill counts them; never convert units yourself.
+- pack_size / pack_unit: the size of ONE unit when it is printed in the product name or line (e.g. "Amul Taaza 500 ml" -> 500, "ml"; "Oil 1 L Pouch" -> 1, "L"; "Rice 5 kg" -> 5, "kg"). If no size is printed, pack_size 0 and pack_unit "".
 - matched_item_id: if the product is clearly the same thing as an item in the restaurant's item list below, give that item's id. Same product with a different brand or wording still counts (e.g. "English Oven Burger Buns" matches "Burger Bun"). If nothing in the list is the same product, give 0. Never guess an id that is not in the list.
 
 Restaurant item list (id | name | unit):
@@ -166,16 +175,60 @@ function findOrCreateSupplier(orgId, name, gstin) {
   return { id: info.lastInsertRowid, name, created: true };
 }
 
-function findOrCreateItem(orgId, line) {
+// Display names used by the Item Master unit dropdown.
+const UNIT_DISPLAY = { pcs: 'pcs', kg: 'kg', g: 'g', l: 'litre', ml: 'ml', pack: 'packet', dozen: 'dozen' };
+// How many `to` units are in one `from` unit (null when not convertible).
+function unitFactor(from, to) {
+  if (from === to) return 1;
+  const t = { 'ml>l': 0.001, 'l>ml': 1000, 'g>kg': 0.001, 'kg>g': 1000 };
+  return t[`${from}>${to}`] ?? null;
+}
+const COUNT_UNITS = new Set(['pcs', 'pack']);
+
+function findItem(orgId, line) {
   if (line.matched_item_id > 0) {
-    const m = db.prepare('SELECT id, name, unit FROM inventory WHERE id = ? AND org_id = ?').get(line.matched_item_id, orgId);
-    if (m) return { id: m.id, name: m.name, unit: m.unit, created: false };
+    const m = db.prepare('SELECT id, name, unit, pack_size FROM inventory WHERE id = ? AND org_id = ?').get(line.matched_item_id, orgId);
+    if (m) return m;
   }
-  const same = db.prepare('SELECT id, name, unit FROM inventory WHERE org_id = ? AND lower(name) = lower(?)').get(orgId, line.name);
-  if (same) return { id: same.id, name: same.name, unit: same.unit, created: false };
-  const unit = clean(line.unit).slice(0, 12) || 'pcs';
+  return db.prepare('SELECT id, name, unit, pack_size FROM inventory WHERE org_id = ? AND lower(name) = lower(?)').get(orgId, line.name) || null;
+}
+
+// Work out how the bill's quantity maps onto the item's stock unit, creating
+// the item when it is new. Returns the item plus `factor`: stock units per
+// one bill unit (e.g. 1 pack of milk = 0.5 litre -> factor 0.5).
+function resolveItem(orgId, line) {
+  const lineU = normUnit(line.unit);
+  const printedSize = Number(line.pack_size) > 0 ? Number(line.pack_size) : 0;
+  const printedU = normUnit(line.pack_unit);
+  const existing = findItem(orgId, line);
+
+  if (existing) {
+    const itemU = normUnit(existing.unit);
+    if (lineU === itemU) return { item: existing, created: false, factor: 1 };
+    if (COUNT_UNITS.has(lineU) && existing.pack_size > 0) {
+      return { item: existing, created: false, factor: existing.pack_size, how: `1 ${line.unit} = ${existing.pack_size} ${existing.unit} (item pack size)` };
+    }
+    if (COUNT_UNITS.has(lineU) && printedSize) {
+      const f = unitFactor(printedU, itemU);
+      if (f) return { item: existing, created: false, factor: printedSize * f, how: `${printedSize} ${line.pack_unit} per ${line.unit} (printed on bill)` };
+    }
+    const f = unitFactor(lineU, itemU);
+    if (f) return { item: existing, created: false, factor: f, how: `${line.unit} → ${existing.unit}` };
+    return { item: existing, created: false, factor: 1,
+      warning: `Bill says ${line.qty} ${line.unit}; this item is counted in ${existing.unit}. Set its pack size in Item Master so future bills convert.` };
+  }
+
+  // New item: if the bill prints a measurable size, stock it in that measure.
+  if (COUNT_UNITS.has(lineU) && printedSize && ['l', 'ml', 'kg', 'g'].includes(printedU)) {
+    const unit = UNIT_DISPLAY[printedU];
+    const info = db.prepare('INSERT INTO inventory (org_id, name, qty, unit, alert_level, pack_size) VALUES (?, ?, 0, ?, 5, ?)')
+      .run(orgId, line.name, unit, printedSize);
+    return { item: { id: info.lastInsertRowid, name: line.name, unit, pack_size: printedSize }, created: true, factor: printedSize,
+      how: `${printedSize} ${unit} per ${line.unit} (printed on bill)` };
+  }
+  const unit = UNIT_DISPLAY[lineU] || clean(line.unit).slice(0, 12) || 'pcs';
   const info = db.prepare('INSERT INTO inventory (org_id, name, qty, unit, alert_level) VALUES (?, ?, 0, ?, 5)').run(orgId, line.name, unit);
-  return { id: info.lastInsertRowid, name: line.name, unit, created: true };
+  return { item: { id: info.lastInsertRowid, name: line.name, unit, pack_size: 0 }, created: true, factor: 1 };
 }
 
 // Turn the extracted invoices into Submitted purchase bills. Each invoice is
@@ -210,7 +263,12 @@ function importInvoices(orgId, invoices, fileName) {
 
         const billId = uuidv4();
         const billNumber = nextBillNumber(orgId);
-        const rows = lines.map(l => ({ line: l, item: findOrCreateItem(orgId, l), amount: round2(l.qty * l.rate) }));
+        const rows = lines.map(l => {
+          const r = resolveItem(orgId, l);
+          const qty = Math.round(l.qty * r.factor * 10000) / 10000;
+          const amount = round2(l.qty * l.rate);
+          return { line: l, ...r, qty, rate: Math.round((amount / qty) * 10000) / 10000, amount };
+        });
         const subtotal = round2(rows.reduce((s, r) => s + r.amount, 0));
         const tax = round2(rows.reduce((s, r) => s + r.line.tax, 0) + (Number(inv.round_off) || 0));
         const total = round2(subtotal + tax);
@@ -222,12 +280,20 @@ function importInvoices(orgId, invoices, fileName) {
         `).run(billId, orgId, billNumber, supplier.id, warehouseId, validDate(clean(inv.invoice_date)) || new Date().toISOString().slice(0, 10),
           subtotal, tax, total, notes, invoiceNo);
 
+        if (PAID_ON_UPLOAD) {
+          db.prepare(`INSERT INTO payments (id, org_id, payment_number, against_type, against_id, supplier_id, amount, method, payment_date, notes)
+                      VALUES (?, ?, ?, 'Purchase Bill', ?, ?, ?, ?, ?, ?)`)
+            .run(uuidv4(), orgId, nextPaymentNumber(orgId), billId, supplier.id, total, PAID_METHOD,
+              validDate(clean(inv.invoice_date)) || new Date().toISOString().slice(0, 10), 'Paid at purchase (bill upload)');
+          db.prepare("UPDATE purchase_bills SET paid_amount = total, status = 'Paid' WHERE id = ? AND org_id = ?").run(billId, orgId);
+        }
+
         for (const r of rows) {
           db.prepare(`INSERT INTO purchase_bill_items (bill_id, org_id, item_id, item_name, qty, rate, amount) VALUES (?, ?, ?, ?, ?, ?, ?)`)
-            .run(billId, orgId, r.item.id, r.item.name, r.line.qty, r.line.rate, r.amount);
+            .run(billId, orgId, r.item.id, r.item.name, r.qty, r.rate, r.amount);
           postMovement({
             orgId, itemId: r.item.id, warehouseId,
-            qtyChange: r.line.qty, incomingRate: r.line.rate,
+            qtyChange: r.qty, incomingRate: r.rate,
             voucherType: 'Purchase Bill', voucherId: billId,
             notes: `Purchase Bill ${billNumber}`
           });
@@ -238,11 +304,11 @@ function importInvoices(orgId, invoices, fileName) {
           status: 'imported', bill_id: billId, bill_number: billNumber, total,
           supplier_created: supplier.created,
           check_total: printed > 0 && Math.abs(printed - total) > 1 ? `Bill says ₹${printed}, imported ₹${total} — please check` : null,
+          paid: PAID_ON_UPLOAD,
           items: rows.map(r => ({
-            name: r.item.name, bill_name: r.line.name, qty: r.line.qty, rate: r.line.rate, new_item: r.item.created,
-            unit: r.item.unit,
-            unit_warning: !r.item.created && normUnit(r.line.unit) !== normUnit(r.item.unit)
-              ? `Bill says ${r.line.qty} ${r.line.unit}; this item is counted in ${r.item.unit}. Check the stock.` : null
+            name: r.item.name, bill_name: r.line.name, qty: r.qty, unit: r.item.unit, rate: r.rate,
+            bill_qty: `${r.line.qty} ${r.line.unit}`, converted: r.how || null,
+            new_item: r.created, unit_warning: r.warning || null
           }))
         };
       })();

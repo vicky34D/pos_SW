@@ -90,7 +90,7 @@ export default function PurchaseBillsView({ showToast }) {
       const res = await api.scanBill(payload)
       setScanResult(res)
       const imported = res.results.filter(r => r.status === 'imported').length
-      showToast(imported ? `${imported} bill${imported > 1 ? 's' : ''} imported — stock updated` : 'Nothing new imported', imported ? 'success' : 'info')
+      showToast(imported ? `${imported} bill${imported > 1 ? 's' : ''} imported as paid — stock updated` : 'Nothing new imported', imported ? 'success' : 'info')
       load()
     } catch (err) { showToast(err.message, 'error') }
     finally { setScanning(false) }
@@ -294,18 +294,18 @@ export default function PurchaseBillsView({ showToast }) {
                     <div className="bill-scan-meta">Invoice {r.invoice_number || '—'}{r.bill_number ? ` → ${r.bill_number}` : ''}</div>
                   </div>
                   <span className="bill-scan-status">
-                    {r.status === 'imported' ? `✓ Imported · ₹${r.total?.toFixed(2)}` : r.status === 'duplicate' ? 'Already imported' : r.status === 'skipped' ? 'Skipped' : 'Failed'}
+                    {r.status === 'imported' ? `✓ Imported${r.paid ? ' · Paid' : ''} · ₹${r.total?.toFixed(2)}` : r.status === 'duplicate' ? 'Already imported' : r.status === 'skipped' ? 'Skipped' : 'Failed'}
                   </span>
                 </div>
                 {r.reason && <div className="bill-scan-reason">{r.reason}</div>}
                 {r.check_total && <div className="bill-scan-warn">⚠ {r.check_total}</div>}
                 {r.items?.length > 0 && (
                   <table className="frappe-table">
-                    <thead><tr><th>Item</th><th>Qty</th><th>Rate (₹)</th></tr></thead>
+                    <thead><tr><th>Item</th><th>Qty added</th><th>Rate (₹ per unit)</th></tr></thead>
                     <tbody>
                       {r.items.map((it, j) => (
                         <tr key={j}>
-                          <td>{it.name}{it.new_item && <span className="bill-scan-tag">new item</span>}{it.bill_name !== it.name && <div className="bill-scan-meta">on bill: {it.bill_name}</div>}{it.unit_warning && <div className="bill-scan-warn">⚠ {it.unit_warning}</div>}</td>
+                          <td>{it.name}{it.new_item && <span className="bill-scan-tag">new item</span>}{it.bill_name !== it.name && <div className="bill-scan-meta">on bill: {it.bill_name}</div>}{it.converted && <div className="bill-scan-meta">bill: {it.bill_qty} · {it.converted}</div>}{it.unit_warning && <div className="bill-scan-warn">⚠ {it.unit_warning}</div>}</td>
                           <td>{it.qty} {it.unit}</td>
                           <td>₹{Number(it.rate).toFixed(2)}</td>
                         </tr>

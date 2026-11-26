@@ -8,7 +8,7 @@ const { postMovement, refreshItemCache } = require('../stockLedger');
 // recomputes it from bins after every movement, so a raw UPDATE here would be
 // silently overwritten by the next sale/purchase. Setting an absolute qty must
 // therefore post the delta through the ledger instead.
-function setQtyViaLedger(orgId, itemId, targetQty) {
+function setQtyViaLedger(orgId, itemId, targetQty, notes = 'Manual edit via Inventory screen') {
   const target = Number(targetQty);
   if (!Number.isFinite(target)) return;
 
@@ -30,7 +30,7 @@ function setQtyViaLedger(orgId, itemId, targetQty) {
     itemId,
     qtyChange: delta,
     voucherType: ledger.bins === 0 && delta > 0 ? 'Opening Stock' : 'Stock Adjustment',
-    notes: 'Manual edit via Inventory screen'
+    notes
   });
 }
 
@@ -44,7 +44,7 @@ router.get('/', (req, res) => {
 // POST add new inventory item
 router.post('/', requireRole(['Admin', 'Manager']), (req, res) => {
   const orgId = req.user.org_id;
-  const { name, qty, unit, alert_level } = req.body;
+  const { name, qty, unit, alert_level, pack_size } = req.body;
   if (!name) return res.status(400).json({ error: 'name is required' });
 
   try {
@@ -54,6 +54,7 @@ router.post('/', requireRole(['Admin', 'Manager']), (req, res) => {
       ).run(orgId, name, 0, unit || 'pcs', alert_level || 5);
 
       const row = db.prepare('SELECT id FROM inventory WHERE org_id = ? AND name = ?').get(orgId, name);
+      if (Number(pack_size) > 0) db.prepare('UPDATE inventory SET pack_size = ? WHERE id = ?').run(Number(pack_size), row.id);
       if (qty) setQtyViaLedger(orgId, row.id, qty); // posts Opening Stock so the first sale deducts from it
     });
     create();
@@ -71,7 +72,7 @@ router.post('/', requireRole(['Admin', 'Manager']), (req, res) => {
 // PUT update inventory item
 router.put('/:id', requireRole(['Admin', 'Manager']), (req, res) => {
   const orgId = req.user.org_id;
-  const { qty, name, unit, alert_level } = req.body;
+  const { qty, name, unit, alert_level, pack_size } = req.body;
   const existing = db.prepare('SELECT * FROM inventory WHERE id = ? AND org_id = ?').get(req.params.id, orgId);
   if (!existing) return res.status(404).json({ error: 'Item not found' });
 
@@ -86,6 +87,9 @@ router.put('/:id', requireRole(['Admin', 'Manager']), (req, res) => {
       orgId
     );
 
+    if (pack_size !== undefined && pack_size !== null && Number(pack_size) >= 0) {
+      db.prepare('UPDATE inventory SET pack_size = ? WHERE id = ? AND org_id = ?').run(Number(pack_size), existing.id, orgId);
+    }
     if (qty !== undefined && qty !== null) {
       setQtyViaLedger(orgId, existing.id, qty);
     }
@@ -116,6 +120,24 @@ router.put('/', requireRole(['Admin', 'Manager']), (req, res) => {
   bulkUpdate();
   const items = db.prepare('SELECT * FROM inventory WHERE org_id = ? ORDER BY name').all(orgId);
   res.json(items);
+});
+
+// POST reset every item's stock to zero (Admin only). Each change is posted
+// as a Stock Adjustment in the ledger, so history is kept and nothing is
+// deleted; bills, sales and item details are untouched.
+router.post('/reset-stock', requireRole(['Admin']), (req, res) => {
+  const orgId = req.user.org_id;
+  if (req.body?.confirm !== 'RESET') return res.status(400).json({ error: 'Type RESET to confirm' });
+  const items = db.prepare('SELECT id, qty FROM inventory WHERE org_id = ?').all(orgId);
+  let changed = 0;
+  db.transaction(() => {
+    for (const it of items) {
+      const before = db.prepare('SELECT COALESCE(SUM(qty), 0) AS qty FROM bins WHERE org_id = ? AND item_id = ?').get(orgId, it.id).qty;
+      if (Math.abs(before) > 0.00005 || Math.abs(it.qty) > 0.00005) changed++;
+      setQtyViaLedger(orgId, it.id, 0, 'Reset all stock to zero');
+    }
+  })();
+  res.json({ success: true, items: items.length, changed });
 });
 
 // DELETE inventory item

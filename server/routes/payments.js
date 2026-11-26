@@ -104,3 +104,4 @@ router.delete('/:id', requireRole(['Admin', 'Manager']), (req, res) => {
 });
 
 module.exports = router;
+module.exports.nextPaymentNumber = nextPaymentNumber;
