@@ -1,5 +1,5 @@
 /* ===== GOOGLE FONTS — minimal weights for fast load ===== */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&family=Outfit:wght@500;600;700;800&display=swap');
 
 /* ===== CSS VARIABLES — Graphite Monochrome Theme =====
    Cool neutral surfaces, high-contrast graphite ink. Minimal and
@@ -3143,3 +3143,299 @@ html, body, #root {
 .modal-total div[style] { color: rgba(255,255,255,0.8) !important; }
 .stat-card.revenue { background: var(--accent); }
 .stat-card.revenue .stat-label, .stat-card.revenue .stat-value { color: #fff; }
+
+
+/* ===========================================================
+   DHARS THEME — lavender-white canvas, white cards with crisp
+   ink outlines, lime + violet highlights, black pill actions,
+   Bricolage Grotesque headings. Replaces the glass layers above.
+   =========================================================== */
+:root {
+  --dh-bg:      #f8f7f4;
+  --dh-surface: #ffffff;
+  --dh-ink:     #121212;
+  --dh-ink-2:   #4a4a55;
+  --dh-muted:   #8a8a96;
+  --dh-line:    #121212;
+  --dh-soft:    #e7e4f0;
+  --dh-lime:    #d6f24b;
+  --dh-lime-2:  #c4e436;
+  --dh-lime-soft: #f4fbd2;
+  --dh-violet:  #7b5cff;
+  --dh-violet-2:#6a48f5;
+  --dh-violet-soft: #ece7ff;
+  --dh-peach-soft:  #fff1d6;
+  --dh-radius:  20px;
+  --dh-head: 'Bricolage Grotesque', 'Inter', system-ui, sans-serif;
+
+  --bg-primary: var(--dh-bg);
+  --bg-secondary: #fff;
+  --bg-card: #fff;
+  --text-primary: var(--dh-ink);
+  --text-secondary: var(--dh-ink-2);
+  --text-muted: var(--dh-muted);
+  --border: var(--dh-soft);
+  --border-hover: var(--dh-ink);
+  --accent: var(--dh-violet);
+  --accent-dark: var(--dh-violet-2);
+  --accent-light: #9b84ff;
+  --accent-glow: rgba(123, 92, 255, 0.25);
+  --accent-soft: var(--dh-violet-soft);
+  --ig-blue: var(--dh-violet);
+  --ig-blue-dark: var(--dh-violet-2);
+  --success: #2f8a3a;
+  --success-bg: var(--dh-lime-soft);
+  --glass-bg: #fff; --glass-card: #fff; --glass-card-hi: #fff;
+  --glass-edge: none;
+}
+html, body, #root { background: var(--dh-bg); background-attachment: initial; color: var(--dh-ink); }
+
+/* No glass anywhere */
+.pos-item-card, .stat-card, .report-card, .stock-card, .team-card, .team-summary-card,
+.menu-mgmt-card, .today-item-card, .frappe-stat-card, .tbl-card, .supplier-card, .team-form-panel,
+.payment-btn, .pos-categories, .table-chip, .order-type-toggle, .qty-controls,
+.btn-clear, .btn-print, .btn-action.btn-hold, .btn-modal-cancel, .pos-date-badge, .pos-status-badge,
+.swipe-track, .cash-quick-btn, .inventory-filter-btn, .report-tabs, .sidebar, .modal-box, .frappe-modal,
+.pastel-login-card, .toast, .brand-logo, .mobile-brand-mark, .mobile-app-header, .mobile-cart-btn {
+  -webkit-backdrop-filter: none; backdrop-filter: none;
+}
+
+/* Headings */
+.brand-name, .pos-page-title, .pastel-title, .modal-title, .stat-value, .pos-item-price,
+.bill-row.total, .modal-total-value, .order-header h2, .order-header h3, .order-number,
+h1, h2, h3, .mobile-location, .mcb-total, .dh-login-title, .dh-card-title, .dh-logo {
+  font-family: var(--dh-head);
+  letter-spacing: -0.02em;
+}
+
+/* --- Panels --- */
+@media (min-width: 769px) {
+  .main-content, .order-panel {
+    background: var(--dh-surface);
+    border: 1.5px solid var(--dh-line);
+    box-shadow: 0 4px 0 rgba(18,18,18,0.06);
+  }
+  .sidebar {
+    background: var(--dh-ink);
+    border: 1.5px solid var(--dh-ink);
+    box-shadow: 0 18px 40px rgba(18,18,18,0.18);
+  }
+}
+.order-panel { background: var(--dh-surface); }
+.order-header, .billing-section, .order-item-wrap, .order-item { border-color: var(--dh-soft); }
+.billing-section { background: #faf9fd; }
+
+/* --- Sidebar: black bar, pill nav like the top bar --- */
+.sidebar .brand-name, .sidebar .user-name { color: #fff; }
+.sidebar .brand-tagline, .sidebar .user-role, .sidebar .nav-section-label { color: rgba(255,255,255,0.5); }
+.sidebar .brand-logo {
+  background: var(--dh-lime); color: var(--dh-ink); border: none; box-shadow: none;
+  font-family: var(--dh-head); font-weight: 800; border-radius: 12px;
+}
+.sidebar .nav-item { color: rgba(255,255,255,0.72); background: transparent; border-radius: 999px; }
+.sidebar .nav-item:hover { background: rgba(255,255,255,0.08); color: #fff; }
+.sidebar .nav-item.active { background: #2a2a2e; color: #fff; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08); }
+.sidebar .nav-item.active::before, .sidebar .nav-item.active::after { background: var(--dh-lime); }
+.sidebar-footer, .sidebar-brand { border-color: rgba(255,255,255,0.1); }
+.sidebar .user-avatar { background: var(--dh-violet); color: #fff; }
+.sidebar .sidebar-close-btn { color: #fff; }
+
+/* --- Top bar, search, badges --- */
+.pos-search input, .search-wrapper input, .frappe-search, .customer-input,
+.modal-form-group input, .modal-form-group select, .settings-input, .frappe-input, .frappe-select,
+.cash-input, .bill-cash-input-wrap, .discount-input, .order-item-note-input, .input-group input {
+  background: #fff; border: 1.5px solid var(--dh-soft); box-shadow: none; color: var(--dh-ink);
+}
+.pos-search input:focus, .search-wrapper input:focus, .frappe-search:focus, .customer-input:focus,
+.modal-form-group input:focus, .modal-form-group select:focus, .settings-input:focus,
+.frappe-input:focus, .frappe-select:focus, .input-group input:focus {
+  background: #fff; border-color: var(--dh-ink); box-shadow: 0 0 0 4px var(--dh-lime-soft);
+}
+.pos-date-badge, .pos-status-badge {
+  background: var(--dh-lime-soft); border: 1.5px solid var(--dh-ink); box-shadow: none; color: var(--dh-ink);
+}
+
+/* --- Category pills & table chips --- */
+.pos-categories { background: #f6f5fa; border: 1.5px solid var(--dh-soft); box-shadow: none; }
+.pos-cat-pill { color: var(--dh-ink-2); }
+.pos-cat-pill.active, .order-type-btn.active, .inventory-filter-btn.active, .report-tab.active {
+  background: var(--dh-ink); color: #fff; box-shadow: none;
+}
+.table-chip { background: #fff; border: 1.5px solid var(--dh-soft); box-shadow: none; color: var(--dh-ink); }
+.table-chip:hover { background: #fff; border-color: var(--dh-ink); box-shadow: none; }
+.table-chip.active { background: var(--dh-ink); border-color: var(--dh-ink); color: #fff; }
+.table-chip.has-items:not(.active) { background: var(--dh-lime-soft); border-color: var(--dh-ink); color: var(--dh-ink); }
+.table-chip-badge { background: var(--dh-violet); color: #fff; }
+
+/* --- Menu item cards: outlined, lime tile, black add --- */
+.pos-item-card {
+  background: #fff; border: 1.5px solid var(--dh-ink); border-radius: var(--dh-radius);
+  box-shadow: 0 3px 0 var(--dh-ink);
+  transition: transform .18s cubic-bezier(.2,.8,.2,1), box-shadow .18s cubic-bezier(.2,.8,.2,1);
+}
+.pos-item-card:hover { background: #fff; transform: translateY(-2px); box-shadow: 0 5px 0 var(--dh-ink); }
+.pos-item-card:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--dh-ink); }
+.pos-item-card .pos-item-emoji,
+.pos-item-card[data-cat] .pos-item-emoji {
+  --tile: var(--dh-lime-soft);
+  background:
+    radial-gradient(120% 90% at 100% 0%, var(--dh-lime) 0 38%, transparent 39%),
+    var(--dh-lime-soft);
+  border: none; box-shadow: none; border-radius: 14px;
+}
+.pos-item-card:nth-child(3n+2) .pos-item-emoji {
+  background: radial-gradient(120% 90% at 100% 0%, #d9cfff 0 38%, transparent 39%), var(--dh-violet-soft);
+}
+.pos-item-card:nth-child(3n) .pos-item-emoji {
+  background: radial-gradient(120% 90% at 100% 0%, #ffe0a3 0 38%, transparent 39%), var(--dh-peach-soft);
+}
+.pos-item-emoji::after { display: none; }
+.pos-item-name { color: var(--dh-ink); font-weight: 600; }
+.pos-item-price { color: var(--dh-ink); font-weight: 700; }
+.pos-item-add { background: var(--dh-ink); color: #fff; box-shadow: none; }
+.pos-item-card:hover .pos-item-add { background: var(--dh-violet); }
+
+/* --- Buttons --- */
+.btn-add-stock, .btn-modal-confirm, .pastel-btn-primary, .btn-checkout, .frappe-btn-primary, .tbl-action.primary {
+  background: var(--dh-ink); color: #fff; border: 1.5px solid var(--dh-ink); border-radius: 999px; box-shadow: none;
+}
+.btn-add-stock:hover, .btn-modal-confirm:hover, .pastel-btn-primary:hover, .btn-checkout:hover,
+.frappe-btn-primary:hover, .tbl-action.primary:hover {
+  background: #2a2a2e; box-shadow: 0 8px 20px rgba(18,18,18,0.18);
+}
+.btn-clear, .btn-print, .btn-action.btn-hold, .btn-modal-cancel, .cash-quick-btn, .payment-btn {
+  background: #fff; border: 1.5px solid var(--dh-ink); color: var(--dh-ink); box-shadow: none; border-radius: 999px;
+}
+.payment-btn, .cash-quick-btn { border-radius: 16px; }
+.btn-clear:hover, .btn-print:hover, .btn-action.btn-hold:hover, .btn-modal-cancel:hover,
+.cash-quick-btn:hover, .payment-btn:hover { background: var(--dh-lime-soft); box-shadow: none; }
+.payment-btn.active, .payment-btn.selected { background: var(--dh-lime); border-color: var(--dh-ink); color: var(--dh-ink); }
+.order-type-toggle, .qty-controls { background: #f6f5fa; border: 1.5px solid var(--dh-soft); box-shadow: none; }
+.qty-btn { color: var(--dh-ink); }
+
+/* --- Swipe to pay: lime fill, black knob --- */
+.swipe-track { background: #f6f5fa; border: 1.5px solid var(--dh-ink); box-shadow: none; }
+.swipe-fill { background: var(--dh-lime); }
+.swipe-handle { background: var(--dh-ink); color: var(--dh-lime); box-shadow: 0 4px 12px rgba(18,18,18,0.25); }
+.swipe-label, .swipe-label-text { color: var(--dh-ink); }
+.swipe-track.is-confirmed .swipe-handle { background: var(--dh-violet); color: #fff; }
+.swipe-track.is-disabled { border-color: var(--dh-soft); }
+.swipe-track.is-disabled .swipe-handle { background: #c9c7d2; color: #fff; box-shadow: none; }
+
+/* --- Totals, stats, modals --- */
+.modal-total { background: var(--dh-violet); border: 1.5px solid var(--dh-ink); box-shadow: 0 3px 0 var(--dh-ink); }
+.change-display { background: var(--dh-lime-soft); border-color: var(--dh-ink); }
+.stat-card, .report-card, .stock-card, .team-card, .team-summary-card, .menu-mgmt-card, .today-item-card,
+.frappe-stat-card, .tbl-card, .supplier-card, .team-form-panel {
+  background: #fff; border: 1.5px solid var(--dh-ink); border-radius: var(--dh-radius); box-shadow: 0 3px 0 var(--dh-ink);
+}
+.stat-card.revenue { background: var(--dh-violet); }
+.stat-card.today { background: var(--dh-lime); }
+.stat-card.transactions { background: var(--dh-violet-soft); }
+.stat-card.avg { background: var(--dh-peach-soft); }
+.stat-card.today .stat-label, .stat-card.today .stat-value,
+.stat-card.transactions .stat-label, .stat-card.transactions .stat-value,
+.stat-card.avg .stat-label, .stat-card.avg .stat-value { color: var(--dh-ink); }
+.report-tabs, .inventory-filter-btn { background: #f6f5fa; border: 1.5px solid var(--dh-soft); box-shadow: none; }
+
+.modal-overlay { background: rgba(18, 18, 18, 0.35); }
+.modal-box, .frappe-modal {
+  background: #fff; border: 1.5px solid var(--dh-ink); border-radius: 24px;
+  box-shadow: 0 6px 0 var(--dh-ink), 0 30px 60px rgba(18,18,18,0.2);
+}
+.toast { background: var(--dh-ink); color: #fff; border: none; }
+::selection { background: var(--dh-lime); color: var(--dh-ink); }
+
+/* --- Mobile --- */
+@media (max-width: 768px) {
+  .mobile-app-header { background: var(--dh-ink); border-bottom: none; color: #fff; }
+  .mobile-app-header .mobile-location, .mobile-hamburger, .mobile-settings-gear { color: #fff; }
+  .mobile-brand-mark {
+    background: var(--dh-lime); color: var(--dh-ink); border: none; box-shadow: none;
+    font-family: var(--dh-head); font-weight: 800;
+  }
+  .sidebar { background: var(--dh-ink); }
+  .order-panel-container { background: #fff; border-left: 1.5px solid var(--dh-ink); }
+  .mobile-cart-btn { background: #fff; border: 1.5px solid var(--dh-ink); color: var(--dh-ink); }
+  .mobile-cart-btn.has-items { background: var(--dh-ink); color: #fff; }
+  .mobile-cart-btn.has-items .mcb-total { color: var(--dh-lime); }
+  .modal-box { background: #fff; }
+  .pos-item-card { box-shadow: 0 2px 0 var(--dh-ink); }
+}
+
+/* ===========================================================
+   DHARS LOGIN
+   =========================================================== */
+.dh-login.pastel-welcome-container {
+  min-height: 100vh; min-height: 100dvh; display: flex; align-items: center; justify-content: center;
+  padding: 24px; background: var(--dh-bg);
+}
+.dh-login-shell {
+  width: min(980px, 100%); display: grid; grid-template-columns: 1.1fr 1fr; gap: 0;
+  background: #fff; border: 1.5px solid var(--dh-ink); border-radius: 32px; overflow: hidden;
+  box-shadow: 0 8px 0 var(--dh-ink), 0 40px 80px rgba(18,18,18,0.12);
+  animation: dhRise .5s cubic-bezier(.2,.8,.2,1) both;
+}
+@keyframes dhRise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+.dh-login-brand {
+  position: relative; padding: 36px; display: flex; flex-direction: column; justify-content: space-between; gap: 32px;
+  background:
+    radial-gradient(220px 220px at 92% 14%, var(--dh-lime) 0 60%, transparent 61%),
+    radial-gradient(180px 180px at 8% 100%, #d9cfff 0 60%, transparent 61%),
+    var(--dh-ink);
+  color: #fff; min-height: 480px; overflow: hidden;
+}
+.dh-logo { display: flex; align-items: center; gap: 10px; font-size: 1.35rem; font-weight: 800; color: #fff; }
+.dh-logo-mark {
+  width: 36px; height: 36px; border-radius: 11px; display: grid; place-items: center;
+  background: var(--dh-lime); color: var(--dh-ink); font-size: 1.1rem;
+}
+.dh-login-title { font-size: clamp(2rem, 4vw, 2.9rem); font-weight: 800; line-height: 1.05; margin: 0 0 10px; color: #fff; }
+.dh-login-sub { color: rgba(255,255,255,0.7); font-size: 1rem; line-height: 1.45; margin: 0; max-width: 32ch; }
+.dh-login-chips { display: flex; flex-wrap: wrap; gap: 10px; }
+.dh-chip {
+  display: inline-flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 14px;
+  border: 1.5px solid var(--dh-ink); font-size: 0.85rem; color: var(--dh-ink);
+}
+.dh-chip b { font-family: var(--dh-head); font-weight: 700; }
+.dh-chip-lime { background: var(--dh-lime); }
+.dh-chip-violet { background: var(--dh-violet-soft); }
+.dh-chip-white { background: #fff; }
+
+.pastel-login-card.dh-login-card {
+  background: #fff; border: none; border-radius: 0; box-shadow: none; padding: 44px 40px;
+  display: flex; flex-direction: column; justify-content: center; text-align: left; max-height: none;
+}
+.dh-card-title { font-size: 1.9rem; font-weight: 800; margin: 0 0 6px; color: var(--dh-ink); }
+.dh-card-sub { color: var(--dh-muted); margin: 0 0 24px; font-size: 0.92rem; }
+.dh-field { display: flex; flex-direction: column; gap: 6px; }
+.dh-field > span { font-size: 0.8rem; font-weight: 600; color: var(--dh-ink-2); }
+.dh-login .input-group input { height: 50px; border-radius: 14px; padding: 0 16px; font-size: 1rem; width: 100%; }
+.dh-login-btn {
+  margin-top: 8px; height: 52px; width: 100%; font-size: 1rem; font-weight: 600;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+}
+.dh-login-btn span { color: var(--dh-lime); font-size: 1.1rem; }
+.dh-card-foot { margin: 22px 0 0; font-size: 0.78rem; color: var(--dh-muted); text-align: center; }
+
+@media (max-width: 768px) {
+  .dh-login.pastel-welcome-container { padding: 14px; align-items: stretch; }
+  .dh-login-shell { grid-template-columns: 1fr; border-radius: 26px; box-shadow: 0 5px 0 var(--dh-ink); }
+  .dh-login-brand { min-height: 0; padding: 24px; gap: 22px; }
+  .dh-login-chips { display: none; }
+  .pastel-login-card.dh-login-card { padding: 26px 22px 30px; }
+}
+.sidebar .nav-item svg { stroke: currentColor; background: transparent; }
+.sidebar .nav-item.active svg { background: var(--dh-lime); stroke: var(--dh-ink); }
+.pos-cat-pill.active .pos-cat-name, .pos-cat-pill.active span { color: #fff; }
+.pos-cat-pill.active .pos-cat-emoji-wrapper { background: rgba(255,255,255,0.14); border-color: transparent; }
+.dh-login-hero, .dh-logo, .dh-login-chips { position: relative; z-index: 1; }
+@media (max-width: 768px) {
+  .dh-login-brand {
+    background:
+      radial-gradient(90px 90px at 100% 0%, var(--dh-lime) 0 60%, transparent 61%),
+      radial-gradient(70px 70px at 0% 100%, #d9cfff 0 60%, transparent 61%),
+      var(--dh-ink);
+  }
+  .dh-login-title { font-size: 1.9rem; }
+}

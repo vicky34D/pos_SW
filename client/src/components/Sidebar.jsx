@@ -56,9 +56,9 @@ export default function Sidebar({ activeView, onViewChange, currentUser, onClose
     <aside className="sidebar">
       {/* Brand */}
       <div className="sidebar-brand">
-        <div className="brand-logo">SW</div>
+        <div className="brand-logo">D</div>
         <div className="brand-text">
-          <div className="brand-name">StreetWok</div>
+          <div className="brand-name">DHARS</div>
           <div className="brand-tagline">POS · ERP</div>
         </div>
         {onClose && (
