@@ -6,6 +6,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
 const { JWT_SECRET } = require('../middleware/auth');
+const { effectivePages } = require('../permissions');
 
 // Note: Replace with real Client ID from environment variables in production
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || 'dummy_client_id.apps.googleusercontent.com';
@@ -49,7 +50,7 @@ router.post('/google', async (req, res) => {
       return res.json({
         action: 'login_success',
         token,
-        user: { id: user.id, name: user.name, email: user.email, role: user.role, org_id: user.org_id, is_owner: !!user.is_owner }
+        user: { id: user.id, name: user.name, email: user.email, role: user.role, org_id: user.org_id, is_owner: !!user.is_owner, pages: effectivePages(user.role, user.pages) }
       });
     } else {
       // User doesn't exist, redirect to profile setup
@@ -107,7 +108,7 @@ router.post('/setup-profile', async (req, res) => {
     res.json({
       action: 'setup_success',
       token,
-      user: { id: userId, name, email, role: 'Admin', org_id: orgId, is_owner: true }
+      user: { id: userId, name, email, role: 'Admin', org_id: orgId, is_owner: true, pages: effectivePages('Admin', null) }
     });
   } catch (error) {
     console.error('Setup Error:', error);
@@ -152,7 +153,7 @@ router.post('/login', async (req, res) => {
     res.json({
       action: 'login_success',
       token,
-      user: { id: user.id, name: user.name, email: user.email, role: user.role, org_id: user.org_id, is_owner: !!user.is_owner }
+      user: { id: user.id, name: user.name, email: user.email, role: user.role, org_id: user.org_id, is_owner: !!user.is_owner, pages: effectivePages(user.role, user.pages) }
     });
   } catch (error) {
     console.error('Login Error:', error);

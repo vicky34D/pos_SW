@@ -1,3 +1,5 @@
+import { PAGE_GROUPS, userPages } from '../lib/pages'
+
 export default function Sidebar({ activeView, onViewChange, currentUser, onClose }) {
   const icons = {
     pos: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>,
@@ -14,40 +16,9 @@ export default function Sidebar({ activeView, onViewChange, currentUser, onClose
     settings: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>,
   }
 
-  // Items with mobileVisible:true appear in the bottom nav on mobile
-  const navGroups = [
-    {
-      label: 'Sales',
-      items: [
-        { id: 'pos', label: 'Point of Sale', mobileLabel: 'POS', mobileVisible: true, roles: ['Admin','Manager','Employee','Viewer'] },
-        { id: 'tables', label: 'Tables', mobileLabel: 'Tables', mobileVisible: true, roles: ['Admin','Manager','Employee','Viewer'] },
-        { id: 'reports', label: 'Reports', mobileLabel: 'Reports', mobileVisible: true, roles: ['Admin','Manager','Employee'] },
-        { id: 'orders', label: 'Order History', mobileLabel: 'History', mobileVisible: false, roles: ['Admin','Manager','Employee'] },
-      ]
-    },
-    {
-      label: 'Inventory',
-      items: [
-        { id: 'inventory', label: 'Item Master', mobileVisible: false, roles: ['Admin','Manager','Employee','Viewer'] },
-        { id: 'stockledger', label: 'Stock Ledger', mobileVisible: false, roles: ['Admin','Manager'] },
-      ]
-    },
-    {
-      label: 'Buying',
-      items: [
-        { id: 'suppliers', label: 'Suppliers', mobileVisible: false, roles: ['Admin','Manager'] },
-        { id: 'purchase', label: 'Purchase Bills', mobileVisible: false, roles: ['Admin','Manager'] },
-        { id: 'expenses', label: 'Expense Bills', mobileVisible: false, roles: ['Admin','Manager'] },
-      ]
-    },
-    {
-      label: 'Admin',
-      items: [
-        { id: 'menu', label: 'Menu Management', mobileLabel: 'Menu', mobileVisible: true, roles: ['Admin','Manager','Employee'] },
-        { id: 'team', label: 'Team', mobileVisible: false, roles: ['Admin','Manager'] },
-      ]
-    }
-  ]
+  // Which pages this person may open (role + their own access from Team).
+  const myPages = userPages(currentUser)
+  const navGroups = PAGE_GROUPS.map(g => ({ ...g, items: g.items.filter(i => !i.footer) }))
 
   const userRole = currentUser?.role || 'Employee'
   const userInitial = currentUser?.name ? currentUser.name.charAt(0).toUpperCase() : 'U'
@@ -72,7 +43,7 @@ export default function Sidebar({ activeView, onViewChange, currentUser, onClose
       <nav className="sidebar-nav">
         <div className="nav-group">
           {navGroups.map(group => {
-            const visible = group.items.filter(item => item.roles.includes(userRole))
+            const visible = group.items.filter(item => myPages.includes(item.id))
             if (!visible.length) return null
             return (
               <div key={group.label} className="nav-section">
@@ -96,7 +67,7 @@ export default function Sidebar({ activeView, onViewChange, currentUser, onClose
 
       {/* Footer */}
       <div className="sidebar-footer">
-        {['Admin', 'Manager'].includes(userRole) && (
+        {myPages.includes('settings') && (
           <button
             className={`nav-item settings-nav${activeView === 'settings' ? ' active' : ''}`}
             onClick={() => onViewChange('settings')}

@@ -3497,3 +3497,17 @@ h1, h2, h3, .mobile-location, .mcb-total, .dh-login-title, .dh-card-title, .dh-l
 .team-toggle-btn:hover { background: var(--dh-lime-soft, #f4fbd2); }
 .frappe-btn.frappe-btn-danger { background: #fff; color: #c0262d; border: 1.5px solid #c0262d; border-radius: 999px; }
 .frappe-btn.frappe-btn-danger:hover { background: #fdecec; }
+.team-form-wide { grid-column: 1 / -1; }
+.team-pages { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+.team-page-chip {
+  display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px;
+  border: 1.5px solid var(--dh-soft, #e7e4f0); background: #fff; font-size: 0.82rem; cursor: pointer; user-select: none;
+}
+.team-page-chip input { accent-color: var(--dh-ink, #121212); margin: 0; }
+.team-page-chip.is-on { border-color: var(--dh-ink, #121212); background: var(--dh-lime-soft, #f4fbd2); }
+.team-page-chip.is-static { cursor: default; padding: 2px 10px; font-size: 0.74rem; }
+.team-access-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 8px; }
+.team-access-label { font-size: 0.76rem; font-weight: 600; color: var(--dh-ink-2, #4a4a55); }
+.team-access-editor { margin-top: 10px; padding: 12px; border-radius: 14px; border: 1.5px dashed var(--dh-ink, #121212); background: #fafaf7; }
+.team-access-actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.team-access-actions .btn-save-stock { height: 36px; }

@@ -306,6 +306,8 @@ db.exec(`
 (function migrateOwner() {
   const cols = db.prepare("PRAGMA table_info(users)").all().map(c => c.name);
   if (!cols.includes('is_owner')) db.exec("ALTER TABLE users ADD COLUMN is_owner INTEGER NOT NULL DEFAULT 0");
+  // Per-person page access (JSON array of page ids); NULL = the role's full set.
+  if (!cols.includes('pages')) db.exec("ALTER TABLE users ADD COLUMN pages TEXT DEFAULT NULL");
 })();
 
 function ensureOwners() {

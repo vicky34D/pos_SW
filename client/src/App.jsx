@@ -10,6 +10,7 @@ import SettingsView from './components/SettingsView'
 import UserManagement from './components/UserManagement'
 import Toast from './components/Toast'
 import WelcomePage from './components/WelcomePage'
+import { userPages, firstPage } from './lib/pages'
 import TablesView from './components/TablesView'
 import SuppliersView from './components/SuppliersView'
 import PurchaseBillsView from './components/PurchaseBillsView'
@@ -25,6 +26,13 @@ export default function App() {
   const [activeView, setActiveView] = useState('loading')
   const [startupError, setStartupError] = useState(null)
   const [currentUser, setCurrentUser] = useState(null)
+  // Keep people on pages they may open (access can change while signed in).
+  useEffect(() => {
+    if (!currentUser || activeView === 'loading' || activeView === 'login') return
+    const pages = userPages(currentUser)
+    const ok = pages.includes(activeView) || (activeView === 'pos' && pages.includes('tables'))
+    if (!ok) setActiveView(firstPage(currentUser))
+  }, [currentUser, activeView])
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
 
@@ -91,7 +99,7 @@ export default function App() {
 
   const loadInitialData = useCallback((user) => {
     setCurrentUser(user)
-    setActiveView('pos')
+    setActiveView(firstPage(user))
     return Promise.allSettled([
       api.getSettings().then(setSettings),
       api.getOrderCounter().then(data => setOrderCounter(data.last_number)),
@@ -381,12 +389,12 @@ export default function App() {
           <span className="mobile-brand-mark">D</span>
           <span style={{ verticalAlign: 'middle' }}>DHARS</span>
         </div>
-        <button className="mobile-settings-gear" onClick={() => {
+        {userPages(currentUser).includes('settings') ? <button className="mobile-settings-gear" onClick={() => {
           setActiveView('settings');
           setIsSidebarOpen(false);
         }}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-        </button>
+        </button> : <span style={{ width: 40 }} />}
       </header>
 
       {isSidebarOpen && <div className="sidebar-mobile-overlay" onClick={() => setIsSidebarOpen(false)}></div>}
@@ -398,7 +406,7 @@ export default function App() {
             setIsSidebarOpen(false);
             if (view === 'logout') {
               handleLogout()
-            } else {
+            } else if (userPages(currentUser).includes(view)) {
               setActiveView(view)
             }
           }} 
