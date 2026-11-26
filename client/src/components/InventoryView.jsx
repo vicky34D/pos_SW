@@ -14,7 +14,7 @@ const emptyForm = {
   qty: 0, alert_level: 5, reorder_qty: 0, valuation_rate: 0, description: '', pack_size: 0
 }
 
-export default function InventoryView({ showToast }) {
+export default function InventoryView({ showToast, currentUser }) {
   const [items, setItems] = useState([])
   const [valuation, setValuation] = useState({ items: [], total_stock_value: 0 })
   const [reorderItems, setReorderItems] = useState([])
@@ -102,6 +102,24 @@ export default function InventoryView({ showToast }) {
     finally { setResetting(false) }
   }
 
+  const handleStartFresh = async () => {
+    let s
+    try { s = await api.getStartFreshSummary() } catch (e) { return showToast(e.message, 'error') }
+    const typed = window.prompt(
+      'START FRESH — this PERMANENTLY deletes:\n' +
+      `• ${s.purchase_bills} purchase bills\n• ${s.expense_bills} expense bills\n• ${s.payments} payments against them\n` +
+      `• ${s.stock_ledger_entries} stock ledger entries\n• ₹${s.stock_value.toFixed(2)} of stock value (every item's stock and value become 0)\n\n` +
+      'Kept: items, suppliers, menu, recipes, sales/orders and users.\nA full backup of the database is saved on the server first.\n\nType DELETE to continue:')
+    if (typed !== 'DELETE') { if (typed !== null) showToast('Nothing deleted — you must type DELETE', 'error'); return }
+    setResetting(true)
+    try {
+      const r = await api.startFresh()
+      showToast(`Done: ${r.deleted.purchase_bills} purchase bills, ${r.deleted.expense_bills} expense bills and the stock ledger deleted. Backup: ${r.backup}`, 'success')
+      load()
+    } catch (e) { showToast(e.message, 'error') }
+    finally { setResetting(false) }
+  }
+
   const handleDelete = async (id) => {
     if (!window.confirm('Delete this item?')) return
     try { await api.deleteInventoryItem(id); showToast('Deleted', 'success'); load() }
@@ -133,7 +151,10 @@ export default function InventoryView({ showToast }) {
           <h1 className="frappe-title">Item Master</h1>
         </div>
         <div className="bill-scan-actions">
-          <button className="frappe-btn" onClick={handleResetStock} disabled={resetting}>{resetting ? 'Resetting…' : 'Reset all stock to 0'}</button>
+          {currentUser?.is_owner && (
+            <button className="frappe-btn frappe-btn-danger" onClick={handleStartFresh} disabled={resetting}>Start fresh…</button>
+          )}
+          <button className="frappe-btn" onClick={handleResetStock} disabled={resetting}>{resetting ? 'Working…' : 'Reset all stock to 0'}</button>
           <button className="frappe-btn frappe-btn-primary" onClick={openNew}>+ New Item</button>
         </div>
       </div>

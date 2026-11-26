@@ -3495,3 +3495,5 @@ h1, h2, h3, .mobile-location, .mcb-total, .dh-login-title, .dh-card-title, .dh-l
 .btn-save-stock:hover { background: #2a2a2e; }
 .team-toggle-btn { border-radius: 999px; border: 1.5px solid var(--dh-ink, #121212); background: #fff; color: var(--dh-ink, #121212); }
 .team-toggle-btn:hover { background: var(--dh-lime-soft, #f4fbd2); }
+.frappe-btn.frappe-btn-danger { background: #fff; color: #c0262d; border: 1.5px solid #c0262d; border-radius: 999px; }
+.frappe-btn.frappe-btn-danger:hover { background: #fdecec; }
