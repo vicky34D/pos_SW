@@ -37,29 +37,35 @@ app.get('/api/session', authenticateToken, (req, res) => {
       email: user.email,
       name: user.name,
       role: user.role,
-      is_owner: !!user.is_owner
+      is_owner: !!user.is_owner,
+      pages: user.pages
     }
   });
 });
 
-// Protected API Routes
-app.use('/api/menu', authenticateToken, require('./routes/menu'));
-app.use('/api/orders', authenticateToken, require('./routes/orders'));
-app.use('/api/inventory', authenticateToken, require('./routes/inventory'));
-app.use('/api/recipes', authenticateToken, require('./routes/recipes'));
-app.use('/api/reports', authenticateToken, require('./routes/reports'));
-app.use('/api/users', authenticateToken, require('./routes/users'));
-app.use('/api/tables', authenticateToken, require('./routes/tables'));
-app.use('/api/parked', authenticateToken, require('./routes/parked'));
+// Protected API Routes. requirePage() also checks the person's page access
+// (Team → Access), so a hidden page can't be reached by calling its API.
+const { requirePage } = require('./permissions');
+const SALES_PAGES = ['pos', 'tables'];
+const byMethod = (map) => (req, res, next) => requirePage(...(map[req.method] || map.default))(req, res, next);
+
+app.use('/api/menu', authenticateToken, byMethod({ GET: [...SALES_PAGES, 'menu'], default: ['menu'] }), require('./routes/menu'));
+app.use('/api/orders', authenticateToken, byMethod({ GET: ['orders', 'reports'], POST: SALES_PAGES, default: ['reports', 'orders', 'settings'] }), require('./routes/orders'));
+app.use('/api/inventory', authenticateToken, requirePage('inventory', 'menu', 'stockledger', 'purchase'), require('./routes/inventory'));
+app.use('/api/recipes', authenticateToken, requirePage('menu', 'inventory'), require('./routes/recipes'));
+app.use('/api/reports', authenticateToken, (req, res, next) => (req.path === '/counter' ? next() : requirePage('reports')(req, res, next)), require('./routes/reports'));
+app.use('/api/users', authenticateToken, (req, res, next) => (/^\/[^/]+\/password$/.test(req.path) ? next() : requirePage('team')(req, res, next)), require('./routes/users'));
+app.use('/api/tables', authenticateToken, requirePage(...SALES_PAGES), require('./routes/tables'));
+app.use('/api/parked', authenticateToken, requirePage(...SALES_PAGES), require('./routes/parked'));
 // ERPNext-style stock & buying module
-app.use('/api/warehouses', authenticateToken, require('./routes/warehouses'));
-app.use('/api/suppliers', authenticateToken, require('./routes/suppliers'));
-app.use('/api/purchase-bills', authenticateToken, require('./routes/purchaseBills'));
-app.use('/api/bill-scan', authenticateToken, require('./routes/billScan'));
+app.use('/api/warehouses', authenticateToken, requirePage('inventory', 'stockledger', 'purchase', 'expenses'), require('./routes/warehouses'));
+app.use('/api/suppliers', authenticateToken, requirePage('suppliers', 'purchase', 'expenses'), require('./routes/suppliers'));
+app.use('/api/purchase-bills', authenticateToken, requirePage('purchase'), require('./routes/purchaseBills'));
+app.use('/api/bill-scan', authenticateToken, requirePage('purchase'), require('./routes/billScan'));
 app.use('/api/admin', authenticateToken, require('./routes/admin'));
-app.use('/api/expenses', authenticateToken, require('./routes/expenses'));
-app.use('/api/payments', authenticateToken, require('./routes/payments'));
-app.use('/api/stock', authenticateToken, require('./routes/stockLedger'));
+app.use('/api/expenses', authenticateToken, requirePage('expenses'), require('./routes/expenses'));
+app.use('/api/payments', authenticateToken, requirePage('purchase', 'expenses'), require('./routes/payments'));
+app.use('/api/stock', authenticateToken, requirePage('inventory', 'stockledger'), require('./routes/stockLedger'));
 
 // Settings routes (Protected)
 app.get('/api/settings', authenticateToken, (req, res) => {
@@ -70,7 +76,7 @@ app.get('/api/settings', authenticateToken, (req, res) => {
   res.json(settings);
 });
 
-app.put('/api/settings', authenticateToken, requireRole(['Admin', 'Manager']), (req, res) => {
+app.put('/api/settings', authenticateToken, requireRole(['Admin', 'Manager']), requirePage('settings'), (req, res) => {
   const orgId = req.user.org_id;
   const updates = req.body;
   const upsert = db.prepare('INSERT OR REPLACE INTO settings (key, org_id, value) VALUES (?, ?, ?)');

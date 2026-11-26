@@ -4,14 +4,18 @@ const { db } = require('../db');
 const { requireRole } = require('../middleware/auth');
 const { v4: uuidv4 } = require('uuid');
 const bcrypt = require('bcrypt');
+const { rolePages, parseCustom } = require('../permissions');
 
 // Roles, lowest to highest. What each can do is enforced on every API route
 // with requireRole(); the Team screen shows the same summary to the admin.
 const ROLES = ['Viewer', 'Employee', 'Manager', 'Admin'];
 const MIN_PASSWORD = 6;
-const PUBLIC_COLS = 'id, email, name, phone, designation, role, active, is_owner, created_at';
+const PUBLIC_COLS = 'id, email, name, phone, designation, role, active, is_owner, pages, created_at';
 
-const getUser = (id, orgId) => db.prepare(`SELECT ${PUBLIC_COLS} FROM users WHERE id = ? AND org_id = ?`).get(id, orgId);
+const getUserRaw = (id, orgId) => db.prepare(`SELECT ${PUBLIC_COLS} FROM users WHERE id = ? AND org_id = ?`).get(id, orgId);
+// pages: the person's own page list (null = everything their role allows).
+const shape = (u) => u && ({ ...u, is_owner: !!u.is_owner, pages: parseCustom(u.pages) });
+const getUser = (id, orgId) => shape(getUserRaw(id, orgId));
 
 // Only the main admin may create Admins or change/reset another Admin;
 // nobody but the main admin may touch the main admin's account.
@@ -22,11 +26,22 @@ function guardTarget(req, target, { newRole } = {}) {
   return null;
 }
 
+// Validate a requested page list against the role. Returns JSON text, null
+// for "everything the role allows", or false when nothing valid was picked.
+function normalizePages(pages, role) {
+  if (pages === undefined || pages === null || role === 'Admin') return null;
+  if (!Array.isArray(pages)) return false;
+  const allowed = rolePages(role);
+  const picked = allowed.filter(p => pages.includes(p));
+  if (!picked.length) return false;
+  return picked.length === allowed.length ? null : JSON.stringify(picked);
+}
+
 // GET all users in the organization
 router.get('/', requireRole(['Admin', 'Manager']), (req, res) => {
   const orgId = req.user.org_id;
   const users = db.prepare(`SELECT ${PUBLIC_COLS} FROM users WHERE org_id = ? ORDER BY is_owner DESC, active DESC, name`).all(orgId);
-  res.json(users.map(u => ({ ...u, is_owner: !!u.is_owner })));
+  res.json(users.map(shape));
 });
 
 // POST create a new user in the organization
@@ -35,6 +50,8 @@ router.post('/', requireRole(['Admin']), async (req, res) => {
   const name = String(req.body.name || '').trim();
   const email = String(req.body.email || '').trim().toLowerCase();
   const { password, role, phone, designation } = req.body;
+  const pagesJson = normalizePages(req.body.pages, role);
+  if (pagesJson === false) return res.status(400).json({ error: 'Pick at least one page' });
 
   if (!email || !name || !password || !role) {
     return res.status(400).json({ error: 'Name, email, password and role are required' });
@@ -50,9 +67,9 @@ router.post('/', requireRole(['Admin']), async (req, res) => {
     const password_hash = await bcrypt.hash(String(password), 10);
     const id = uuidv4();
     db.prepare(`
-      INSERT INTO users (id, org_id, email, name, password_hash, role, phone, designation)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(id, orgId, email, name, password_hash, role, phone || null, designation || null);
+      INSERT INTO users (id, org_id, email, name, password_hash, role, phone, designation, pages)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(id, orgId, email, name, password_hash, role, phone || null, designation || null, pagesJson);
     res.status(201).json(getUser(id, orgId));
   } catch (err) {
     if (err.message.includes('UNIQUE')) return res.status(409).json({ error: 'A user with this email already exists' });
@@ -68,6 +85,11 @@ router.put('/:id', requireRole(['Admin']), (req, res) => {
   if (!target) return res.status(404).json({ error: 'User not found' });
 
   const { role, active, name, phone, designation } = req.body;
+  let pagesJson; // undefined = keep as is
+  if (req.body.pages !== undefined) {
+    pagesJson = normalizePages(req.body.pages, role || target.role);
+    if (pagesJson === false) return res.status(400).json({ error: 'Pick at least one page' });
+  }
   if (role !== undefined && !ROLES.includes(role)) return res.status(400).json({ error: 'Unknown role' });
   const denied = guardTarget(req, target, { newRole: role });
   if (denied) return res.status(403).json({ error: denied });
@@ -79,13 +101,14 @@ router.put('/:id', requireRole(['Admin']), (req, res) => {
   }
 
   db.prepare(`
-    UPDATE users SET role = ?, active = ?, name = ?, phone = ?, designation = ? WHERE id = ? AND org_id = ?
+    UPDATE users SET role = ?, active = ?, name = ?, phone = ?, designation = ?, pages = ? WHERE id = ? AND org_id = ?
   `).run(
     role || target.role,
     active !== undefined ? (active ? 1 : 0) : target.active,
     name !== undefined && String(name).trim() ? String(name).trim() : target.name,
     phone !== undefined ? (phone || null) : target.phone,
     designation !== undefined ? (designation || null) : target.designation,
+    pagesJson !== undefined ? pagesJson : (target.pages ? JSON.stringify(target.pages) : null),
     target.id, orgId
   );
   res.json(getUser(target.id, orgId));

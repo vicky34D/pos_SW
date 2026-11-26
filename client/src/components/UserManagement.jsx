@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import * as api from '../api'
+import { ALL_PAGES, rolePages } from '../lib/pages'
 
 // What each role can open and change. The server enforces the same rules on
 // every request, so hiding a button here is only a convenience.
@@ -14,7 +15,7 @@ const ROLE_INFO = {
   },
   Employee: {
     tag: 'Counter staff',
-    can: 'Take orders (POS, tables, held orders), see order history, reports, the menu and stock levels. Cannot edit the menu, stock or bills.',
+    can: 'Take orders (POS, tables, held orders), see order history, reports, the menu and stock levels. Cannot edit the menu, stock or bills. Untick pages to show them less.',
   },
   Viewer: {
     tag: 'Read only',
@@ -22,7 +23,33 @@ const ROLE_INFO = {
   },
 }
 const ROLES = ['Admin', 'Manager', 'Employee', 'Viewer']
-const emptyUser = { name: '', email: '', phone: '', designation: '', password: '', role: 'Employee' }
+const emptyUser = { name: '', email: '', phone: '', designation: '', password: '', role: 'Employee', pages: null }
+
+// The pages a person can open: their own list, or everything their role allows.
+const pagesOf = (u) => {
+  const byRole = rolePages(u.role)
+  return u.role === 'Admin' || !Array.isArray(u.pages) ? byRole : byRole.filter(p => u.pages.includes(p))
+}
+
+// Tick boxes for the pages a role allows. `value` null = all of them.
+function PagePicker({ role, value, onChange }) {
+  const allowed = rolePages(role)
+  const picked = Array.isArray(value) ? value.filter(p => allowed.includes(p)) : allowed
+  const toggle = (id) => {
+    const next = picked.includes(id) ? picked.filter(p => p !== id) : [...picked, id]
+    onChange(next.length === allowed.length ? null : next)
+  }
+  return (
+    <div className="team-pages">
+      {ALL_PAGES.filter(p => allowed.includes(p.id)).map(p => (
+        <label key={p.id} className={`team-page-chip${picked.includes(p.id) ? ' is-on' : ''}`}>
+          <input type="checkbox" checked={picked.includes(p.id)} onChange={() => toggle(p.id)} />
+          {p.label}
+        </label>
+      ))}
+    </div>
+  )
+}
 
 const makePassword = () => {
   const chars = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789'
@@ -37,6 +64,7 @@ export default function UserManagement({ showToast, currentUser }) {
   const [newUser, setNewUser] = useState(emptyUser)
   const [showPw, setShowPw] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [accessEdit, setAccessEdit] = useState({}) // userId -> draft pages (null = all)
 
   const isAdmin = currentUser?.role === 'Admin'
   const isOwner = !!currentUser?.is_owner
@@ -85,6 +113,17 @@ export default function UserManagement({ showToast, currentUser }) {
     try {
       await api.updateUserRole(user.id, { role })
       showToast(`${user.name} is now ${role}`, 'success')
+      fetchUsers()
+    } catch (err) { showToast(err.message, 'error') }
+  }
+
+  const saveAccess = async (user) => {
+    const pages = accessEdit[user.id]
+    if (Array.isArray(pages) && pages.length === 0) return showToast('Tick at least one page', 'error')
+    try {
+      await api.updateUserRole(user.id, { pages })
+      showToast(`Access saved for ${user.name}. It applies right away.`, 'success')
+      setAccessEdit(a => { const n = { ...a }; delete n[user.id]; return n })
       fetchUsers()
     } catch (err) { showToast(err.message, 'error') }
   }
@@ -188,11 +227,17 @@ export default function UserManagement({ showToast, currentUser }) {
             </div>
             <div className="team-form-field">
               <label>Role</label>
-              <select value={newUser.role} onChange={e => setNewUser({ ...newUser, role: e.target.value })}>
+              <select value={newUser.role} onChange={e => setNewUser({ ...newUser, role: e.target.value, pages: null })}>
                 {roleChoices.map(r => <option key={r} value={r}>{r} — {ROLE_INFO[r].tag}</option>)}
               </select>
               <div className="team-role-help">{ROLE_INFO[newUser.role].can}</div>
             </div>
+            {newUser.role !== 'Admin' && (
+              <div className="team-form-field team-form-wide">
+                <label>Pages they can open (untick to hide)</label>
+                <PagePicker role={newUser.role} value={newUser.pages} onChange={pages => setNewUser({ ...newUser, pages })} />
+              </div>
+            )}
             <div className="team-form-actions">
               <button type="submit" className="btn-save-stock" disabled={saving}>{saving ? 'Creating…' : 'Create User'}</button>
             </div>
@@ -219,7 +264,25 @@ export default function UserManagement({ showToast, currentUser }) {
                     <span>{user.email}</span>
                     <span>{user.phone || 'No phone'}</span>
                   </div>
-                  <div className="team-role-help">{ROLE_INFO[user.role]?.can}</div>
+                  <div className="team-access-row">
+                    <span className="team-access-label">Can open:</span>
+                    {user.role === 'Admin'
+                      ? <span className="team-page-chip is-on is-static">All pages</span>
+                      : pagesOf(user).map(id => <span key={id} className="team-page-chip is-on is-static">{ALL_PAGES.find(p => p.id === id)?.label}</span>)}
+                    {manageable && user.role !== 'Admin' && !(user.id in accessEdit) && (
+                      <button className="team-pw-btn" onClick={() => setAccessEdit(a => ({ ...a, [user.id]: user.pages }))}>Edit access</button>
+                    )}
+                  </div>
+                  {user.id in accessEdit && (
+                    <div className="team-access-editor">
+                      <PagePicker role={user.role} value={accessEdit[user.id]} onChange={pages => setAccessEdit(a => ({ ...a, [user.id]: pages }))} />
+                      <div className="team-access-actions">
+                        <button className="btn-save-stock" onClick={() => saveAccess(user)}>Save access</button>
+                        <button className="team-pw-btn" onClick={() => setAccessEdit(a => ({ ...a, [user.id]: null }))}>All pages</button>
+                        <button className="team-pw-btn" onClick={() => setAccessEdit(a => { const n = { ...a }; delete n[user.id]; return n })}>Cancel</button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
