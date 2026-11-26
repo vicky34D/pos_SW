@@ -49,7 +49,7 @@ export default function PosView({ onAddToOrder, activeTable }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem' }}>
             <span style={{ fontSize: '1.8rem', display: 'flex', alignItems: 'center' }}>🏍️</span>
             <div>
-              <h1 className="pos-page-title" style={{ fontSize: '1.25rem', fontWeight: 800, margin: 0 }}>StreetWok POS</h1>
+              <h1 className="pos-page-title" style={{ fontSize: '1.25rem', fontWeight: 800, margin: 0 }}>DHARS POS</h1>
               <span className="pos-date-badge" style={{ fontSize: '0.68rem', opacity: 0.75, display: 'block', marginTop: '1px' }}>{today}</span>
             </div>
           </div>

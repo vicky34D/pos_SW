@@ -378,8 +378,8 @@ export default function App() {
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
         </button>
         <div className="mobile-location">
-          <span className="mobile-brand-mark">SW</span>
-          <span style={{ verticalAlign: 'middle' }}>{settings.shop_name || 'StreetWok'}</span>
+          <span className="mobile-brand-mark">D</span>
+          <span style={{ verticalAlign: 'middle' }}>DHARS</span>
         </div>
         <button className="mobile-settings-gear" onClick={() => {
           setActiveView('settings');
