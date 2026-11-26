@@ -300,6 +300,15 @@ db.exec(`
   addCol('is_stock_item', "is_stock_item INTEGER NOT NULL DEFAULT 1");
 })();
 
+// Bill scanning: remember the supplier's own invoice number so the same
+// invoice is never imported twice. Additive + idempotent.
+(function migrateBillScan() {
+  const cols = db.prepare("PRAGMA table_info(purchase_bills)").all().map(c => c.name);
+  if (!cols.includes('supplier_invoice_no')) {
+    db.exec("ALTER TABLE purchase_bills ADD COLUMN supplier_invoice_no TEXT DEFAULT ''");
+  }
+})();
+
 // Orders feature upgrades: per-order discount, per-item notes/modifiers, and
 // a parked_orders table for held (paused) orders. All additive + idempotent.
 (function migrateOrderFeatures() {

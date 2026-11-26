@@ -29,3 +29,6 @@ npm-debug.log*
 
 # Electron build output (not client/dist — that is tracked)
 dist/
+
+# Claude API key for bill scanning (never commit)
+server/ai.env
