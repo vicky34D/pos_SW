@@ -300,6 +300,22 @@ db.exec(`
   addCol('is_stock_item', "is_stock_item INTEGER NOT NULL DEFAULT 1");
 })();
 
+// Bill scanning: remember the supplier's own invoice number so the same
+// invoice is never imported twice. Additive + idempotent.
+(function migrateBillScan() {
+  const cols = db.prepare("PRAGMA table_info(purchase_bills)").all().map(c => c.name);
+  if (!cols.includes('supplier_invoice_no')) {
+    db.exec("ALTER TABLE purchase_bills ADD COLUMN supplier_invoice_no TEXT DEFAULT ''");
+  }
+  // Size of one bought pack in the item's own unit (Milk in litre: 1 pack = 0.5).
+  const invCols = db.prepare("PRAGMA table_info(inventory)").all().map(c => c.name);
+  if (!invCols.includes('pack_size')) {
+    db.exec("ALTER TABLE inventory ADD COLUMN pack_size REAL NOT NULL DEFAULT 0");
+    // Owner confirmed milk is bought in 500 ml packs (first run only).
+    db.exec("UPDATE inventory SET pack_size = 0.5 WHERE lower(name) = 'milk' AND lower(unit) IN ('litre','liter','l','ltr') AND pack_size = 0");
+  }
+})();
+
 // Orders feature upgrades: per-order discount, per-item notes/modifiers, and
 // a parked_orders table for held (paused) orders. All additive + idempotent.
 (function migrateOrderFeatures() {

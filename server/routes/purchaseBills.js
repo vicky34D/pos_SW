@@ -201,3 +201,4 @@ router.put('/:id', requireRole(['Admin', 'Manager']), (req, res) => {
 });
 
 module.exports = router;
+module.exports.nextBillNumber = nextBillNumber;

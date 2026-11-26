@@ -11,7 +11,7 @@ const statusBadge = (qty, alert) => {
 
 const emptyForm = {
   name: '', item_code: '', item_group: 'General', unit: 'pcs',
-  qty: 0, alert_level: 5, reorder_qty: 0, valuation_rate: 0, description: ''
+  qty: 0, alert_level: 5, reorder_qty: 0, valuation_rate: 0, description: '', pack_size: 0
 }
 
 export default function InventoryView({ showToast }) {
@@ -67,7 +67,7 @@ export default function InventoryView({ showToast }) {
       name: item.name, item_code: item.item_code || '', item_group: item.item_group || 'General',
       unit: item.unit, qty: item.qty, alert_level: item.alert_level,
       reorder_qty: item.reorder_qty || 0, valuation_rate: item.valuation_rate || 0,
-      description: item.description || ''
+      description: item.description || '', pack_size: item.pack_size || 0
     })
     setShowForm(true)
   }
@@ -87,6 +87,19 @@ export default function InventoryView({ showToast }) {
       load()
     } catch (e) { showToast(e.message, 'error') }
     finally { setSaving(false) }
+  }
+
+  const [resetting, setResetting] = useState(false)
+  const handleResetStock = async () => {
+    const typed = window.prompt('This sets the stock of EVERY item to 0.\nItems, bills and sales history are kept (each change is logged as a Stock Adjustment).\n\nType RESET to continue:')
+    if (typed !== 'RESET') { if (typed !== null) showToast('Not reset — you must type RESET', 'error'); return }
+    setResetting(true)
+    try {
+      const r = await api.resetAllStock()
+      showToast(`Stock reset to 0 for ${r.changed} item${r.changed === 1 ? '' : 's'}`, 'success')
+      load()
+    } catch (e) { showToast(e.message, 'error') }
+    finally { setResetting(false) }
   }
 
   const handleDelete = async (id) => {
@@ -119,7 +132,10 @@ export default function InventoryView({ showToast }) {
           <div className="frappe-breadcrumb">Inventory <span>›</span> Item Master</div>
           <h1 className="frappe-title">Item Master</h1>
         </div>
-        <button className="frappe-btn frappe-btn-primary" onClick={openNew}>+ New Item</button>
+        <div className="bill-scan-actions">
+          <button className="frappe-btn" onClick={handleResetStock} disabled={resetting}>{resetting ? 'Resetting…' : 'Reset all stock to 0'}</button>
+          <button className="frappe-btn frappe-btn-primary" onClick={openNew}>+ New Item</button>
+        </div>
       </div>
       <div className="frappe-page-body">
 
@@ -332,6 +348,12 @@ export default function InventoryView({ showToast }) {
                 <select className="frappe-input" value={form.unit} onChange={e => setForm(f => ({ ...f, unit: e.target.value }))}>
                   {UNITS.map(u => <option key={u} value={u}>{u}</option>)}
                 </select>
+              </div>
+              <div className="frappe-field">
+                <label>Pack size on bills ({form.unit} per pack)</label>
+                <input className="frappe-input" type="number" step="0.001" min="0" value={form.pack_size}
+                  placeholder="e.g. 0.5 for a 500 ml pack"
+                  onChange={e => setForm(f => ({ ...f, pack_size: Number(e.target.value) }))} />
               </div>
               <div className="frappe-field">
                 <label>Current Qty</label>

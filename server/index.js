@@ -21,6 +21,8 @@ app.use(cors({
   },
   credentials: true
 }));
+// Bill photos/PDFs are sent as base64, so that one route accepts a bigger body.
+app.use('/api/bill-scan', express.json({ limit: '15mb' }));
 app.use(express.json());
 
 // Auth Routes (Public)
@@ -52,6 +54,7 @@ app.use('/api/parked', authenticateToken, require('./routes/parked'));
 app.use('/api/warehouses', authenticateToken, require('./routes/warehouses'));
 app.use('/api/suppliers', authenticateToken, require('./routes/suppliers'));
 app.use('/api/purchase-bills', authenticateToken, require('./routes/purchaseBills'));
+app.use('/api/bill-scan', authenticateToken, require('./routes/billScan'));
 app.use('/api/expenses', authenticateToken, require('./routes/expenses'));
 app.use('/api/payments', authenticateToken, require('./routes/payments'));
 app.use('/api/stock', authenticateToken, require('./routes/stockLedger'));

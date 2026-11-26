@@ -63,12 +63,13 @@ async function request(path, options = {}) {
   }
 
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 8000);
+  const timeout = setTimeout(() => controller.abort(), options.timeoutMs || 8000);
 
   let res;
   try {
+    const { timeoutMs, ...fetchOptions } = options;
     res = await fetch(`${BASE}${path}`, {
-      ...options,
+      ...fetchOptions,
       headers,
       signal: controller.signal,
     });
@@ -88,6 +89,7 @@ async function request(path, options = {}) {
     if (res.status === 401 && getAuthToken()) {
       clearAuthToken();
     }
+    if (res.status === 413) throw new Error('File is too large. Use a smaller photo or PDF.');
     const err = await res.json().catch(() => ({ error: res.statusText }));
     throw new Error(err.error || 'Request failed');
   }
@@ -126,6 +128,7 @@ export const getInventory = () => request('/inventory');
 export const createInventoryItem = (data) => request('/inventory', { method: 'POST', body: JSON.stringify(data) });
 export const updateInventoryItem = (id, data) => request(`/inventory/${id}`, { method: 'PUT', body: JSON.stringify(data) });
 export const bulkUpdateInventory = (updates) => request('/inventory', { method: 'PUT', body: JSON.stringify({ updates }) });
+export const resetAllStock = () => request('/inventory/reset-stock', { method: 'POST', body: JSON.stringify({ confirm: 'RESET' }), timeoutMs: 60000 });
 export const deleteInventoryItem = (id) => request(`/inventory/${id}`, { method: 'DELETE' });
 
 // Recipes (menu item -> inventory ingredient mapping)
@@ -170,6 +173,8 @@ export const getPurchaseBill = (id) => request(`/purchase-bills/${id}`);
 export const createPurchaseBill = (data) => request('/purchase-bills', { method: 'POST', body: JSON.stringify(data) });
 export const updatePurchaseBill = (id, data) => request(`/purchase-bills/${id}`, { method: 'PUT', body: JSON.stringify(data) });
 export const submitPurchaseBill = (id) => request(`/purchase-bills/${id}/submit`, { method: 'POST' });
+// Bill scanning reads the bill with AI, so allow up to 2 minutes.
+export const scanBill = (data) => request('/bill-scan', { method: 'POST', body: JSON.stringify(data), timeoutMs: 120000 });
 export const cancelPurchaseBill = (id) => request(`/purchase-bills/${id}/cancel`, { method: 'POST' });
 
 // Expense Bills

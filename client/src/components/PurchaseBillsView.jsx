@@ -1,5 +1,30 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import * as api from '../api'
+
+// Phone photos are shrunk to ~1600px JPEG before upload: small enough to send
+// quickly, still sharp enough to read every line of a bill.
+async function fileToPayload(file) {
+  const isPdf = file.type === 'application/pdf' || /\.pdf$/i.test(file.name)
+  if (isPdf) {
+    if (file.size > 8 * 1024 * 1024) throw new Error('PDF is larger than 8 MB')
+    const data = await new Promise((resolve, reject) => {
+      const r = new FileReader()
+      r.onload = () => resolve(String(r.result).split(',')[1])
+      r.onerror = () => reject(new Error('Could not read the file'))
+      r.readAsDataURL(file)
+    })
+    return { file_name: file.name, media_type: 'application/pdf', data }
+  }
+  if (!file.type.startsWith('image/')) throw new Error('Upload a PDF or a photo')
+  const bitmap = await createImageBitmap(file)
+  const scale = Math.min(1, 1600 / Math.max(bitmap.width, bitmap.height))
+  const canvas = document.createElement('canvas')
+  canvas.width = Math.round(bitmap.width * scale)
+  canvas.height = Math.round(bitmap.height * scale)
+  canvas.getContext('2d').drawImage(bitmap, 0, 0, canvas.width, canvas.height)
+  const data = canvas.toDataURL('image/jpeg', 0.85).split(',')[1]
+  return { file_name: file.name, media_type: 'image/jpeg', data }
+}
 
 const STATUS_COLORS = { Draft:'badge-grey', Submitted:'badge-blue', 'Partially Paid':'badge-orange', Paid:'badge-green', Cancelled:'badge-red' }
 
@@ -21,6 +46,9 @@ export default function PurchaseBillsView({ showToast }) {
   const [saving, setSaving] = useState(false)
   const [detail, setDetail] = useState(null)
   const [payingBill, setPayingBill] = useState(null)
+  const [scanning, setScanning] = useState(false)
+  const [scanResult, setScanResult] = useState(null)
+  const fileInputRef = useRef(null)
   const [payForm, setPayForm] = useState({ amount: 0, method: 'Cash', payment_date: new Date().toISOString().slice(0,10), notes: '' })
 
   const load = useCallback(async () => {
@@ -50,6 +78,22 @@ export default function PurchaseBillsView({ showToast }) {
   const openDetail = async (id) => {
     try { const d = await api.getPurchaseBill(id); setDetail(d) }
     catch (e) { showToast(e.message, 'error') }
+  }
+
+  const handleScanFile = async (e) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    setScanning(true)
+    try {
+      const payload = await fileToPayload(file)
+      const res = await api.scanBill(payload)
+      setScanResult(res)
+      const imported = res.results.filter(r => r.status === 'imported').length
+      showToast(imported ? `${imported} bill${imported > 1 ? 's' : ''} imported as paid — stock updated` : 'Nothing new imported', imported ? 'success' : 'info')
+      load()
+    } catch (err) { showToast(err.message, 'error') }
+    finally { setScanning(false) }
   }
 
   const openNew = () => {
@@ -114,8 +158,17 @@ export default function PurchaseBillsView({ showToast }) {
           <div className="frappe-breadcrumb">Buying <span>›</span> Purchase Bills</div>
           <h1 className="frappe-title">Purchase Bills</h1>
         </div>
-        <button className="frappe-btn frappe-btn-primary" onClick={openNew}>+ New Bill</button>
+        <div className="bill-scan-actions">
+          <input ref={fileInputRef} type="file" accept="application/pdf,image/*" hidden onChange={handleScanFile} />
+          <button className="frappe-btn frappe-btn-primary" onClick={() => fileInputRef.current?.click()} disabled={scanning}>
+            {scanning ? 'Reading bill…' : '⬆ Upload Bill'}
+          </button>
+          <button className="frappe-btn" onClick={openNew}>+ New Bill</button>
+        </div>
       </div>
+      {scanning && (
+        <div className="bill-scan-progress">Reading your bill with AI — this takes about 10–30 seconds. Stock updates automatically.</div>
+      )}
       <div className="frappe-page-body">
 
       <div className="frappe-stat-row">
@@ -220,6 +273,51 @@ export default function PurchaseBillsView({ showToast }) {
               {['Submitted','Partially Paid'].includes(detail.status) && <button className="frappe-btn frappe-btn-success" onClick={() => openPayment(detail)}>Record Payment</button>}
               {detail.status !== 'Cancelled' && <button className="frappe-btn frappe-btn-danger" onClick={() => handleCancel(detail.id)}>Cancel</button>}
               <button className="frappe-btn frappe-btn-secondary" onClick={() => setDetail(null)}>Close</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bill scan result */}
+      {scanResult && (
+        <div className="frappe-modal-overlay" onClick={() => setScanResult(null)}>
+          <div className="frappe-modal frappe-modal-lg" onClick={e => e.stopPropagation()}>
+            <div className="frappe-modal-head">
+              <h2>Bill upload result</h2>
+              <button className="frappe-modal-close" onClick={() => setScanResult(null)}>✕</button>
+            </div>
+            {scanResult.results.map((r, i) => (
+              <div key={i} className={`bill-scan-card is-${r.status}`}>
+                <div className="bill-scan-card-head">
+                  <div>
+                    <div className="bill-scan-supplier">{r.supplier || 'Unknown seller'}{r.supplier_created && <span className="bill-scan-tag">new supplier</span>}</div>
+                    <div className="bill-scan-meta">Invoice {r.invoice_number || '—'}{r.bill_number ? ` → ${r.bill_number}` : ''}</div>
+                  </div>
+                  <span className="bill-scan-status">
+                    {r.status === 'imported' ? `✓ Imported${r.paid ? ' · Paid' : ''} · ₹${r.total?.toFixed(2)}` : r.status === 'duplicate' ? 'Already imported' : r.status === 'skipped' ? 'Skipped' : 'Failed'}
+                  </span>
+                </div>
+                {r.reason && <div className="bill-scan-reason">{r.reason}</div>}
+                {r.check_total && <div className="bill-scan-warn">⚠ {r.check_total}</div>}
+                {r.items?.length > 0 && (
+                  <table className="frappe-table">
+                    <thead><tr><th>Item</th><th>Qty added</th><th>Rate (₹ per unit)</th></tr></thead>
+                    <tbody>
+                      {r.items.map((it, j) => (
+                        <tr key={j}>
+                          <td>{it.name}{it.new_item && <span className="bill-scan-tag">new item</span>}{it.bill_name !== it.name && <div className="bill-scan-meta">on bill: {it.bill_name}</div>}{it.converted && <div className="bill-scan-meta">bill: {it.bill_qty} · {it.converted}</div>}{it.unit_warning && <div className="bill-scan-warn">⚠ {it.unit_warning}</div>}</td>
+                          <td>{it.qty} {it.unit}</td>
+                          <td>₹{Number(it.rate).toFixed(2)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            ))}
+            <div className="bill-scan-foot">
+              AI cost for this upload: ₹{scanResult.cost?.inr?.toFixed(2)} ({scanResult.cost?.input_tokens} + {scanResult.cost?.output_tokens} tokens).
+              If something is wrong, open the bill and Cancel it — the stock is reversed.
             </div>
           </div>
         </div>
