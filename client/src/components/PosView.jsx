@@ -111,6 +111,7 @@ export default function PosView({ onAddToOrder, activeTable }) {
               <button
                 key={item.id}
                 className="pos-item-card"
+                data-cat={item.category}
                 onClick={() => onAddToOrder(item)}
               >
                 <div className="pos-item-emoji">{item.emoji || '🍽️'}</div>

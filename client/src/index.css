@@ -2509,3 +2509,637 @@ h1, h2, h3, h4, h5, h6,
   .pos-item-emoji { border-radius: 10px; }
   .toast-container { bottom: calc(110px + env(safe-area-inset-bottom)); }
 }
+
+/* ===========================================================
+   DARK GLASS THEME  (feat/glass-dark-theme)
+   Inspired by a smart-home dashboard: warm dark backdrop,
+   frosted-glass panels, pastel colour tiles, green accent and
+   pill-shaped segmented controls. Appearance only — layered last
+   so it overrides the earlier themes without touching logic.
+   =========================================================== */
+:root {
+  color-scheme: dark;
+  --glass-font: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --glass-bg:      rgba(38, 37, 34, 0.62);
+  --glass-strong:  rgba(44, 43, 40, 0.86);
+  --glass-card:    rgba(255, 255, 255, 0.055);
+  --glass-card-hi: rgba(255, 255, 255, 0.09);
+  --glass-line:    rgba(255, 255, 255, 0.08);
+  --glass-line-hi: rgba(255, 255, 255, 0.16);
+  --glass-blur:    saturate(140%) blur(28px);
+
+  --tile-green:  #6fdc8c;
+  --tile-mint:   #8fe3a7;
+  --tile-coral:  #f28b7d;
+  --tile-yellow: #f2c94c;
+  --tile-sand:   #efe3c8;
+  --tile-sky:    #8cc7f2;
+  --tile-ink:    #1b1a17;
+
+  --bg-primary:    #1c1b19;
+  --bg-secondary:  rgba(255, 255, 255, 0.055);
+  --bg-card:       rgba(255, 255, 255, 0.055);
+  --bg-elevated:   rgba(255, 255, 255, 0.07);
+  --bg-hover:      rgba(255, 255, 255, 0.10);
+  --bg-active:     rgba(255, 255, 255, 0.14);
+  --accent:        #3ccf6e;
+  --accent-dark:   #2fb35a;
+  --accent-light:  #6fdc8c;
+  --accent-glow:   rgba(60, 207, 110, 0.30);
+  --accent-soft:   rgba(60, 207, 110, 0.14);
+  --ig-blue:       #3ccf6e;
+  --ig-blue-dark:  #2fb35a;
+  --ig-pink:       #3ccf6e;
+  --brand:         #f2f1ee;
+  --brand-dark:    #ffffff;
+  --brand-glow:    rgba(255, 255, 255, 0.12);
+  --text-primary:  #f2f1ee;
+  --text-secondary:#c3c0b8;
+  --text-muted:    #8d8a82;
+  --border:        rgba(255, 255, 255, 0.08);
+  --border-hover:  rgba(255, 255, 255, 0.18);
+  --danger:        #f28b7d;
+  --danger-bg:     rgba(242, 139, 125, 0.14);
+  --success:       #6fdc8c;
+  --success-bg:    rgba(111, 220, 140, 0.14);
+  --warning:       #f2c94c;
+  --warning-bg:    rgba(242, 201, 76, 0.14);
+  --info:          #8cc7f2;
+  --info-bg:       rgba(140, 199, 242, 0.14);
+  --sidebar-bg:    transparent;
+  --sidebar-active: rgba(255, 255, 255, 0.10);
+  --sidebar-hover:  rgba(255, 255, 255, 0.06);
+  --radius-sm:     12px;
+  --radius-md:     16px;
+  --radius-lg:     22px;
+  --radius-xl:     26px;
+  --shadow-sm:     0 1px 0 rgba(255,255,255,0.04) inset;
+  --shadow-md:     0 10px 30px rgba(0,0,0,0.30);
+  --shadow-lg:     0 24px 60px rgba(0,0,0,0.45);
+}
+
+/* --- Backdrop: warm, blurred, photographic feel --- */
+html, body, #root {
+  font-family: var(--glass-font);
+  background:
+    radial-gradient(900px 600px at 12% 8%, rgba(150, 118, 84, 0.55), transparent 60%),
+    radial-gradient(800px 600px at 88% 18%, rgba(92, 104, 86, 0.45), transparent 60%),
+    radial-gradient(900px 700px at 70% 100%, rgba(120, 92, 70, 0.45), transparent 60%),
+    linear-gradient(160deg, #2b2824 0%, #1c1b19 55%, #171614 100%);
+  background-attachment: fixed;
+  color: var(--text-primary);
+}
+button, input, select, textarea,
+h1, h2, h3, h4, h5, h6, .header-title, .pos-page-title, .modal-title, .pos-item-name,
+.pos-item-price, .stat-value, .modal-total-value, .bill-row.total, .order-header h4,
+.brand-name, .pastel-title, .mcb-total, .cash-input, .bill-cash-input {
+  font-family: var(--glass-font);
+}
+.header-title, .pos-page-title { font-weight: 600; letter-spacing: -0.03em; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.14); }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.24); }
+::selection { background: rgba(60,207,110,0.35); }
+
+/* --- Floating glass panels (desktop/tablet) --- */
+.sidebar, .main-content, .mobile-app-header, .modal-box, .frappe-modal,
+.pastel-login-card, .toast {
+  -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur);
+}
+@media (min-width: 769px) {
+  .app-container { padding: 12px; gap: 12px; }
+  .app-container.pos-mode { grid-template-columns: var(--sidebar-width) 1fr 372px; }
+  .sidebar, .main-content, .order-panel {
+    background: var(--glass-bg); border: 1px solid var(--glass-line);
+    border-radius: 28px; box-shadow: var(--shadow-lg);
+    height: calc(100dvh - 24px); overflow: hidden;
+  }
+  .sidebar { overflow-y: auto; }
+  .main-content { overflow-y: auto; }
+  .order-panel { border-left: 1px solid var(--glass-line); }
+}
+
+/* --- Sidebar: icon circles with a green active state --- */
+.sidebar { border-right: none; }
+.sidebar-brand { border-bottom: 1px solid var(--glass-line); }
+.brand-logo, .mobile-brand-mark, .pastel-hero {
+  background: var(--glass-card-hi); border: 1px solid var(--glass-line-hi);
+  box-shadow: none; color: var(--text-primary);
+}
+.brand-name { font-weight: 600; font-size: 0.95rem; color: var(--text-primary); }
+.brand-tagline { color: var(--text-muted); }
+.nav-item { color: var(--text-secondary); font-weight: 500; }
+.nav-item svg {
+  box-sizing: content-box; width: 18px; height: 18px; padding: 7px; border-radius: 50%;
+  background: var(--glass-card); stroke: var(--text-secondary);
+  transition: background 0.25s var(--ease-out), stroke 0.25s, transform 0.3s var(--ease-spring);
+}
+.nav-item:hover { background: var(--glass-card); color: var(--text-primary); }
+.nav-item:hover svg { stroke: var(--text-primary); transform: scale(1.06); }
+.nav-item.active { background: var(--glass-card); color: var(--text-primary); font-weight: 600; }
+.nav-item.active svg { background: var(--accent); stroke: #0f1a12; stroke-width: 2.4; }
+.nav-section-label { color: var(--text-muted); }
+.sidebar-footer { border-top: 1px solid var(--glass-line); }
+.user-avatar, .team-avatar {
+  background: var(--glass-card-hi); color: var(--text-primary);
+  box-shadow: 0 0 0 2px var(--accent);
+}
+.user-name { color: var(--text-primary); }
+
+/* --- Header + search: pill "Ask" style --- */
+.pos-search input, .search-wrapper input, .frappe-search {
+  background: var(--glass-card); border: 1px solid var(--glass-line);
+  border-radius: 999px; color: var(--text-primary);
+}
+.pos-search input:focus, .search-wrapper input:focus, .frappe-search:focus {
+  background: var(--glass-card-hi); border-color: var(--glass-line-hi);
+  box-shadow: 0 0 0 3px rgba(60,207,110,0.18);
+}
+.pos-date-badge, .pos-status-badge {
+  background: var(--glass-card) !important; border: 1px solid var(--glass-line) !important;
+  border-radius: 999px !important; color: var(--text-secondary);
+}
+
+/* --- Categories: segmented glass pill bar (like the room switcher) --- */
+.pos-categories {
+  gap: 4px; padding: 5px; margin: 0.35rem 0 0.9rem; align-self: flex-start; max-width: 100%;
+  background: var(--glass-strong); border: 1px solid var(--glass-line);
+  border-radius: 999px; box-shadow: var(--shadow-md);
+}
+.pos-cat-pill {
+  flex-direction: row; gap: 0.4rem; min-width: 0; padding: 0.5rem 0.95rem;
+  border-radius: 999px; color: var(--text-secondary); font-weight: 500;
+  transition: background 0.25s var(--ease-out), color 0.2s, transform 0.2s var(--ease-spring);
+}
+.pos-cat-pill:hover { background: var(--glass-card); color: var(--text-primary); }
+.pos-cat-pill:active { transform: scale(0.95); }
+.pos-cat-emoji-wrapper, .pos-cat-pill.active .pos-cat-emoji-wrapper {
+  width: auto; height: auto; padding: 0; background: none; border: none;
+  box-shadow: none; transform: none; animation: none;
+}
+.pos-cat-emoji-wrapper::before { display: none; }
+.pos-cat-emoji { position: static; inset: auto; background: none; font-size: 1rem; }
+.pos-cat-name { font-size: 0.84rem; color: inherit; max-width: none; }
+.pos-cat-pill.active {
+  background: rgba(255,255,255,0.13); color: var(--text-primary);
+  box-shadow: inset 0 0 0 1px var(--glass-line-hi);
+}
+.pos-cat-pill.active .pos-cat-name { color: var(--text-primary); font-weight: 600; }
+.pos-cat-pill.active::after {
+  content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--tile-coral);
+}
+
+/* --- Menu items: glass cards with pastel device tiles --- */
+.pos-item-card {
+  background: var(--glass-card); border: 1px solid var(--glass-line);
+  border-radius: 24px; padding: 0.55rem 0.55rem 0.85rem; box-shadow: none;
+}
+.pos-item-card:hover { background: var(--glass-card-hi); border-color: var(--glass-line-hi); box-shadow: var(--shadow-md); }
+.pos-item-emoji {
+  --tile: var(--tile-sand);
+  background: var(--tile); border-radius: 18px; filter: none;
+  box-shadow: inset 0 -10px 24px rgba(0,0,0,0.08);
+}
+.pos-item-emoji { filter: drop-shadow(0 8px 10px rgba(0,0,0,0.18)); }
+.pos-item-card[data-cat="burgers"] .pos-item-emoji,
+.pos-item-card[data-cat="wings"] .pos-item-emoji      { --tile: var(--tile-coral); }
+.pos-item-card[data-cat="fries"] .pos-item-emoji,
+.pos-item-card[data-cat="popcorn"] .pos-item-emoji,
+.pos-item-card[data-cat="biryani"] .pos-item-emoji    { --tile: var(--tile-yellow); }
+.pos-item-card[data-cat="drinks"] .pos-item-emoji,
+.pos-item-card[data-cat="momos"] .pos-item-emoji      { --tile: var(--tile-green); }
+.pos-item-card[data-cat="strips"] .pos-item-emoji,
+.pos-item-card[data-cat="snacks"] .pos-item-emoji     { --tile: var(--tile-mint); }
+.pos-item-card[data-cat="combos"] .pos-item-emoji     { --tile: var(--tile-sky); }
+.pos-item-name { color: var(--text-primary); font-weight: 600; }
+.pos-item-desc { color: var(--text-muted); }
+.pos-item-price { color: var(--text-primary); font-weight: 600; }
+.pos-item-price .cur { color: var(--text-muted); }
+.pos-item-add { background: var(--accent); color: #0f1a12; border-radius: 50%; }
+.pos-item-card:active .pos-item-add { background: #fff; color: #0f1a12; }
+
+/* --- Table bar --- */
+.table-bar { background: transparent; border-bottom: 1px solid var(--glass-line); }
+.table-chip { background: var(--glass-card); border: 1px solid var(--glass-line); color: var(--text-secondary); }
+.table-chip:hover { background: var(--glass-card-hi); border-color: var(--glass-line-hi); color: var(--text-primary); }
+.table-chip.active { background: #f2f1ee; border-color: #f2f1ee; color: var(--tile-ink); }
+.table-chip.active .table-chip-badge { background: var(--tile-ink); color: #f2f1ee; }
+.table-chip.has-items:not(.active) { background: var(--accent-soft); border-color: rgba(60,207,110,0.4); color: var(--tile-green); }
+
+/* --- Order panel --- */
+.order-panel { background: var(--glass-bg); }
+.order-header, .action-section { background: transparent; }
+.order-header { border-bottom: 1px solid var(--glass-line); }
+.order-number { background: var(--glass-card); color: var(--text-secondary); border-radius: 999px; }
+.order-type-toggle { background: var(--glass-card); border-radius: 999px; padding: 4px; }
+.order-type-btn { border-radius: 999px; color: var(--text-muted); }
+.order-type-btn.active { background: rgba(255,255,255,0.14); color: var(--text-primary); box-shadow: inset 0 0 0 1px var(--glass-line-hi); }
+.order-type-btn:hover:not(.active) { background: var(--glass-card); color: var(--text-primary); }
+.customer-input, .order-item-note-input, .discount-input, .bill-cash-input-wrap {
+  background: var(--glass-card); border: 1px solid var(--glass-line); color: var(--text-primary);
+  border-radius: 12px;
+}
+.customer-input:focus { background: var(--glass-card-hi); border-color: var(--glass-line-hi); }
+.order-item-wrap, .order-item { border-color: var(--glass-line); }
+.order-item-category { background: var(--glass-card-hi); color: var(--text-secondary); }
+.qty-controls { background: var(--glass-card); }
+.qty-btn { color: var(--text-primary); }
+.qty-btn:hover { background: #f2f1ee; color: var(--tile-ink); }
+.qty-btn.delete-btn:hover { background: var(--tile-coral); color: var(--tile-ink); }
+.billing-section { background: rgba(0,0,0,0.12); border-top: 1px solid var(--glass-line); }
+.bill-row.total { border-top: 1px dashed var(--glass-line-hi); }
+.bill-row.balance, .bill-row.balance span:last-child { color: var(--tile-green); }
+.bill-row.balance.short, .bill-row.balance.short span:last-child { color: var(--tile-coral); }
+.discount-mode-toggle { background: var(--glass-card); border-color: var(--glass-line); }
+.discount-mode-toggle button.active { background: var(--accent); color: #0f1a12; }
+.order-item-note-btn { background: var(--glass-card); border-color: var(--glass-line); }
+
+/* --- Buttons --- */
+.btn-action { border-radius: 999px; }
+.btn-clear { background: var(--glass-card); color: var(--tile-coral); border: 1px solid var(--glass-line); }
+.btn-clear:hover { background: var(--tile-coral); color: var(--tile-ink); border-color: var(--tile-coral); }
+.btn-print, .btn-action.btn-hold { background: var(--glass-card); color: var(--text-primary); border: 1px solid var(--glass-line); }
+.btn-print:hover, .btn-action.btn-hold:hover { background: var(--glass-card-hi); color: var(--text-primary); border-color: var(--glass-line-hi); }
+.btn-add-stock, .btn-modal-confirm, .pastel-btn-primary, .btn-checkout, .frappe-btn-primary, .tbl-action.primary {
+  background: var(--accent); color: #0f1a12; border-radius: 999px; font-weight: 600; border-color: var(--accent);
+}
+.btn-add-stock:hover, .btn-modal-confirm:hover, .pastel-btn-primary:hover, .btn-checkout:hover,
+.frappe-btn-primary:hover:not(:disabled), .tbl-action.primary:hover {
+  background: var(--accent-light); color: #0f1a12; box-shadow: 0 8px 22px var(--accent-glow);
+}
+.btn-modal { border-radius: 999px; }
+.btn-modal-cancel { background: var(--glass-card); color: var(--text-primary); border: 1px solid var(--glass-line); }
+.btn-modal-cancel:hover { background: var(--glass-card-hi); }
+.mgmt-btn { border-radius: 999px; }
+.mgmt-btn-edit { background: var(--info-bg); color: var(--tile-sky); }
+.mgmt-btn-delete { background: var(--danger-bg); color: var(--tile-coral); }
+.mgmt-btn-recipe { background: var(--accent-soft); color: var(--tile-green); }
+.mgmt-btn-edit:hover, .mgmt-btn-delete:hover, .mgmt-btn-recipe:hover { color: var(--tile-ink); }
+.mgmt-btn-edit:hover { background: var(--tile-sky); }
+.mgmt-btn-delete:hover { background: var(--tile-coral); }
+.mgmt-btn-recipe:hover { background: var(--tile-green); }
+.inventory-filter-btn, .btn-secondary-action, .inventory-delete-btn, .team-toggle-btn, .report-tab {
+  background: var(--glass-card); border: 1px solid var(--glass-line); color: var(--text-secondary); border-radius: 999px;
+}
+.inventory-filter-btn:hover, .btn-secondary-action:hover, .team-toggle-btn:hover {
+  background: var(--glass-card-hi); color: var(--text-primary); border-color: var(--glass-line-hi);
+}
+.inventory-filter-btn.active, .report-tab.active {
+  background: rgba(255,255,255,0.14); color: var(--text-primary); border-color: var(--glass-line-hi);
+}
+.report-tabs { background: var(--glass-strong); border: 1px solid var(--glass-line); padding: 4px; }
+
+/* --- Swipe to pay: glass track, green fill, white "play" knob --- */
+.swipe-track { background: var(--glass-card); box-shadow: inset 0 0 0 1px var(--glass-line); }
+.swipe-fill { background: var(--accent); opacity: calc(0.25 + var(--p) * 0.75); }
+.swipe-handle { background: #f2f1ee; color: var(--tile-ink); box-shadow: 0 6px 18px rgba(0,0,0,0.35); }
+.swipe-track.is-dragging .swipe-handle { box-shadow: 0 8px 24px var(--accent-glow); }
+.swipe-label-text {
+  background: linear-gradient(90deg, #c3c0b8 0%, #c3c0b8 40%, #ffffff 50%, #c3c0b8 60%, #c3c0b8 100%);
+  background-size: 250% 100%; -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.swipe-track.is-confirmed { background: var(--accent-soft); }
+.swipe-track.is-confirmed .swipe-fill { background: var(--accent); }
+.swipe-track.is-confirmed .swipe-handle { background: #fff; color: var(--accent-dark); }
+.swipe-track.is-confirmed .swipe-label, .swipe-track.is-confirmed .swipe-label-text { color: #0f1a12; }
+.swipe-track.is-disabled .swipe-handle { background: rgba(255,255,255,0.18); color: var(--text-muted); }
+.swipe-track.is-disabled .swipe-label-text { color: var(--text-muted); }
+
+/* --- Modals --- */
+.modal-overlay { background: rgba(10, 10, 9, 0.55); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+.modal-box, .frappe-modal { background: var(--glass-strong); border: 1px solid var(--glass-line-hi); border-radius: 28px; color: var(--text-primary); }
+.modal-total { background: var(--tile-green); border: none; border-radius: 20px; }
+.modal-total-label, .modal-total + * { color: rgba(27,26,23,0.7); }
+.modal-total-value { color: var(--tile-ink); background: none; -webkit-text-fill-color: currentColor; }
+.modal-total div[style] { color: rgba(27,26,23,0.65) !important; }
+.payment-btn { background: var(--glass-card); border: 1px solid var(--glass-line); color: var(--text-primary); border-radius: 20px; }
+.payment-btn:hover { background: var(--glass-card-hi); border-color: var(--accent); color: var(--text-primary); }
+.cash-quick-btn { background: var(--glass-card); border-color: var(--glass-line); color: var(--text-primary); border-radius: 999px; }
+.cash-quick-btn:hover { background: var(--glass-card-hi); border-color: var(--glass-line-hi); color: var(--text-primary); }
+.cash-input { background: var(--glass-card); border-color: var(--glass-line); color: var(--text-primary); }
+.change-display { background: var(--accent-soft); border-color: rgba(60,207,110,0.4); border-radius: 18px; }
+.change-display strong { color: var(--tile-green); }
+.change-display.short { background: var(--danger-bg); border-color: rgba(242,139,125,0.4); }
+.change-display.short strong { color: var(--tile-coral); }
+.modal-form-group input, .modal-form-group select, .settings-input, .frappe-input, .frappe-select,
+.inventory-field input, .inventory-field select, .team-form-field input, .team-form-field select,
+.team-field-block select, .recipe-ingredient, .recipe-qty, .stock-qty input, .input-group input {
+  background: var(--glass-card); border: 1px solid var(--glass-line); color: var(--text-primary); border-radius: 12px;
+}
+.modal-form-group input:focus, .modal-form-group select:focus, .settings-input:focus,
+.frappe-input:focus, .frappe-select:focus, .input-group input:focus {
+  border-color: var(--glass-line-hi); box-shadow: 0 0 0 3px rgba(60,207,110,0.18);
+}
+select option { background: #2b2926; color: var(--text-primary); }
+.modal-box::before { background: rgba(255,255,255,0.22); }
+
+/* --- Cards, stats (Energy-style colour tiles), tables --- */
+.stat-card, .report-card, .stock-card, .team-card, .team-summary-card, .menu-mgmt-card,
+.today-item-card, .frappe-stat-card, .tbl-card, .supplier-card, .team-form-panel {
+  background: var(--glass-card); border: 1px solid var(--glass-line); border-radius: 24px; box-shadow: none;
+}
+.stat-card::before { display: none; }
+.stat-card.revenue      { background: var(--accent-dark); }
+.stat-card.today        { background: var(--tile-green); }
+.stat-card.transactions { background: var(--tile-yellow); }
+.stat-card.avg          { background: var(--tile-coral); }
+.stat-card .stat-label, .stat-card .stat-value,
+.stat-card.revenue .stat-value, .stat-card.today .stat-value,
+.stat-card.transactions .stat-value, .stat-card.avg .stat-value { color: var(--tile-ink); }
+.stat-card .stat-label { opacity: 0.7; }
+.report-card-header, .report-table thead th { background: rgba(255,255,255,0.03); border-color: var(--glass-line); }
+.report-table tbody td { border-color: var(--glass-line); color: var(--text-secondary); }
+.report-table tbody tr:hover { background: var(--glass-card); }
+
+/* --- Toasts --- */
+.toast { background: var(--glass-strong); color: var(--text-primary); border: 1px solid var(--glass-line-hi); border-radius: 999px; }
+
+/* --- Login --- */
+.pastel-welcome-container { background: transparent; }
+.pastel-login-card { background: var(--glass-bg); border: 1px solid var(--glass-line-hi); border-radius: 28px; box-shadow: var(--shadow-lg); }
+.pastel-hero { width: 84px; height: 84px; border-radius: 26px; }
+.pastel-title { font-weight: 600; font-size: 1.6rem; letter-spacing: -0.03em; }
+
+/* --- Mobile --- */
+@media (max-width: 768px) {
+  .mobile-app-header { background: rgba(28,27,25,0.7); border-bottom: 1px solid var(--glass-line); }
+  .mobile-hamburger, .mobile-settings-gear { color: var(--text-primary); }
+  .mobile-location { font-family: var(--glass-font); font-weight: 600; font-size: 1rem; color: var(--text-primary); }
+  .sidebar { background: var(--glass-strong); }
+  .order-panel-container { background: #262522; border-left: 1px solid var(--glass-line); }
+  .order-panel { background: transparent; }
+  .mobile-close-cart { background: var(--glass-card-hi); border-color: var(--glass-line); color: var(--text-primary); }
+  .mobile-cart-btn { background: var(--glass-strong); border: 1px solid var(--glass-line-hi); -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur); }
+  .mobile-cart-btn.has-items { background: var(--accent); border-color: var(--accent); color: #0f1a12; box-shadow: 0 14px 30px var(--accent-glow); }
+  .mobile-cart-btn.has-items .mcb-total { color: #0f1a12; }
+  .mobile-cart-btn .mcb-bag { background: rgba(0,0,0,0.12); }
+  .cart-badge { background: var(--tile-coral); color: var(--tile-ink); }
+  .modal-box { background: var(--glass-strong); border-radius: 28px 28px 0 0; }
+  .pos-categories { align-self: stretch; }
+  .pos-cat-pill { padding: 0.45rem 0.8rem; }
+  .pos-cat-name { font-size: 0.78rem; }
+  .pos-item-card { border-radius: 18px; padding: 0.4rem 0.4rem 0.55rem; }
+  .pos-item-emoji { border-radius: 14px; }
+}
+.pos-cat-pill { flex-shrink: 0; }
+.swipe-track.is-disabled .swipe-fill { opacity: 0; }
+
+/* Pop-ups inside the cart (payment, receipt) use position:fixed. A transform,
+   will-change or backdrop-filter on an ancestor traps them inside that box, so
+   the cart panel never has a blur, and the phone drawer drops its transform
+   once it is open. */
+.order-panel { background: rgba(36, 35, 32, 0.9); }
+@media (max-width: 768px) {
+  .order-panel-container { will-change: auto; }
+  .order-panel-container.open { transform: none; }
+}
+
+/* ===========================================================
+   LIGHT GLASS  — same layout, tiles and green accent as the
+   dark glass theme, on a soft warm-white frosted backdrop.
+   =========================================================== */
+:root {
+  color-scheme: light;
+  --glass-bg:      rgba(255, 255, 255, 0.62);
+  --glass-strong:  rgba(255, 255, 255, 0.86);
+  --glass-card:    rgba(255, 255, 255, 0.72);
+  --glass-card-hi: rgba(255, 255, 255, 0.95);
+  --glass-line:    rgba(40, 36, 30, 0.08);
+  --glass-line-hi: rgba(40, 36, 30, 0.16);
+
+  --bg-primary:    #f3f0ea;
+  --bg-secondary:  rgba(255, 255, 255, 0.72);
+  --bg-card:       rgba(255, 255, 255, 0.72);
+  --bg-elevated:   rgba(40, 36, 30, 0.05);
+  --bg-hover:      rgba(40, 36, 30, 0.07);
+  --bg-active:     rgba(40, 36, 30, 0.10);
+  --accent:        #2fb35a;
+  --accent-dark:   #25994b;
+  --accent-light:  #3ccf6e;
+  --accent-glow:   rgba(47, 179, 90, 0.28);
+  --accent-soft:   rgba(47, 179, 90, 0.12);
+  --brand:         #1b1a17;
+  --brand-dark:    #000;
+  --text-primary:  #1b1a17;
+  --text-secondary:#57534b;
+  --text-muted:    #8f8a80;
+  --border:        rgba(40, 36, 30, 0.09);
+  --border-hover:  rgba(40, 36, 30, 0.18);
+  --danger:        #d9534a;
+  --danger-bg:     rgba(217, 83, 74, 0.10);
+  --success:       #25994b;
+  --success-bg:    rgba(47, 179, 90, 0.12);
+  --sidebar-active: rgba(40, 36, 30, 0.06);
+  --sidebar-hover:  rgba(40, 36, 30, 0.04);
+  --shadow-md:     0 10px 30px rgba(60, 48, 30, 0.10);
+  --shadow-lg:     0 24px 60px rgba(60, 48, 30, 0.14);
+}
+html, body, #root {
+  background:
+    radial-gradient(900px 600px at 10% 5%, rgba(236, 214, 186, 0.9), transparent 60%),
+    radial-gradient(800px 600px at 90% 15%, rgba(210, 228, 206, 0.8), transparent 60%),
+    radial-gradient(900px 700px at 70% 100%, rgba(240, 222, 204, 0.9), transparent 60%),
+    linear-gradient(160deg, #f6f2ec 0%, #efebe4 55%, #ece7df 100%);
+  background-attachment: fixed;
+}
+::-webkit-scrollbar-thumb { background: rgba(40,36,30,0.16); }
+::-webkit-scrollbar-thumb:hover { background: rgba(40,36,30,0.28); }
+.order-panel { background: rgba(255, 255, 255, 0.78); }
+.nav-item.active svg { stroke: #fff; }
+.pos-item-add, .pos-item-card:active .pos-item-add { color: #fff; }
+.pos-item-card:active .pos-item-add { background: var(--tile-ink); }
+.pos-cat-pill.active { background: #fff; box-shadow: 0 2px 8px rgba(60,48,30,0.12), inset 0 0 0 1px var(--glass-line); }
+.table-chip.active { background: var(--tile-ink); border-color: var(--tile-ink); color: #fff; }
+.table-chip.active .table-chip-badge { background: #fff; color: var(--tile-ink); }
+.table-chip.has-items:not(.active) { color: var(--accent-dark); }
+.order-type-btn.active { background: #fff; box-shadow: 0 1px 4px rgba(60,48,30,0.14); }
+.qty-btn:hover { background: var(--tile-ink); color: #fff; }
+.btn-add-stock, .btn-modal-confirm, .pastel-btn-primary, .btn-checkout, .frappe-btn-primary, .tbl-action.primary,
+.btn-add-stock:hover, .btn-modal-confirm:hover, .pastel-btn-primary:hover, .btn-checkout:hover,
+.frappe-btn-primary:hover:not(:disabled), .tbl-action.primary:hover,
+.discount-mode-toggle button.active { color: #fff; }
+.btn-clear { color: var(--danger); }
+.mgmt-btn-edit { color: #2f7fbf; }
+.mgmt-btn-delete { color: var(--danger); }
+.mgmt-btn-recipe { color: var(--accent-dark); }
+.inventory-filter-btn.active, .report-tab.active { background: #fff; box-shadow: 0 1px 4px rgba(60,48,30,0.12); }
+.swipe-handle { background: var(--tile-ink); color: #fff; box-shadow: 0 6px 18px rgba(0,0,0,0.22); }
+.swipe-label-text {
+  background: linear-gradient(90deg, #57534b 0%, #57534b 40%, #1b1a17 50%, #57534b 60%, #57534b 100%);
+  background-size: 250% 100%; -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.swipe-track.is-confirmed .swipe-label, .swipe-track.is-confirmed .swipe-label-text { color: #fff; }
+.swipe-track.is-disabled .swipe-handle { background: rgba(40,36,30,0.14); color: var(--text-muted); }
+.modal-overlay { background: rgba(60, 48, 30, 0.25); }
+.modal-total { background: var(--tile-green); }
+.stat-card.revenue { background: var(--tile-green); }
+.stat-card.today   { background: var(--tile-mint); }
+.change-display strong, .bill-row.balance, .bill-row.balance span:last-child { color: var(--accent-dark); }
+.change-display.short strong, .bill-row.balance.short, .bill-row.balance.short span:last-child { color: var(--danger); }
+select option { background: #fff; color: var(--text-primary); }
+::selection { background: rgba(47,179,90,0.25); }
+@media (max-width: 768px) {
+  .mobile-app-header { background: rgba(255, 255, 255, 0.75); }
+  .order-panel-container { background: #faf8f4; }
+  .sidebar { background: rgba(255,255,255,0.92); }
+  .mobile-cart-btn { color: var(--text-primary); }
+  .mobile-cart-btn.has-items, .mobile-cart-btn.has-items .mcb-total { color: #fff; }
+  .mobile-cart-btn .mcb-bag { background: rgba(255,255,255,0.22); }
+  .modal-box { background: rgba(255,255,255,0.95); }
+}
+
+/* ===========================================================
+   GLASS PASS — make the light theme read as real frosted glass:
+   a colourful backdrop to see through, translucent panels with
+   bright edges and top highlights, frosted cards.
+   (No backdrop-filter on .main-content / .order-panel: that would
+   trap position:fixed pop-ups inside those panels.)
+   =========================================================== */
+:root {
+  --glass-bg:      rgba(255, 255, 255, 0.34);
+  --glass-strong:  rgba(255, 255, 255, 0.62);
+  --glass-card:    rgba(255, 255, 255, 0.42);
+  --glass-card-hi: rgba(255, 255, 255, 0.66);
+  --glass-line:    rgba(255, 255, 255, 0.65);
+  --glass-line-hi: rgba(255, 255, 255, 0.9);
+  --glass-edge:    inset 0 1px 0 rgba(255,255,255,0.9), inset 0 0 0 1px rgba(255,255,255,0.35);
+  --bg-secondary:  rgba(255, 255, 255, 0.42);
+  --bg-card:       rgba(255, 255, 255, 0.42);
+  --border:        rgba(255, 255, 255, 0.6);
+  --border-hover:  rgba(255, 255, 255, 0.95);
+}
+html, body, #root {
+  background:
+    radial-gradient(70vw 70vh at 0% 0%, rgba(255, 176, 130, 0.65), transparent 70%),
+    radial-gradient(70vw 70vh at 100% 0%, rgba(150, 190, 255, 0.55), transparent 70%),
+    radial-gradient(70vw 70vh at 100% 100%, rgba(150, 196, 255, 0.55), transparent 70%),
+    radial-gradient(70vw 70vh at 0% 100%, rgba(255, 216, 140, 0.60), transparent 70%),
+    radial-gradient(50vw 50vh at 50% 50%, rgba(214, 186, 255, 0.30), transparent 70%),
+    linear-gradient(160deg, #f7efe6 0%, #eef1ea 50%, #e9eef5 100%);
+  background-attachment: fixed;
+}
+
+/* Panels: translucent with a bright glass rim */
+@media (min-width: 769px) {
+  .sidebar, .main-content, .order-panel {
+    background: var(--glass-bg);
+    border: 1px solid rgba(255,255,255,0.7);
+    box-shadow: var(--glass-edge), 0 24px 60px rgba(70, 55, 35, 0.14);
+  }
+}
+.main-content, .order-panel { -webkit-backdrop-filter: none; backdrop-filter: none; }
+.order-panel { background: var(--glass-bg); }
+.order-header, .billing-section { border-color: rgba(255,255,255,0.6); }
+.billing-section { background: rgba(255,255,255,0.28); }
+
+/* Frosted cards, chips, inputs */
+.pos-item-card, .stat-card, .report-card, .stock-card, .team-card, .team-summary-card,
+.menu-mgmt-card, .today-item-card, .frappe-stat-card, .tbl-card, .supplier-card, .team-form-panel,
+.payment-btn, .pos-categories, .table-chip, .order-type-toggle, .qty-controls,
+.btn-clear, .btn-print, .btn-action.btn-hold, .btn-modal-cancel, .pos-date-badge, .pos-status-badge,
+.swipe-track, .cash-quick-btn, .inventory-filter-btn, .report-tabs {
+  background: var(--glass-card);
+  border: 1px solid rgba(255,255,255,0.7);
+  box-shadow: var(--glass-edge), 0 6px 18px rgba(70, 55, 35, 0.07);
+  -webkit-backdrop-filter: blur(14px) saturate(160%); backdrop-filter: blur(14px) saturate(160%);
+}
+.pos-item-card:hover, .payment-btn:hover, .table-chip:hover, .cash-quick-btn:hover {
+  background: var(--glass-card-hi);
+  box-shadow: var(--glass-edge), 0 14px 32px rgba(70, 55, 35, 0.14);
+}
+.pos-search input, .search-wrapper input, .frappe-search, .customer-input,
+.modal-form-group input, .modal-form-group select, .settings-input, .frappe-input, .frappe-select,
+.cash-input, .bill-cash-input-wrap, .discount-input, .order-item-note-input, .input-group input {
+  background: rgba(255,255,255,0.5); border: 1px solid rgba(255,255,255,0.75);
+  box-shadow: inset 0 1px 2px rgba(70,55,35,0.06);
+}
+.pos-search input:focus, .search-wrapper input:focus, .customer-input:focus,
+.modal-form-group input:focus, .input-group input:focus {
+  background: rgba(255,255,255,0.8); border-color: #fff;
+}
+.pos-cat-pill.active, .order-type-btn.active, .inventory-filter-btn.active, .report-tab.active {
+  background: rgba(255,255,255,0.9);
+  box-shadow: inset 0 1px 0 #fff, 0 4px 12px rgba(70,55,35,0.12);
+}
+.table-chip.active { background: var(--tile-ink); border-color: var(--tile-ink); }
+.order-item-wrap, .order-item { border-color: rgba(255,255,255,0.6); }
+
+/* Colour tiles get a glossy top sheen */
+.pos-item-emoji {
+  position: relative; overflow: hidden;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.55), inset 0 -12px 24px rgba(0,0,0,0.06);
+}
+.pos-item-emoji::after {
+  content: ''; position: absolute; inset: 0 0 55% 0;
+  background: linear-gradient(180deg, rgba(255,255,255,0.35), rgba(255,255,255,0));
+  pointer-events: none;
+}
+.stat-card.revenue, .stat-card.today, .stat-card.transactions, .stat-card.avg, .modal-total {
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.6), 0 10px 24px rgba(70,55,35,0.10);
+  border-color: rgba(255,255,255,0.5);
+}
+
+/* Pop-ups: stronger frosted glass */
+.modal-overlay { background: rgba(70, 55, 35, 0.18); }
+.modal-box, .frappe-modal, .pastel-login-card {
+  background: rgba(255,255,255,0.55);
+  border: 1px solid rgba(255,255,255,0.85);
+  box-shadow: var(--glass-edge), 0 30px 70px rgba(70,55,35,0.22);
+  -webkit-backdrop-filter: blur(30px) saturate(170%); backdrop-filter: blur(30px) saturate(170%);
+}
+.toast { background: rgba(255,255,255,0.7); border-color: rgba(255,255,255,0.9); }
+.brand-logo, .mobile-brand-mark, .pastel-hero {
+  background: rgba(255,255,255,0.6); border: 1px solid rgba(255,255,255,0.9);
+  box-shadow: var(--glass-edge), 0 6px 16px rgba(70,55,35,0.10);
+}
+
+@media (max-width: 768px) {
+  .mobile-app-header { background: rgba(255,255,255,0.45); border-bottom: 1px solid rgba(255,255,255,0.7); }
+  .order-panel-container {
+    background: rgba(250, 247, 242, 0.9);
+    border-left: 1px solid rgba(255,255,255,0.9);
+  }
+  .sidebar { background: rgba(255,255,255,0.7); }
+  .mobile-cart-btn { background: rgba(255,255,255,0.6); border: 1px solid rgba(255,255,255,0.9); }
+  .mobile-cart-btn.has-items { background: rgba(47,179,90,0.88); border-color: rgba(255,255,255,0.5); }
+  .modal-box { background: rgba(255,255,255,0.72); }
+}
+
+/* Menu item tiles: neutral frosted glass, no category colours */
+.pos-item-card .pos-item-emoji,
+.pos-item-card[data-cat] .pos-item-emoji {
+  --tile: rgba(255, 255, 255, 0.55);
+  background: var(--tile);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: inset 0 1px 0 #fff, inset 0 -10px 20px rgba(70, 55, 35, 0.04);
+}
+
+/* ===========================================================
+   BLUE ACCENT — replaces the green accent everywhere.
+   =========================================================== */
+:root {
+  --accent:       #0a84ff;
+  --accent-dark:  #0071e3;
+  --accent-light: #3d9bff;
+  --accent-glow:  rgba(10, 132, 255, 0.28);
+  --accent-soft:  rgba(10, 132, 255, 0.12);
+  --ig-blue:      #0a84ff;
+  --ig-blue-dark: #0071e3;
+  --tile-green:   #9cc9ff;
+  --tile-mint:    #c3defc;
+  --success:      #0071e3;
+  --success-bg:   rgba(10, 132, 255, 0.12);
+}
+.search-wrapper input:focus, .pos-search input:focus, .frappe-search:focus,
+.modal-form-group input:focus, .modal-form-group select:focus, .settings-input:focus,
+.frappe-input:focus, .frappe-select:focus, .input-group input:focus {
+  box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.18);
+}
+::selection { background: rgba(10, 132, 255, 0.22); }
+.table-chip.has-items:not(.active) { background: var(--accent-soft); border-color: rgba(10,132,255,0.35); color: var(--accent-dark); }
+.change-display { background: var(--accent-soft); border-color: rgba(10,132,255,0.35); }
+.mobile-cart-btn.has-items { background: rgba(10, 132, 255, 0.9); }
+.modal-total { background: var(--accent); }
+.modal-total-value, .modal-total-label { color: #fff; }
+.modal-total div[style] { color: rgba(255,255,255,0.8) !important; }
+.stat-card.revenue { background: var(--accent); }
+.stat-card.revenue .stat-label, .stat-card.revenue .stat-value { color: #fff; }
