@@ -25,13 +25,9 @@ router.post('/google', async (req, res) => {
     const ticket = await client.verifyIdToken({
       idToken: credential,
       audience: GOOGLE_CLIENT_ID,
-    }).catch(err => {
-      // DEV MOCK: If verification fails (e.g., dummy ID), extract payload manually.
-      // Do NOT do this in production!
-      const payloadBase64 = credential.split('.')[1];
-      const decodedJson = Buffer.from(payloadBase64, 'base64').toString();
-      return { getPayload: () => JSON.parse(decodedJson) };
-    });
+    }).catch(() => null);
+    // Never trust an unverified Google token: it could name any email.
+    if (!ticket) return res.status(401).json({ error: 'Google sign-in could not be verified' });
 
     const payload = ticket.getPayload();
     const { email, sub: google_id, name } = payload;
@@ -39,6 +35,9 @@ router.post('/google', async (req, res) => {
     // Check if user exists
     const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
 
+    if (user && !user.active) {
+      return res.status(403).json({ error: 'This account is deactivated. Ask the admin to re-activate it.' });
+    }
     if (user) {
       // User exists, login success
       const token = jwt.sign(
@@ -50,7 +49,7 @@ router.post('/google', async (req, res) => {
       return res.json({
         action: 'login_success',
         token,
-        user: { id: user.id, name: user.name, email: user.email, role: user.role, org_id: user.org_id }
+        user: { id: user.id, name: user.name, email: user.email, role: user.role, org_id: user.org_id, is_owner: !!user.is_owner }
       });
     } else {
       // User doesn't exist, redirect to profile setup
@@ -86,8 +85,8 @@ router.post('/setup-profile', async (req, res) => {
       // Create User (Admin of their new org)
       const userId = uuidv4();
       db.prepare(`
-        INSERT INTO users (id, org_id, google_id, email, password_hash, name, phone, designation, role)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO users (id, org_id, google_id, email, password_hash, name, phone, designation, role, is_owner)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
       `).run(userId, orgId, google_id || null, email, password_hash, name, phone || null, designation || null, 'Admin');
 
       // Seed organization data
@@ -108,7 +107,7 @@ router.post('/setup-profile', async (req, res) => {
     res.json({
       action: 'setup_success',
       token,
-      user: { id: userId, name, email, role: 'Admin', org_id: orgId }
+      user: { id: userId, name, email, role: 'Admin', org_id: orgId, is_owner: true }
     });
   } catch (error) {
     console.error('Setup Error:', error);
@@ -129,7 +128,7 @@ router.post('/login', async (req, res) => {
   }
 
   try {
-    const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
+    const user = db.prepare('SELECT * FROM users WHERE lower(email) = lower(?)').get(String(email).trim());
 
     if (!user || !user.password_hash) {
       return res.status(401).json({ error: 'Invalid credentials' });
@@ -139,6 +138,9 @@ router.post('/login', async (req, res) => {
     
     if (!isMatch) {
       return res.status(401).json({ error: 'Invalid credentials' });
+    }
+    if (!user.active) {
+      return res.status(403).json({ error: 'This account is deactivated. Ask the admin to re-activate it.' });
     }
 
     const token = jwt.sign(
@@ -150,7 +152,7 @@ router.post('/login', async (req, res) => {
     res.json({
       action: 'login_success',
       token,
-      user: { id: user.id, name: user.name, email: user.email, role: user.role, org_id: user.org_id }
+      user: { id: user.id, name: user.name, email: user.email, role: user.role, org_id: user.org_id, is_owner: !!user.is_owner }
     });
   } catch (error) {
     console.error('Login Error:', error);

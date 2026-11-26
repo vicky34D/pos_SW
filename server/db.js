@@ -300,6 +300,28 @@ db.exec(`
   addCol('is_stock_item', "is_stock_item INTEGER NOT NULL DEFAULT 1");
 })();
 
+// Main admin ("owner") of each organisation: cannot be demoted, deactivated
+// or have their password reset by anyone else, and is the only one who can
+// create or change Admins. Additive + idempotent.
+(function migrateOwner() {
+  const cols = db.prepare("PRAGMA table_info(users)").all().map(c => c.name);
+  if (!cols.includes('is_owner')) db.exec("ALTER TABLE users ADD COLUMN is_owner INTEGER NOT NULL DEFAULT 0");
+})();
+
+function ensureOwners() {
+  const orgs = db.prepare('SELECT id FROM organizations').all();
+  for (const { id } of orgs) {
+    if (db.prepare('SELECT 1 FROM users WHERE org_id = ? AND is_owner = 1').get(id)) continue;
+    // The business owner is Subhankar Dhar; otherwise the earliest active Admin.
+    const pick = db.prepare(`
+      SELECT id FROM users WHERE org_id = ? AND active = 1 AND lower(name) LIKE '%subhankar%' ORDER BY created_at ASC LIMIT 1
+    `).get(id) || db.prepare(`
+      SELECT id FROM users WHERE org_id = ? AND active = 1 AND role = 'Admin' ORDER BY created_at ASC LIMIT 1
+    `).get(id);
+    if (pick) db.prepare("UPDATE users SET is_owner = 1, role = 'Admin' WHERE id = ?").run(pick.id);
+  }
+}
+
 // Bill scanning: remember the supplier's own invoice number so the same
 // invoice is never imported twice. Additive + idempotent.
 (function migrateBillScan() {
@@ -551,5 +573,6 @@ function getDefaultSessionUser() {
 }
 
 ensureDefaultOrganization();
+ensureOwners();
 
-module.exports = { db, seedOrganizationData, ensureDefaultOrganization, getDefaultSessionUser };
+module.exports = { db, seedOrganizationData, ensureDefaultOrganization, getDefaultSessionUser, ensureOwners };

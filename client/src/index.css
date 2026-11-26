@@ -3461,3 +3461,37 @@ h1, h2, h3, .mobile-location, .mcb-total, .dh-login-title, .dh-card-title, .dh-l
 .bill-scan-reason { font-size: 0.85rem; color: var(--dh-ink-2, #4a4a55); }
 .bill-scan-warn { font-size: 0.85rem; color: #a15c00; margin: 4px 0 8px; }
 .bill-scan-foot { font-size: 0.8rem; color: var(--dh-muted, #8a8a96); margin-top: 6px; line-height: 1.45; }
+
+/* ===== Team: roles & main admin ===== */
+.team-owner-badge {
+  display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 0.72rem; font-weight: 700;
+  background: var(--dh-lime, #d6f24b); color: var(--dh-ink, #121212); border: 1.5px solid var(--dh-ink, #121212);
+}
+.team-role-help { font-size: 0.78rem; color: var(--dh-ink-2, #4a4a55); line-height: 1.4; margin-top: 4px; max-width: 60ch; }
+.team-pw-row { display: flex; gap: 6px; }
+.team-pw-row input { flex: 1; min-width: 0; }
+.team-pw-btn {
+  padding: 0 12px; border-radius: 999px; border: 1.5px solid var(--dh-ink, #121212); background: #fff;
+  font-size: 0.8rem; font-weight: 600; cursor: pointer; white-space: nowrap;
+}
+.team-pw-btn:hover { background: var(--dh-lime-soft, #f4fbd2); }
+.team-roles-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-top: 10px; }
+.team-role-card { background: #fff; border: 1.5px solid var(--dh-ink, #121212); border-radius: 18px; padding: 14px; box-shadow: 0 3px 0 var(--dh-ink, #121212); }
+.team-role-name { font-family: var(--dh-head, inherit); font-weight: 700; font-size: 1.05rem; }
+.team-role-name span { font-family: inherit; font-size: 0.72rem; font-weight: 600; margin-left: 6px; padding: 2px 8px; border-radius: 999px; background: var(--dh-violet-soft, #ece7ff); color: var(--dh-violet-2, #6a48f5); }
+.team-card-controls { flex-wrap: wrap; }
+.team-form-field input, .team-form-field select, .team-field-block select {
+  height: 44px; padding: 0 14px; border-radius: 12px; width: 100%;
+  background: #fff; border: 1.5px solid var(--dh-soft, #e7e4f0); color: var(--dh-ink, #121212); font: inherit;
+}
+.team-form-field input:focus, .team-form-field select:focus, .team-field-block select:focus {
+  outline: none; border-color: var(--dh-ink, #121212); box-shadow: 0 0 0 4px var(--dh-lime-soft, #f4fbd2);
+}
+.team-field-block select { height: 38px; width: auto; min-width: 130px; }
+.btn-save-stock {
+  background: var(--dh-ink, #121212); color: #fff; border: 1.5px solid var(--dh-ink, #121212);
+  border-radius: 999px; padding: 0 22px; height: 44px; font-weight: 600; box-shadow: none; cursor: pointer;
+}
+.btn-save-stock:hover { background: #2a2a2e; }
+.team-toggle-btn { border-radius: 999px; border: 1.5px solid var(--dh-ink, #121212); background: #fff; color: var(--dh-ink, #121212); }
+.team-toggle-btn:hover { background: var(--dh-lime-soft, #f4fbd2); }
