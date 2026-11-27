@@ -3,7 +3,7 @@ import * as api from '../api'
 
 const PASSCODE = '252525'
 
-export default function SettingsView({ settings, setSettings, showToast }) {
+export default function SettingsView({ settings, setSettings, showToast, currentUser }) {
   const [form, setForm] = useState({ ...settings })
   const [showPasscodeModal, setShowPasscodeModal] = useState(false)
   const [passcodeInput, setPasscodeInput] = useState('')
@@ -93,6 +93,8 @@ export default function SettingsView({ settings, setSettings, showToast }) {
         </div>
       </div>
 
+      {currentUser?.is_owner && <AiKeySection showToast={showToast} />}
+
       <div className="settings-section">
         <div className="settings-title" style={{ color: 'var(--danger)' }}>⚠️ Danger Zone</div>
         <div className="settings-row">
@@ -148,6 +150,89 @@ export default function SettingsView({ settings, setSettings, showToast }) {
               <button className="btn-modal btn-modal-confirm" onClick={handlePasscodeSubmit}>Confirm</button>
             </div>
           </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// Main admin only: the Anthropic API key that powers "Upload Bill".
+// The key is sent once to the server and never shown again (only its last 4).
+function AiKeySection({ showToast }) {
+  const [status, setStatus] = useState(null)
+  const [editing, setEditing] = useState(false)
+  const [key, setKey] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    api.getAiKeyStatus().then(setStatus).catch(() => setStatus({ configured: false }))
+  }, [])
+
+  const save = async () => {
+    setBusy(true); setError('')
+    try {
+      const res = await api.saveAiKey(key.trim())
+      setStatus(res); setEditing(false); setKey('')
+      showToast(res.warning || 'AI key saved. Bill upload is ready.', res.warning ? 'info' : 'success')
+    } catch (e) {
+      setError(e.message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const remove = async () => {
+    if (!confirm('Remove the AI key? Bill upload will stop working until a new key is added.')) return
+    try {
+      setStatus(await api.removeAiKey())
+      showToast('AI key removed', 'info')
+    } catch (e) {
+      showToast(e.message, 'error')
+    }
+  }
+
+  const showForm = editing || (status && !status.configured)
+
+  return (
+    <div className="settings-section">
+      <div className="settings-title">AI Bill Upload</div>
+      <div className="settings-row">
+        <div>
+          <span className="settings-label">Anthropic API key</span>
+          <div className="ai-key-hint">
+            Powers Purchase Bills → Upload Bill. Only you (main admin) see this. Get a key at console.anthropic.com → API Keys.
+          </div>
+        </div>
+        {status === null ? (
+          <span className="ai-key-hint">Checking…</span>
+        ) : status.configured && !editing ? (
+          <div className="ai-key-status">
+            <span className="ai-key-ok">✓ Key saved (ends in …{status.last4})</span>
+            <button className="btn-modal btn-modal-cancel" onClick={() => { setEditing(true); setError('') }}>Replace</button>
+            {status.source === 'settings' && <button className="btn-modal btn-modal-cancel" onClick={remove}>Remove</button>}
+          </div>
+        ) : (
+          <span className="ai-key-missing">Not set: Upload Bill is off</span>
+        )}
+      </div>
+      {showForm && (
+        <div className="ai-key-form">
+          <input
+            className="settings-input"
+            type="password"
+            autoComplete="off"
+            spellCheck={false}
+            placeholder="sk-ant-…"
+            value={key}
+            onChange={e => { setKey(e.target.value); setError('') }}
+            onKeyDown={e => e.key === 'Enter' && key.trim() && !busy && save()}
+          />
+          <button className="btn-modal btn-modal-confirm" disabled={!key.trim() || busy} onClick={save}>
+            {busy ? 'Checking key…' : 'Save key'}
+          </button>
+          {editing && <button className="btn-modal btn-modal-cancel" onClick={() => { setEditing(false); setKey(''); setError('') }}>Cancel</button>}
+          {error && <div className="ai-key-error">{error}</div>}
         </div>
       )}
     </div>

@@ -3511,3 +3511,15 @@ h1, h2, h3, .mobile-location, .mcb-total, .dh-login-title, .dh-card-title, .dh-l
 .team-access-editor { margin-top: 10px; padding: 12px; border-radius: 14px; border: 1.5px dashed var(--dh-ink, #121212); background: #fafaf7; }
 .team-access-actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
 .team-access-actions .btn-save-stock { height: 36px; }
+
+/* ---------- AI key (Settings) ---------- */
+.ai-key-hint { font-size: 0.72rem; color: var(--text-muted); margin-top: 0.2rem; max-width: 420px; }
+.ai-key-status { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; justify-content: flex-end; }
+.ai-key-status .btn-modal { padding: 0.35rem 0.8rem; font-size: 0.78rem; flex: 0 0 auto; }
+.ai-key-ok { font-size: 0.8rem; font-weight: 600; color: var(--success); }
+.ai-key-missing { font-size: 0.8rem; font-weight: 600; color: var(--danger); }
+.ai-key-form { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; padding: 0.25rem 0 0.75rem; }
+.ai-key-form .settings-input { flex: 1 1 260px; max-width: none; font-family: ui-monospace, monospace; }
+.ai-key-form .btn-modal { flex: 0 0 auto; padding: 0.55rem 1rem; }
+.ai-key-form .btn-modal:disabled { opacity: 0.5; cursor: not-allowed; }
+.ai-key-error { flex-basis: 100%; color: var(--danger); font-size: 0.78rem; }

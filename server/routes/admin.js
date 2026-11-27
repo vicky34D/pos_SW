@@ -68,4 +68,52 @@ router.post('/start-fresh', requireOwner, async (req, res) => {
   res.json({ success: true, deleted: before, after: summary(orgId), backup: path.basename(backupFile) });
 });
 
+// ===================================================================
+// AI key for bill scanning (main admin only). The key is written to
+// server/ai.env and never returned: the browser only sees its last 4 chars.
+// ===================================================================
+const aiKey = require('../aiKey');
+
+router.get('/ai-key', requireOwner, (req, res) => res.json(aiKey.status()));
+
+router.put('/ai-key', requireOwner, async (req, res) => {
+  const key = String(req.body?.key || '').trim();
+  if (!aiKey.KEY_PATTERN.test(key)) {
+    return res.status(400).json({ error: 'That does not look like an Anthropic API key (it starts with sk-ant-)' });
+  }
+
+  // Ask Anthropic whether the key works before saving it (free, uses no tokens).
+  let warning = null;
+  try {
+    const Anthropic = require('@anthropic-ai/sdk');
+    const Client = Anthropic.default || Anthropic;
+    await new Client({ apiKey: key, timeout: 15000, maxRetries: 1 }).models.list({ limit: 1 });
+  } catch (err) {
+    if (err?.status === 401 || err?.status === 403) {
+      return res.status(400).json({ error: 'Anthropic refused this key. Copy it again from console.anthropic.com → API Keys.' });
+    }
+    warning = 'Saved, but the key could not be checked right now (no internet?). Try one bill upload to confirm.';
+  }
+
+  try {
+    aiKey.writeKey(key);
+  } catch (err) {
+    console.error('[ai-key] could not write ai.env:', err.message);
+    return res.status(500).json({ error: 'Could not save the key on the server' });
+  }
+  console.log(`[ai-key] set by ${req.user.email} (ends ${key.slice(-4)})`);
+  res.json({ ...aiKey.status(), warning });
+});
+
+router.delete('/ai-key', requireOwner, (req, res) => {
+  try {
+    aiKey.writeKey(null);
+  } catch (err) {
+    console.error('[ai-key] could not write ai.env:', err.message);
+    return res.status(500).json({ error: 'Could not remove the key' });
+  }
+  console.log(`[ai-key] removed by ${req.user.email}`);
+  res.json(aiKey.status());
+});
+
 module.exports = router;

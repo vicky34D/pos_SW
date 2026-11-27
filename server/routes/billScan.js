@@ -22,8 +22,8 @@ const PAID_ON_UPLOAD = true;
 const PAID_METHOD = 'UPI';
 const { v4: uuidv4 } = require('uuid');
 
-// Load only the dedicated key file, so no other server setting can change.
-require('dotenv').config({ path: path.join(__dirname, '..', 'ai.env'), quiet: true });
+// The key lives in server/ai.env (set from Settings by the main admin).
+const { getKey } = require('../aiKey');
 
 const MODEL = 'claude-haiku-5-5';
 // Haiku 5.5 list price (USD per million tokens, prompts up to 100K tokens).
@@ -36,12 +36,15 @@ const MEDIA_TYPES = new Set(['application/pdf', 'image/jpeg', 'image/png', 'imag
 const round2 = (n) => Math.round((Number(n) || 0) * 100) / 100;
 
 let client = null;
+let clientKey = null;
 function getClient() {
-  if (!process.env.ANTHROPIC_API_KEY) return null;
-  if (!client) {
+  const key = getKey(); // read fresh, so a key saved in Settings works at once
+  if (!key) return null;
+  if (!client || clientKey !== key) {
     const Anthropic = require('@anthropic-ai/sdk');
     const Client = Anthropic.default || Anthropic;
-    client = new Client(); // reads ANTHROPIC_API_KEY
+    client = new Client({ apiKey: key });
+    clientKey = key;
   }
   return client;
 }
@@ -325,7 +328,7 @@ function importInvoices(orgId, invoices, fileName) {
 router.post('/', requireRole(['Admin', 'Manager']), async (req, res) => {
   const orgId = req.user.org_id;
   const { file_name, media_type, data } = req.body || {};
-  if (!getClient()) return res.status(503).json({ error: 'Bill scanning is not set up yet: the server has no ANTHROPIC_API_KEY.' });
+  if (!getClient()) return res.status(503).json({ error: 'Bill scanning is not set up yet: the main admin must add the AI key in Settings.' });
   if (!MEDIA_TYPES.has(media_type)) return res.status(400).json({ error: 'Upload a PDF or a photo (JPG, PNG or WEBP).' });
   if (!data || typeof data !== 'string') return res.status(400).json({ error: 'No file received.' });
 
