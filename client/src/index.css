@@ -3523,3 +3523,50 @@ h1, h2, h3, .mobile-location, .mcb-total, .dh-login-title, .dh-card-title, .dh-l
 .ai-key-form .btn-modal { flex: 0 0 auto; padding: 0.55rem 1rem; }
 .ai-key-form .btn-modal:disabled { opacity: 0.5; cursor: not-allowed; }
 .ai-key-error { flex-basis: 100%; color: var(--danger); font-size: 0.78rem; }
+
+/* ---------- Monthly totals tab (Purchase / Expense bills) ---------- */
+.list-tabs { display: flex; gap: 0.4rem; margin: 0.25rem 0 0.9rem; }
+.list-tab { padding: 0.45rem 1rem; border-radius: 999px; border: 1.5px solid var(--dh-ink, #121212); background: transparent; color: var(--dh-ink, #121212); font-weight: 600; font-size: 0.82rem; cursor: pointer; }
+.list-tab.active { background: var(--dh-ink, #121212); color: var(--dh-lime, #d6f24b); }
+.monthly-totals tfoot td { border-top: 2px solid var(--dh-ink, #121212); background: var(--dh-soft, #f1f0ec); }
+.monthly-groups { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+
+/* ---------- P&L ---------- */
+.pnl-formula { display: inline-block; font-weight: 700; font-size: 0.85rem; padding: 0.4rem 0.8rem; border-radius: 999px; background: var(--dh-lime, #d6f24b); border: 1.5px solid var(--dh-ink, #121212); margin-bottom: 0.5rem; }
+.pnl-section-title { font-family: var(--dh-head, inherit); font-weight: 700; font-size: 1rem; margin: 1.2rem 0 0.6rem; }
+.pnl-cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.8rem; }
+.pnl-card { background: #fff; border: 1.5px solid var(--dh-ink, #121212); border-radius: var(--dh-radius, 16px); box-shadow: 0 3px 0 var(--dh-ink, #121212); padding: 0.9rem 1rem; border-top-width: 6px; }
+.pnl-sales { border-top-color: #2f9e44; }
+.pnl-purchase { border-top-color: var(--dh-violet, #7b5cff); }
+.pnl-expense { border-top-color: #f08c00; }
+.pnl-profit { background: var(--dh-lime-soft, #f1fbcf); border-top-color: #2f9e44; }
+.pnl-loss { background: #ffe3e3; border-top-color: #e03131; }
+.pnl-card-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--dh-muted, #666); }
+.pnl-card-value { font-family: var(--dh-head, inherit); font-size: 1.6rem; font-weight: 800; margin: 0.2rem 0; }
+.pnl-change { font-size: 0.75rem; color: var(--dh-muted, #666); }
+.pnl-change.is-good { color: #2f9e44; font-weight: 600; }
+.pnl-change.is-bad { color: #e03131; font-weight: 600; }
+.pnl-minis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.8rem; }
+.pnl-mini { background: #fff; border: 1.5px solid var(--dh-ink, #121212); border-radius: var(--dh-radius, 16px); padding: 0.9rem 1rem; }
+.pnl-mini-head { margin-bottom: 0.5rem; }
+.pnl-mini-title { font-weight: 700; }
+.pnl-mini-note { font-size: 0.72rem; color: var(--dh-muted, #666); margin-top: 0.15rem; }
+.pnl-mini-row { display: flex; justify-content: space-between; font-size: 0.88rem; padding: 0.25rem 0; }
+.pnl-mini-net { border-top: 1.5px dashed var(--dh-ink, #121212); margin-top: 0.3rem; padding-top: 0.5rem; font-weight: 800; }
+.pnl-mini-net.is-profit span:last-child { color: #2f9e44; }
+.pnl-mini-net.is-loss span:last-child { color: #e03131; }
+.pnl-table .frappe-tag { margin-left: 0.4rem; }
+.pnl-sub { font-size: 0.7rem; color: var(--dh-muted, #666); margin-top: 0.15rem; font-weight: 400; }
+.pnl-bar-col { width: 160px; }
+.pnl-bar { height: 7px; background: var(--dh-soft, #f1f0ec); border-radius: 999px; margin: 3px 0; overflow: hidden; }
+.pnl-bar span { display: block; height: 100%; border-radius: 999px; }
+.pnl-bar-in, .pnl-dot-in { background: #2f9e44; }
+.pnl-bar-out, .pnl-dot-out { background: #e8590c; }
+.pnl-legend { display: flex; align-items: center; gap: 0.4rem; font-size: 0.75rem; color: var(--dh-muted, #666); margin-top: 0.5rem; }
+.pnl-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-left: 0.5rem; }
+.pnl-foot { font-size: 0.72rem; color: var(--dh-muted, #666); margin: 1rem 0 2rem; max-width: 720px; }
+@media (max-width: 900px) {
+  .pnl-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pnl-minis { grid-template-columns: 1fr; }
+  .pnl-bar-col { display: none; }
+}

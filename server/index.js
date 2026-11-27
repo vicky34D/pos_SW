@@ -54,6 +54,7 @@ app.use('/api/orders', authenticateToken, byMethod({ GET: ['orders', 'reports'],
 app.use('/api/inventory', authenticateToken, requirePage('inventory', 'menu', 'stockledger', 'purchase'), require('./routes/inventory'));
 app.use('/api/recipes', authenticateToken, requirePage('menu', 'inventory'), require('./routes/recipes'));
 app.use('/api/reports', authenticateToken, (req, res, next) => (req.path === '/counter' ? next() : requirePage('reports')(req, res, next)), require('./routes/reports'));
+app.use('/api/pnl', authenticateToken, requirePage('pnl'), require('./routes/pnl'));
 app.use('/api/users', authenticateToken, (req, res, next) => (/^\/[^/]+\/password$/.test(req.path) ? next() : requirePage('team')(req, res, next)), require('./routes/users'));
 app.use('/api/tables', authenticateToken, requirePage(...SALES_PAGES), require('./routes/tables'));
 app.use('/api/parked', authenticateToken, requirePage(...SALES_PAGES), require('./routes/parked'));

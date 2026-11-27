@@ -9,6 +9,7 @@ const PAGE_ROLES = {
   tables: ALL,
   reports: ['Admin', 'Manager', 'Employee'],
   orders: ['Admin', 'Manager', 'Employee'],
+  pnl: ['Admin', 'Manager'],
   inventory: ALL,
   stockledger: ['Admin', 'Manager'],
   suppliers: ['Admin', 'Manager'],

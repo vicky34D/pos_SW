@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import * as api from '../api'
+import MonthlyTotals, { ListTabs } from './MonthlyTotals'
 
 // Phone photos are shrunk to ~1600px JPEG before upload: small enough to send
 // quickly, still sharp enough to read every line of a bill.
@@ -47,6 +48,7 @@ export default function PurchaseBillsView({ showToast }) {
   const [detail, setDetail] = useState(null)
   const [payingBill, setPayingBill] = useState(null)
   const [scanning, setScanning] = useState(false)
+  const [view, setView] = useState('list')
   const [scanResult, setScanResult] = useState(null)
   const fileInputRef = useRef(null)
   const [payForm, setPayForm] = useState({ amount: 0, method: 'Cash', payment_date: new Date().toISOString().slice(0,10), notes: '' })
@@ -186,6 +188,8 @@ export default function PurchaseBillsView({ showToast }) {
         </div>
       </div>
 
+      <ListTabs view={view} setView={setView} />
+      {view === 'monthly' ? <MonthlyTotals rows={bills} dateKey="bill_date" noun="bills" /> : (<>
       <div className="frappe-toolbar">
         <input className="frappe-search" placeholder="Search bill no or supplier…" value={search} onChange={e => setSearch(e.target.value)} />
         <select className="frappe-select" value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
@@ -221,6 +225,7 @@ export default function PurchaseBillsView({ showToast }) {
           </tbody>
         </table>
       </div>
+      </>)}
 
       {/* Bill Detail Modal */}
       {detail && (

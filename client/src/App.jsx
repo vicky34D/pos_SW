@@ -5,6 +5,7 @@ import PosView from './components/PosView'
 import OrderPanel from './components/OrderPanel'
 import InventoryView from './components/InventoryView'
 import ReportsView from './components/ReportsView'
+import PnlView from './components/PnlView'
 import MenuManagement from './components/MenuManagement'
 import SettingsView from './components/SettingsView'
 import UserManagement from './components/UserManagement'
@@ -472,6 +473,7 @@ export default function App() {
         {activeView === 'inventory' && (
           <InventoryView showToast={showToast} currentUser={currentUser} />
         )}
+        {activeView === 'pnl' && <PnlView />}
         {activeView === 'reports' && (
           <ReportsView currentUser={currentUser} showToast={showToast} />
         )}
