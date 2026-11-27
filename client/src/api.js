@@ -131,6 +131,9 @@ export const bulkUpdateInventory = (updates) => request('/inventory', { method: 
 export const resetAllStock = () => request('/inventory/reset-stock', { method: 'POST', body: JSON.stringify({ confirm: 'RESET' }), timeoutMs: 60000 });
 export const getStartFreshSummary = () => request('/admin/start-fresh');
 export const startFresh = () => request('/admin/start-fresh', { method: 'POST', body: JSON.stringify({ confirm: 'DELETE' }), timeoutMs: 60000 });
+export const getAiKeyStatus = () => request('/admin/ai-key');
+export const saveAiKey = (key) => request('/admin/ai-key', { method: 'PUT', body: JSON.stringify({ key }), timeoutMs: 30000 });
+export const removeAiKey = () => request('/admin/ai-key', { method: 'DELETE' });
 export const deleteInventoryItem = (id) => request(`/inventory/${id}`, { method: 'DELETE' });
 
 // Recipes (menu item -> inventory ingredient mapping)

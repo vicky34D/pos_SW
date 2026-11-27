@@ -482,7 +482,7 @@ export default function App() {
           <MenuManagement showToast={showToast} />
         )}
         {activeView === 'settings' && (
-          <SettingsView settings={settings} setSettings={setSettings} showToast={showToast} />
+          <SettingsView settings={settings} setSettings={setSettings} showToast={showToast} currentUser={currentUser} />
         )}
         {activeView === 'team' && (
           <UserManagement showToast={showToast} currentUser={currentUser} />

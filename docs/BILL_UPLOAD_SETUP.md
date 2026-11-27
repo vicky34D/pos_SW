@@ -25,26 +25,15 @@ Cost: about ₹0.10–0.40 per bill (shown after every upload).
    Keep it secret: anyone with it can spend your credit.
 4. Optional: **Limits** → set a monthly spend limit (for example $2).
 
-### 2. Put the key on the server
-SSH into the server, then:
+### 2. Add the key in the app
+Log in as the main admin → **Settings → AI Bill Upload** → paste the key → **Save key**.
 
-```bash
-cd ~/pos_SW/server
-nano ai.env
-```
+- The app checks the key with Anthropic before saving it, and it works at once (no restart).
+- It is saved only on the server, in `server/ai.env` (git-ignored, readable only by the app).
+  The app never shows it again: only "Key saved (ends in …abcd)".
+- Only the main admin sees this box. Use **Replace** for a new key, **Remove** to switch bill upload off.
 
-Type one line, then save (Ctrl+O, Enter, Ctrl+X):
-
-```
-ANTHROPIC_API_KEY=sk-ant-...your key...
-```
-
-```bash
-chmod 600 ai.env
-pm2 restart pos-app
-```
-
-`ai.env` is git-ignored, so deploys never delete or publish it.
+(Alternative for server admins: put `ANTHROPIC_API_KEY=sk-ant-...` in `server/ai.env` by SSH and `chmod 600` it.)
 
 ### 3. (Only if big PDFs fail) raise the upload size in Nginx
 Photos are shrunk in the browser and always fit. If a large PDF shows
