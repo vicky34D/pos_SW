@@ -7,6 +7,7 @@ export const PAGE_GROUPS = [
     { id: 'pos', label: 'Point of Sale', mobileLabel: 'POS', mobileVisible: true, roles: ALL },
     { id: 'tables', label: 'Tables', mobileLabel: 'Tables', mobileVisible: true, roles: ALL },
     { id: 'reports', label: 'Reports', mobileLabel: 'Reports', mobileVisible: true, roles: ['Admin', 'Manager', 'Employee'] },
+    { id: 'pnl', label: 'P&L', mobileLabel: 'P&L', mobileVisible: false, roles: ['Admin', 'Manager'] },
     { id: 'orders', label: 'Order History', mobileLabel: 'History', mobileVisible: false, roles: ['Admin', 'Manager', 'Employee'] },
   ] },
   { label: 'Inventory', items: [

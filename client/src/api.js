@@ -145,6 +145,7 @@ export const updateRecipe = (menuItemId, ingredients) =>
 export const getReportSummary = () => request('/reports/summary');
 export const getDailyReport = () => request('/reports/daily');
 export const getMonthlyReport = () => request('/reports/monthly');
+export const getPnl = () => request('/pnl', { timeoutMs: 20000 });
 export const getTodayItems = () => request('/reports/today-items');
 export const getTopItems = () => request('/reports/top-items');
 export const getOrderCounter = () => request('/reports/counter');

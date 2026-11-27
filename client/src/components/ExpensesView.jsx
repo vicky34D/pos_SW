@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import * as api from '../api'
+import MonthlyTotals, { ListTabs } from './MonthlyTotals'
 
 const STATUS_COLORS = { Submitted:'badge-blue', 'Partially Paid':'badge-orange', Paid:'badge-green', Cancelled:'badge-red' }
 const CATEGORIES = ['Rent','Utilities','Salary','Maintenance','Marketing','Packaging','Other']
@@ -12,6 +13,7 @@ export default function ExpensesView({ showToast }) {
   const [expenses, setExpenses] = useState([])
   const [suppliers, setSuppliers] = useState([])
   const [loading, setLoading] = useState(true)
+  const [view, setView] = useState('list')
   const [search, setSearch] = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
   const [filterCat, setFilterCat] = useState('all')
@@ -110,6 +112,8 @@ export default function ExpensesView({ showToast }) {
         </div>
       </div>
 
+      <ListTabs view={view} setView={setView} />
+      {view === 'monthly' ? <MonthlyTotals rows={expenses} dateKey="expense_date" noun="expenses" groupKey="category" groupLabel="By category" /> : (<>
       <div className="frappe-toolbar">
         <input className="frappe-search" placeholder="Search expense, payee, category…" value={search} onChange={e => setSearch(e.target.value)} />
         <select className="frappe-select" value={filterCat} onChange={e => setFilterCat(e.target.value)}>
@@ -150,6 +154,7 @@ export default function ExpensesView({ showToast }) {
           </tbody>
         </table>
       </div>
+      </>)}
 
       {/* Detail Modal */}
       {detail && (

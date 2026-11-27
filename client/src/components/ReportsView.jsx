@@ -69,10 +69,6 @@ export default function ReportsView({ currentUser, showToast }) {
 
       {/* Summary Stats */}
       <div className="stats-grid">
-        <div className="stat-card revenue">
-          <div className="stat-label">Total Revenue</div>
-          <div className="stat-value">₹{summary.total_revenue || 0}</div>
-        </div>
         <div className="stat-card today">
           <div className="stat-label">Today's Revenue</div>
           <div className="stat-value">₹{summary.today_revenue || 0}</div>
