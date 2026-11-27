@@ -28,8 +28,10 @@ function nextPaymentNumber(orgId) {
 
 function reconcileBillStatus(orgId, againstType, againstId) {
   const table = againstType === 'Purchase Bill' ? 'purchase_bills' : 'expense_bills';
-  const bill = db.prepare(`SELECT total, paid_amount FROM ${table} WHERE id = ? AND org_id = ?`).get(againstId, orgId);
-  if (!bill) return;
+  const bill = db.prepare(`SELECT total, paid_amount, status FROM ${table} WHERE id = ? AND org_id = ?`).get(againstId, orgId);
+  // A cancelled bill stays cancelled: removing its payment must not re-open
+  // it (its stock was already reversed, and cancelling again would double it).
+  if (!bill || bill.status === 'Cancelled') return;
   let status;
   if (bill.paid_amount <= EPS) status = 'Submitted';
   else if (bill.paid_amount < bill.total - EPS) status = 'Partially Paid';
